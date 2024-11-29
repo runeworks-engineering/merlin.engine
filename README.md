@@ -1,6 +1,6 @@
 # Merlin
 
-![](doc/images/logo.github.jpg)
+![](doc/images/[Github.header.png)
 
 ## Overview
 Merlin is a GPU computing and rendering engine designed as a sandbox instead of CUDA or OpenCL. While still in development, Merlin offers basic 3D rendering capabilities and a compute shader pipeline. The framework is geared towards facilitating physics experiments, but it's worth noting that it's still evolving and might not yet match the full capabilities of more established tools.
