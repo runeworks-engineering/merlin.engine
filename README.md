@@ -1,5 +1,3 @@
-# Merlin
-
 ![](doc/images/Github.header.png)
 
 ## Overview
