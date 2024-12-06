@@ -3,7 +3,7 @@ project "merlin.particles"
 	language "C++"
 	cppdialect "C++20"
 	staticruntime "on"
-	debugdir (solutiondir .."/merlin.examples" .. "/%{prj.name}")
+	debugdir (solutiondir .."/examples/merlin.examples" .. "/%{prj.name}")
 	targetdir (solutiondir .."/bin/" .. outputdir .. "/%{prj.name}")
 	objdir (solutiondir .."/bin-int/" .. outputdir .. "/%{prj.name}")
 
@@ -29,20 +29,20 @@ project "merlin.particles"
 	   ["Assets/*"] = "assets/**.*"
 	}
 
-	includedirs { solutiondir .. "/merlin.core/vendor/glfw/include" }
+	includedirs { solutiondir .. "/vendor/glfw/include" }
 
 	filter { "system:windows" }
 		ignoredefaultlibraries { "msvcrt" }
 
 	includedirs
 	{
-		solutiondir .. "/merlin.core/vendor/spdlog/include",
-		solutiondir .. "/merlin.core/src",
-		solutiondir .. "/merlin.core/vendor",
-		solutiondir .. "/merlin.core/%{IncludeDir.glm}",
-		solutiondir .. "/merlin.core/%{IncludeDir.glad}",
-		solutiondir .. "/merlin.core/%{IncludeDir.tinyfiledialogs}",
-		solutiondir .. "/merlin.core/%{IncludeDir.imgui}"
+		solutiondir .. "/vendor/spdlog/include",
+		solutiondir .. "/src",
+		solutiondir .. "/vendor",
+		solutiondir .. "/%{IncludeDir.glm}",
+		solutiondir .. "/%{IncludeDir.glad}",
+		solutiondir .. "/%{IncludeDir.tinyfiledialogs}",
+		solutiondir .. "/%{IncludeDir.imgui}"
 	}
 
 	links
@@ -72,7 +72,7 @@ project "merlin.particles"
 		symbols "on"
 		postbuildcommands {
 		  "{COPYDIR} %[assets] %[%{!cfg.targetdir}/assets]",
-		  "{COPYDIR} %[" .. solutiondir .. "/merlin.core/assets] %[%{!cfg.debugdir}/assets/common]"
+		  "{COPYDIR} %[" .. solutiondir .. "/assets] %[%{!cfg.debugdir}/assets/common]"
 		}
 
 	filter "configurations:Release"
@@ -81,5 +81,5 @@ project "merlin.particles"
 		optimize "on"
 		postbuildcommands {
 		  "{COPYDIR} %[assets] %[%{!cfg.targetdir}/assets]",
-		  "{COPYDIR} %[" .. solutiondir .. "/merlin.core/assets] %[%{!cfg.debugdir}/assets/common]"
+		  "{COPYDIR} %[" .. solutiondir .. "/assets] %[%{!cfg.debugdir}/assets/common]"
 		}

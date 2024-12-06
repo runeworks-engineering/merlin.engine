@@ -1,10 +1,9 @@
-function newProject(name)
-	project(name)
+project "merlin.example2D"
 	kind "ConsoleApp"
 	language "C++"
 	cppdialect "C++20"
 	staticruntime "on"
-	debugdir (solutiondir .."/merlin.projects" .. "/%{prj.name}")
+	debugdir (solutiondir .."/examples/merlin.examples" .. "/%{prj.name}")
 	targetdir (solutiondir .."/bin/" .. outputdir .. "/%{prj.name}")
 	objdir (solutiondir .."/bin-int/" .. outputdir .. "/%{prj.name}")
 
@@ -30,18 +29,20 @@ function newProject(name)
 	   ["Assets/*"] = "assets/**.*"
 	}
 
+	includedirs { solutiondir .. "/vendor/glfw/include" }
+
 	filter { "system:windows" }
 		ignoredefaultlibraries { "msvcrt" }
 
-	includedirs{
-		solutiondir .. "/merlin.core/src",
-		solutiondir .. "/merlin.core/vendor",
-		solutiondir .. "/merlin.core/%{IncludeDir.glm}",
-		solutiondir .. "/merlin.core/%{IncludeDir.glad}",
-		solutiondir .. "/merlin.core/%{IncludeDir.imgui}",
-		solutiondir .. "/merlin.core/%{IncludeDir.assimp}",
-		solutiondir .. "/merlin.core/%{IncludeDir.tinyfiledialogs}",
-		solutiondir .. "/merlin.core/%{IncludeDir.glfw}"
+	includedirs
+	{
+		solutiondir .. "/vendor/spdlog/include",
+		solutiondir .. "/src",
+		solutiondir .. "/vendor",
+		solutiondir .. "/%{IncludeDir.glm}",
+		solutiondir .. "/%{IncludeDir.glad}",
+		solutiondir .. "/%{IncludeDir.tinyfiledialogs}",
+		solutiondir .. "/%{IncludeDir.imgui}"
 	}
 
 	links
@@ -50,11 +51,10 @@ function newProject(name)
 		"glad",
 		"glfw",
 		"imgui",
-		"assimp",
 		"tinyfiledialogs",
 		"opengl32"
 	}
-	
+
 
 
 	filter "system:windows"
@@ -72,7 +72,7 @@ function newProject(name)
 		symbols "on"
 		postbuildcommands {
 		  "{COPYDIR} %[assets] %[%{!cfg.targetdir}/assets]",
-		  "{COPYDIR} %[" .. solutiondir .. "/merlin.core/assets] %[%{!cfg.debugdir}/assets/common]"
+		  "{COPYDIR} %[" .. solutiondir .. "/assets] %[%{!cfg.debugdir}/assets/common]"
 		}
 
 	filter "configurations:Release"
@@ -81,6 +81,5 @@ function newProject(name)
 		optimize "on"
 		postbuildcommands {
 		  "{COPYDIR} %[assets] %[%{!cfg.targetdir}/assets]",
-		  "{COPYDIR} %[" .. solutiondir .. "/merlin.core/assets] %[%{!cfg.debugdir}/assets/common]"
+		  "{COPYDIR} %[" .. solutiondir .. "/assets] %[%{!cfg.debugdir}/assets/common]"
 		}
-end

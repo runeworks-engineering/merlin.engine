@@ -1,16 +1,16 @@
-[submodule "merlin.core/vendor/glfw"]
-	path = merlin.core/vendor/glfw
+[submodule "vendor/glfw"]
+	path = vendor/glfw
 	url = https://github.com/JulesTopart/glfw.git
-[submodule "merlin.core/vendor/glm"]
-	path = merlin.core/vendor/glm
+[submodule "vendor/glm"]
+	path = vendor/glm
 	url = https://github.com/g-truc/glm
-[submodule "merlin.core/vendor/imgui"]
-	path = merlin.core/vendor/imgui
+[submodule "vendor/imgui"]
+	path = vendor/imgui
 	url = https://github.com/JulesTopart/imgui.git
 	branch = docking
-[submodule "merlin.core/vendor/assimp"]
-	path = merlin.core/vendor/assimp
+[submodule "vendor/assimp"]
+	path = vendor/assimp
 	url = https://github.com/AminAliari/assimp.git
-[submodule "merlin.core/vendor/tinyfiledialogs"]
-	path = merlin.core/vendor/tinyfiledialogs
+[submodule "vendor/tinyfiledialogs"]
+	path = vendor/tinyfiledialogs
 	url = https://github.com/JulesTopart/tinyfiledialogs.git

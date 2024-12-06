@@ -1,73 +1,3 @@
-
-newaction {
-	trigger     = "new",
-	description = "Create a new project from template using the Merlin library. example : premake5 new <name>",
-	execute = function ()
-
-		projectName = ""
-		if(_ARGS[1])
-		then
-			projectName = _ARGS[1]
-		else
-			printf("error : Please provide project name")
-		end
-
-		projectDir = "merlin.projects/" .. projectName
-		
-		printf("Copying template : \"" .. solutiondir .. "/merlin.template\" > " .. "\"" .. projectDir .."\"")
-		command = "\"" .. solutiondir .. "/merlin.template/src\" " .. "\"" .. projectDir .. "/src\""
-		os.execute("{COPYDIR} " .. command)
-		os.execute("{TOUCH} " .. "\"" .. projectDir .. "/premake5.lua\"")
-
-		suffix = "> " .. "\"" .. projectDir .. "/premake5.lua" .. "\""
-
-		line = "include (solutiondir .. \"/merlin.template/template.lua\")"
-		os.execute("{ECHO} " .. line .. suffix)
-		
-		suffix = ">> " .. "\"" .. projectDir .. "/premake5.lua" .. "\""
-		line = "newProject(\"" .. projectName .. "\")" 
-		os.execute("{ECHO} " .. line .. suffix)
-
-		suffix = ">> " .. "\"" .. solutiondir .. "/premake5.lua" .. "\""
-		line = "	include \"" .. projectDir .. "\"" 
-		os.execute("{ECHO} " .. line .. suffix)
-	end
-}
-
-newaction {
-	trigger     = "add",
-	description = "Add an existing project using the Merlin library. example : premake5 add <name>",
-	execute = function ()
-		projectDir = solutiondir .. "/"
-		
-		projectName = ""
-		if(_ARGS[1])
-		then
-			projectName = _ARGS[1]
-		else
-			printf("error : Please provide project name")
-		end
-
-		projectDir = "merlin.projects/" .. projectName
-		
-		printf("Generating project files for : " .. projectName)
-		os.execute("{TOUCH} " .. "\"" .. projectDir .. "/premake5.lua\"")
-		suffix = "> " .. "\"" .. projectDir .. "/premake5.lua" .. "\""
-
-		line = "include (solutiondir .. \"/merlin.template/template.lua\")"
-		os.execute("{ECHO} " .. line .. suffix)
-
-		suffix = ">> " .. "\"" .. projectDir .. "/premake5.lua" .. "\""
-		line = "newProject(\"" .. projectName .. "\")" 
-		os.execute("{ECHO} " .. line .. suffix)
-		
-		suffix = ">> " .. "\"" .. solutiondir .. "/premake5.lua" .. "\""
-		line = "	include \"" .. projectDir .. "\"" 
-		os.execute("{ECHO} " .. line .. suffix)
-	end
-}
-
-
 workspace "Merlin"
 	architecture "x64"
 	startproject "merlin.example"
@@ -97,18 +27,98 @@ IncludeDir["assimp"] = "vendor/assimp/include"
 
 -- Projects
 group "Dependencies"
-	include "merlin.core/vendor/glfw"
-	include "merlin.core/vendor/glad"
-	include "merlin.core/vendor/imgui"
-	include "merlin.core/vendor/stb_image"
-	include "merlin.core/vendor/tinyfiledialogs"
-	include "merlin.core/vendor/assimp"
+	include "vendor/glfw"
+	include "vendor/glad"
+	include "vendor/imgui"
+	include "vendor/stb_image"
+	include "vendor/tinyfiledialogs"
+	include "vendor/assimp"
 	
-group ""
-	include "merlin.core"
+group "Library"
+	project "merlin"
+	kind "StaticLib"
+	language "C++"
+	cppdialect "C++20"
+	staticruntime "on"
+
+	targetdir ("../bin" .. outputdir .. "/%{prj.name}")
+	objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
+
+	pchheader "include/glpch.h"
+	pchsource "src/glpch.cpp"
+
+	files { 
+		"include/**.h",
+		"src/**.c",
+		"src/**.cpp",
+		"vendor/imgui/backends/imgui_impl_glfw.*",
+		"vendor/imgui/backends/imgui_impl_opengl3.*",
+		"assets/shaders/**.*"
+	}
+
+	vpaths {
+	   ["Headers/*"] = "**.h",
+	   ["Sources/*"] = {"**.c", "**.cpp"},
+	   ["Docs"] = "**.md",
+	   ["Assets/*"] = "assets/**.*"
+	}
 	
+	defines
+	{
+		"_CRT_SECURE_NO_WARNINGS",
+		"GLM_ENABLE_EXPERIMENTAL"
+	}
+
+	includedirs
+	{
+		"./",
+		"%{IncludeDir. glfw}",
+		"%{IncludeDir.glad}",
+		"%{IncludeDir.imgui}",
+		"%{IncludeDir.glm}",
+		"%{IncludeDir.stb_image}",
+		"%{IncludeDir.tinyfiledialogs}",
+		"%{IncludeDir.assimp}"
+	}
+
+	links 
+	{ 
+		"glfw",
+		"glad",
+		"imgui",
+		"stb_image",
+		"tinyfiledialogs",
+		"assimp",
+		"opengl32.lib"
+	}
+
+	filter { 'files:vendor/imgui/backends/imgui_impl_glfw.cpp' }
+		flags { 'NoPCH' }
+		
+	filter { 'files:vendor/imgui/backends/imgui_impl_opengl3.cpp' }
+		flags { 'NoPCH' }
+
+	filter "system:windows"
+		systemversion "latest"
+
+		defines
+		{
+			"GLCORE_PLATFORM_WINDOWS",
+			"GLFW_INCLUDE_NONE"
+		}
+
+	filter "configurations:Debug"
+		defines "GLCORE_DEBUG"
+		runtime "Debug"
+		symbols "on"
+
+	filter "configurations:Release"
+		defines "GLCORE_RELEASE"
+		runtime "Release"
+		optimize "on"
+		
 group "Examples"
-	include "merlin.examples/merlin.example"
-	include "merlin.examples/merlin.sandbox"
-	include "merlin.examples/merlin.example2D"
-	include "merlin.examples/merlin.particles"
+	include "examples/merlin.example"
+	include "examples/merlin.example2D"
+	include "examples/merlin.particles"
+	include "examples/merlin.sandbox"
