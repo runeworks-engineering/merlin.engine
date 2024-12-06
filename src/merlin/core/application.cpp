@@ -1,8 +1,8 @@
 #include "glpch.h"
-#include "application.h"
+#include "core/application.h"
 
-#include "log.h"
-#include "input.h"
+#include "core/log.h"
+#include "core/input.h"
 #include "merlin/graphics/ressourceManager.h"
 #include <glfw/glfw3.h>
 

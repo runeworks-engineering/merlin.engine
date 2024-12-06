@@ -37,7 +37,7 @@ project "merlin.sandbox"
 	includedirs
 	{
 		solutiondir .. "/vendor/spdlog/include",
-		solutiondir .. "/src",
+		solutiondir .. "/include",
 		solutiondir .. "/vendor",
 		solutiondir .. "/%{IncludeDir.glm}",
 		solutiondir .. "/%{IncludeDir.glad}",

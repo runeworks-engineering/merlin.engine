@@ -17,6 +17,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 solutiondir = path.getabsolute("./")
 
 IncludeDir = {}
+IncludeDir["self"] = "include"
 IncludeDir["glfw"] = "vendor/glfw/include"
 IncludeDir["glad"] = "vendor/glad/include"
 IncludeDir["imgui"] = "vendor/imgui"
@@ -41,11 +42,11 @@ group "Library"
 	cppdialect "C++20"
 	staticruntime "on"
 
-	targetdir ("../bin" .. outputdir .. "/%{prj.name}")
-	objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")
+	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
+	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	pchheader "include/glpch.h"
-	pchsource "src/glpch.cpp"
+	pchheader "glpch.h"
+	pchsource "glpch.cpp"
 
 	files { 
 		"include/**.h",
@@ -71,8 +72,8 @@ group "Library"
 
 	includedirs
 	{
-		"./",
-		"%{IncludeDir. glfw}",
+		"%{IncludeDir.self}",
+		"%{IncludeDir.glfw}",
 		"%{IncludeDir.glad}",
 		"%{IncludeDir.imgui}",
 		"%{IncludeDir.glm}",
@@ -122,3 +123,4 @@ group "Examples"
 	include "examples/merlin.example2D"
 	include "examples/merlin.particles"
 	include "examples/merlin.sandbox"
+	
