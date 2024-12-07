@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "phongShader.h"
+#include "pch.h"
+#include "merlin/shaders/phongShader.h"
 
 namespace Merlin {
 

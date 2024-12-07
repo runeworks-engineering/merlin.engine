@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "light.h"
+#include "pch.h"
+#include "merlin/scene/light.h"
 #include "merlin/core/core.h"
 
 namespace Merlin {

@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "console.h"
+#include "pch.h"
+#include "merlin/core/console.h"
 
 #include <iostream>
 

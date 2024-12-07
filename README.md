@@ -16,7 +16,7 @@ Merlin is in a developmental stage and might require some familiarity with GPU c
 
 1. **Clone the Repository**
 ```
-git clone --recurse-submodules https://github.com/JulesTopart/Merlin.git
+git clone --recurse-submodules https://github.com/runeworks-engineering/merlin.engine.git
 ```
 
 2. **Build the Engine**
@@ -30,25 +30,36 @@ git clone --recurse-submodules https://github.com/JulesTopart/Merlin.git
    
    Premake is packaged with Merlin inside the `extern folder`. You could also install premake on you machine and add it to your PATH environment variable to shorten the commands.
    
-   To create a new project preconfigured for Merlin, use this command : 
-   ```
-   ./extern/premake5/premake5.exe new <projectname>
-   ```
-   
-   or if you already have premake installed : 
-   
-   ```
-   premake5 new <projectname>
-   ```
-   
-   This command will create a new folder using the project template into the `merlin.projects` directory.
-   
 
 3. **Open MVSC Solution**
    - Open the `.sln` file in Microsoft Visual Studio.
 
+4. **Compile Merlin**
+   - Right click on the `merlin` project, under `Library`, and click `Generate`
+
+The static library will be compiled and available inside the `bin` directory.
+
 ## Example Usage
-The code sample provided gives an insight into the usage of Merlin. It involves creating a camera, loading models, shaders, and managing a simple scene with lighting. It demonstrates the engine's capabilities in handling basic 3D objects and scene management.
+
+Merlin has several examples that can be used as a starting point.
+Each of these examples showcases a specific feature of the library:
+
+1. **`merlin.example`**: A basic 3D rendering example with a sphere and a single light.
+   - Use this as a starting point for projects that require basic 3D rendering with minimal setup.
+
+2. **`merlin.example2D`**: A similar example using orthographic projection for 2D rendering.
+   - Ideal for applications focused on 2D rendering, such as UI elements, sprites, or 2D visualizations.
+
+3. **`merlin.particles`**: Demonstrates particle system features.
+   - Use this to explore and implement complex particle effects or simulations
+
+4. **`merlin.sandbox`**: A shaded rendering environment.
+   - Perfect for experimenting with advanced rendering techniques like PBR (Physically Based Rendering) or testing shaders.
+
+
+---
+
+## Galery
 
 **Rendering**
 
@@ -63,15 +74,19 @@ The code sample provided gives an insight into the usage of Merlin. It involves 
 ![](doc/images/SLS.reconstruct.jpg)
 
 ## Limitations and Development Status
+
 Merlin is a work in progress and may not yet be fully optimized or bug-free. Users should be prepared for potential issues and are encouraged to contribute to its development.
 
 ## Contributing
+
 Contributions are welcome, especially in areas of bug fixing, feature enhancement, and documentation improvement. Please submit pull requests for any contributions.
 
 ## Support and Issues
+
 For support or to report issues, please use the GitHub issue tracker associated with the repository.
 
 ## License
+
 Merlin is released under CC BY-NC-SA. Please review the license terms before using or modifying the software.
 
 ![](https://licensebuttons.net/l/by-nc-sa/3.0/88x31.png)

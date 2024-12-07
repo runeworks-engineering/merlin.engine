@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "voxelizer.h"
+#include "pch.h"
+#include "merlin/utils/voxelizer.h"
 #include "merlin/memory/bindingPointManager.h"
 #include "merlin/shaders/computeShader.h"
 

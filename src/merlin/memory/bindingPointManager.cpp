@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "bindingPointManager.h"
+#include "pch.h"
+#include "merlin/memory/bindingPointManager.h"
 
 namespace Merlin {
 

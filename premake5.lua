@@ -45,8 +45,8 @@ group "Library"
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	pchheader "glpch.h"
-	pchsource "glpch.cpp"
+	pchheader "pch.h"
+	pchsource "src/pch.cpp"
 
 	files { 
 		"include/**.h",

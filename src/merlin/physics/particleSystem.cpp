@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "particleSystem.h"
+#include "pch.h"
+#include "merlin/physics/particleSystem.h"
 #include "merlin/utils/primitives.h"
 #include "merlin/graphics/ressourceManager.h"
 

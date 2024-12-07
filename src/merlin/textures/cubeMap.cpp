@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "cubeMap.h"
+#include "pch.h"
+#include "merlin/textures/cubeMap.h"
 #include "merlin/core/log.h"
 #include "merlin/utils/textureLoader.h"
 

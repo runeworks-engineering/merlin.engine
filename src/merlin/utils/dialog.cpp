@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "dialog.h"
+#include "pch.h"
+#include "merlin/utils/dialog.h"
 
 #include <tinyfiledialogs.h>
 

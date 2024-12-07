@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "openGLDebug.h"
+#include "pch.h"
+#include "merlin/utils/openGLDebug.h"
 
 namespace Merlin {
 

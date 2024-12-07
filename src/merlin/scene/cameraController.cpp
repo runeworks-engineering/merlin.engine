@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "cameraController.h"
+#include "pch.h"
+#include "merlin/scene/cameraController.h"
 #include "merlin/core/core.h"
 #include "merlin/core/input.h"
 #include "merlin/core/keyCodes.h"

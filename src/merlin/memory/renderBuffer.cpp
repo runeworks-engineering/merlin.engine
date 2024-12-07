@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "renderBuffer.h"
+#include "pch.h"
+#include "merlin/memory/renderBuffer.h"
 
 namespace Merlin {
 	RenderBuffer::RenderBuffer(int samples) : _samples(samples){

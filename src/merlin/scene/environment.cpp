@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "environment.h"
+#include "pch.h"
+#include "merlin/scene/environment.h"
 #include "merlin/memory/vbo.h"
 #include "merlin/memory/ibo.h"
 #include "merlin/memory/frameBuffer.h"

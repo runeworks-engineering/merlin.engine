@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "screenQuadrenderer.h"
+#include "pch.h"
+#include "merlin/graphics/screenQuadrenderer.h"
 #include "merlin/graphics/ressourceManager.h"
 
 namespace Merlin {

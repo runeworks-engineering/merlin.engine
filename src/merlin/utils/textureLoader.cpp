@@ -1,6 +1,6 @@
-#include "glpch.h"
-#include "textureLoader.h"
-#include "util.h"
+#include "pch.h"
+#include "merlin/utils/textureLoader.h"
+#include "merlin/utils/util.h"
 
 ImageData TextureLoader::loadImageData(const std::string& filepath, bool flipped) {
     FileType ft = getFileType(filepath);

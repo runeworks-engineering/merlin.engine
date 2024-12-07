@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "windowsinput.h"
+#include "pch.h"
+#include "merlin/core/windowsinput.h"
 
 #include "merlin/core/application.h"
 #include <GLFW/glfw3.h>

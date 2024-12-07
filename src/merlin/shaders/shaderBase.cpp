@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "shaderBase.h"
+#include "pch.h"
+#include "merlin/shaders/shaderBase.h"
 #include "merlin/core/log.h"
 #include "merlin/memory/bindingPointManager.h"
 #include <fstream>

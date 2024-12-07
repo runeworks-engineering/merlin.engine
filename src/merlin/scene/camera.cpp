@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "camera.h"
+#include "pch.h"
+#include "merlin/scene/camera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>

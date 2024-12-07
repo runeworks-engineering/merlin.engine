@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "modelLoader.h"
+#include "pch.h"
+#include "merlin/utils/modelLoader.h"
 #include "merlin/core/core.h"
 #include "merlin/scene/model.h"
 #include "merlin/memory/ibo.h"

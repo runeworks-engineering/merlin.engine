@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "computeShader.h"
+#include "pch.h"
+#include "merlin/shaders/computeShader.h"
 #include "merlin/core/log.h"
 
 #include <fstream>

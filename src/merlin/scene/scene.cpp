@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "scene.h"
+#include "pch.h"
+#include "merlin/scene/scene.h"
 #include "merlin/utils/modelLoader.h"
 
 namespace Merlin {

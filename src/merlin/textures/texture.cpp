@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "texture.h"
+#include "pch.h"
+#include "merlin/textures/texture.h"
 #include <stb_image.h>
 #include <filesystem>
 

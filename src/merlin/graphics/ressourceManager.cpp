@@ -1,5 +1,5 @@
-#include "glpch.h"
-#include "ressourceManager.h"
+#include "pch.h"
+#include "merlin/graphics/ressourceManager.h"
 #include "merlin/utils/util.h"
 
 namespace Merlin {
