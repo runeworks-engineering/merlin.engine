@@ -3,7 +3,7 @@ project "merlin.example"
 	language "C++"
 	cppdialect "C++20"
 	staticruntime "on"
-	debugdir (solutiondir .."/examples/merlin.examples" .. "/%{prj.name}")
+	debugdir (solutiondir .."/examples" .. "/%{prj.name}")
 	targetdir (solutiondir .."/bin/" .. outputdir .. "/%{prj.name}")
 	objdir (solutiondir .."/bin-int/" .. outputdir .. "/%{prj.name}")
 
