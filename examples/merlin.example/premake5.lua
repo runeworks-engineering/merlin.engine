@@ -36,7 +36,6 @@ project "merlin.example"
 
 	includedirs
 	{
-		solutiondir .. "/vendor/spdlog/include",
 		solutiondir .. "/include",
 		solutiondir .. "/vendor",
 		solutiondir .. "/%{IncludeDir.glm}",
