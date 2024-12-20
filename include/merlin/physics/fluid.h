@@ -1,6 +1,9 @@
 #pragma once
-class fluid :
-    public BasePhysicsEntity
-{
-};
+#include "merlin/physics/physicsModifier.h"
 
+namespace Merlin {
+    class Fluid :
+        public PhysicsModifier
+    {
+    };
+}

@@ -1,12 +1,10 @@
-#pragma once
+#include "glpch.h"
 #include "merlin/physics/physicsModifier.h"
 
 namespace Merlin {
 
-	class RigidBody : public PhysicsModifier {
 
-	};
+
+
 
 }
-
-

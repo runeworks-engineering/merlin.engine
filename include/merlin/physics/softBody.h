@@ -1,15 +1,11 @@
 #pragma once
-#include "basePhysicsEntity.h"
+#include "merlin/physics/physicsModifier.h"
 
 namespace Merlin {
-    class SoftBody : public BasePhysicsEntity {
-    public:
-        SoftBody() : BasePhysicsEntity();
 
-        void stepPhysics(float dt) override {};
+	class SoftBody : public PhysicsModifier {
 
-    private:
-
-    };
+	};
 
 }
+

@@ -3,10 +3,8 @@
 
 namespace Merlin {
 
-	class RigidBody : public PhysicsModifier {
+    class HeatTransfer :public PhysicsModifier{
 
-	};
+    };
 
 }
-
-

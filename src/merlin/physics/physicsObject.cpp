@@ -1,5 +1,5 @@
 #include "glpch.h"
-#include "merlin/physics/softBody.h"
+#include "merlin/physics/physicsObject.h"
 
 namespace Merlin {
 
