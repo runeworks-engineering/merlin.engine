@@ -4,11 +4,9 @@
 #include "merlin/textures/texture.h"
 #include "merlin/textures/textureMultisampled.h"
 #include "merlin/memory/renderBuffer.h"
-#include "merlin/graphics/screenQuadRenderer.h"
-
 
 namespace Merlin {
-
+    class ScreenQuadRenderer;
     class FrameBuffer{
     public:
         FrameBuffer(int width, int height);
@@ -23,20 +21,14 @@ namespace Merlin {
         inline GLuint const id() { return _FrameBufferID; }
          
         void setDrawBuffer(std::vector<unsigned int> buffers = std::vector<unsigned int>());
-        //std::shared_ptr<TextureBase> getColorAttachment(GLsizei id);
-        //std::shared_ptr<TextureBase> getDepthStencilAttachement();
 
         void attachColorTexture(Shared<TextureBase> tex);
         void attachDepthStencilRBO(Shared<RenderBuffer> rbo);
         void attachDepthStencilTexture(Shared<TextureBase> tex);
-        //void setDepthAttachment(Shared<RenderBuffer> rbo);
-        //void setDepthAttachment(Shared<TextureBase> tex);
+
 
         void renderAttachement(GLuint id);
-        //void renderDepthAttachement();
 
-        //std::shared_ptr<TextureBase> createTextureAttachment(GLenum format, GLuint samples = 0);
-        //std::shared_ptr<RenderBuffer> createRenderBufferAttachment(GLenum format, GLuint samples = 0);
 
         static std::shared_ptr<FrameBuffer> create(int width, int height);
         
@@ -51,8 +43,6 @@ namespace Merlin {
         int _height = 0;
 
         GLuint _FrameBufferID;
-
-        inline static Shared<ScreenQuadRenderer> m_texRenderer = nullptr;
     };
 
     typedef FrameBuffer FBO;

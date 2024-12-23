@@ -1,6 +1,5 @@
 #pragma once
 #include "merlin/core/core.h"
-#include "merlin/graphics/material.h"
 #include "merlin/textures/texture.h"
 #include "merlin/shaders/shader.h"
 #include "merlin/shaders/phongShader.h"
@@ -67,22 +66,22 @@ namespace Merlin {
     private:
         Texture2D_Ptr m_albedo_tex;
         Texture2D_Ptr m_normal_tex;
-        Texture2D_Ptr m_metalness_tex;
+        Texture2D_Ptr m_metalic_tex;
         Texture2D_Ptr m_roughness_tex;
         Texture2D_Ptr m_ao_tex; // Ambient Occlusion Texture
 
         glm::vec3 m_albedo_color;
-        float m_metalness;
+        float m_metalic;
         float m_roughness;
         float m_ao;
 
     public:
-        PBRMaterial(std::string name) : MaterialBase(name, MaterialType::PBR), m_albedo_color(1.0f, 1.0f, 1.0f), m_metalness(0.0f), m_roughness(1.0f), m_ao(1.0f) {}
+        PBRMaterial(std::string name) : MaterialBase(name, MaterialType::PBR), m_albedo_color(1.0f, 1.0f, 1.0f), m_metalic(0.0f), m_roughness(1.0f), m_ao(1.0f) {}
 
         // Setters for textures
         inline void setAlbedoTexture(Texture2D_Ptr tex) { m_albedo_tex = tex; }
         inline void setNormalTexture(Texture2D_Ptr tex) { m_normal_tex = tex; }
-        inline void setMetallicTexture(Texture2D_Ptr tex) { m_metalness_tex = tex; }
+        inline void setMetallicTexture(Texture2D_Ptr tex) { m_metalic_tex = tex; }
         inline void setRoughnessTexture(Texture2D_Ptr tex) { m_roughness_tex = tex; }
         inline void setAOTexture(Texture2D_Ptr tex) { m_ao_tex = tex; }
 
@@ -90,7 +89,7 @@ namespace Merlin {
 
         // Setters for material properties
         void setAlbedoColor(const glm::vec3& color) { m_albedo_color = color; }
-        void setMetallic(float value) { m_metalness = value; }
+        void setMetallic(float value) { m_metalic = value; }
         void setRoughness(float value) { m_roughness = value; }
         void setAO(float value) { m_ao = value; }
 

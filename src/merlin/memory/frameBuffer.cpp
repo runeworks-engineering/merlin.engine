@@ -16,10 +16,6 @@ namespace Merlin {
             Console::info("FrameBuffer") << "This implementation support at max " << MaxColorAttachement << " color attachement" << Console::endl;
         }
 
-        if (!m_texRenderer) {
-            m_texRenderer = createShared<ScreenQuadRenderer>();
-        }
-
         // Generate and bind the framebuffer object
         glGenFramebuffers(1, &_FrameBufferID);
     }

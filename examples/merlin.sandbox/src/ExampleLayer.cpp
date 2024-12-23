@@ -115,16 +115,16 @@ void ExampleLayer::onAttach(){
 
 	scene.add(TransformObject::create("origin", 2));
 
-	noise = ComputeShader::create("noise", "assets/noise.comp");
-	glm::ivec3 pWkgSize = glm::ivec3(8, 8, 8); //Number of thread per workgroup
-	glm::ivec3 pWkgCount = (volume_size + pWkgSize - glm::ivec3(1)) / pWkgSize; //Total number of workgroup needed
-	noise->SetWorkgroupLayout(pWkgCount);
+	//noise = ComputeShader::create("noise", "assets/noise.comp");
+	//glm::ivec3 pWkgSize = glm::ivec3(8, 8, 8); //Number of thread per workgroup
+	//glm::ivec3 pWkgCount = (volume_size + pWkgSize - glm::ivec3(1)) / pWkgSize; //Total number of workgroup needed
+	//noise->SetWorkgroupLayout(pWkgCount);
 
-	volume = Texture3D::create(volume_size.x, volume_size.y, volume_size.z, 4, 16);
+	//volume = Texture3D::create(volume_size.x, volume_size.y, volume_size.z, 4, 16);
 
-	isosurface = IsoSurface::create("isosurface", volume);
-	isosurface->mesh()->setMaterial("gold");
-	scene.add(isosurface);
+	//isosurface = IsoSurface::create("isosurface", volume);
+	//isosurface->mesh()->setMaterial("gold");
+	//scene.add(isosurface);
 }
 
 
@@ -146,6 +146,7 @@ void ExampleLayer::onUpdate(Timestep ts){
 	float y = light->position().y;
 	light->translate(glm::vec3(cos(t)* radius - x, sin(t)* radius - y, 0.0));
 
+	/*
 	volume->bindImage(0);
 	noise->use();
 	noise->setFloat("u_time", glfwGetTime());
@@ -158,7 +159,7 @@ void ExampleLayer::onUpdate(Timestep ts){
 
 	isosurface->setIsoLevel(0.1);
 	isosurface->compute();
-
+	*/
 	renderer.clear();
 	renderer.renderScene(scene, *camera);
 }

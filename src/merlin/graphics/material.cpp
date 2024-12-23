@@ -1,7 +1,5 @@
 #include "pch.h"
 #include "merlin/graphics/material.h"
-#include "merlin/shaders/shader.h"
-#include <glm/glm.hpp>
 
 namespace Merlin {
 
@@ -128,13 +126,13 @@ namespace Merlin {
 			m_normal_tex->syncTextureUnit(shader, "normal_tex");
 		}//use vertex normal otherwise
 
-		shader.setInt("material.use_metallic_tex", m_metalness_tex != nullptr && shader.supportTexture());
-		if (m_metalness_tex && shader.supportTexture()) {
-			m_metalness_tex->autoSetUnit();
-			m_metalness_tex->bind();
-			m_metalness_tex->syncTextureUnit(shader, "metalness_tex");
+		shader.setInt("material.use_metallic_tex", m_metalic_tex != nullptr && shader.supportTexture());
+		if (m_metalic_tex && shader.supportTexture()) {
+			m_metalic_tex->autoSetUnit();
+			m_metalic_tex->bind();
+			m_metalic_tex->syncTextureUnit(shader, "metalness_tex");
 		}
-		else shader.setFloat("material.metalness", m_metalness);
+		else shader.setFloat("material.metalness", m_metalic);
 
 		shader.setInt("material.use_roughness_tex", m_roughness_tex != nullptr && shader.supportTexture());
 		if (m_roughness_tex && shader.supportTexture()) {
@@ -150,7 +148,7 @@ namespace Merlin {
 			m_ao_tex->bind();
 			m_ao_tex->syncTextureUnit(shader, "ao_tex");
 		}
-		else shader.setFloat("material.ao", m_metalness);
+		else shader.setFloat("material.ao", m_ao);
 	}
 
 
@@ -163,8 +161,8 @@ namespace Merlin {
 			m_normal_tex->unbind();
 		}
 
-		if (m_metalness_tex) {
-			m_metalness_tex->unbind();
+		if (m_metalic_tex) {
+			m_metalic_tex->unbind();
 		}
 		
 		if (m_roughness_tex) {

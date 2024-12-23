@@ -47,7 +47,7 @@ project "merlin.example2D"
 
 	links
 	{
-		"merlin.core",
+		"merlin",
 		"glad",
 		"glfw",
 		"imgui",

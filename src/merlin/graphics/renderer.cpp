@@ -7,46 +7,14 @@
 
 namespace Merlin {
 
-	Renderer::Renderer() : currentTransform(glm::mat4(1.0)) {}
+	Renderer::Renderer() {}
 
 	Renderer::~Renderer() {}
 
-	void Renderer::initialize() {
-		resetGlobalTransform();
-		enableMultisampling();
-		enableSampleShading();
-		enableDepthTest();
-		enableCubeMap();
-		enableFaceCulling();
-		m_defaultEnvironment = createShared<Environment>("defaultEnvironment", 16);
-		m_defaultAmbient = createShared<AmbientLight>("defaultAmbientLight");
-		m_defaultAmbient->setAmbient(glm::vec3(0.2));
-		m_defaultDirLight = createShared<DirectionalLight>("defaultDirLight", glm::vec3(1,-0.6,-1)* glm::vec3(3));
-		m_defaultDirLight2 = createShared<DirectionalLight>("defaultDirLight2", glm::vec3(-0.5,0.6,-1)*glm::vec3(3));
-		m_defaultDirLight3 = createShared<DirectionalLight>("defaultDirLight3", glm::vec3(-1.0,-0.6,-0.6)* glm::vec3(3));
-	}
-
-	void Renderer::pushMatrix() {
-		matrixStack.push(currentTransform);
-	}
-
-	void Renderer::popMatrix() {
-		if (!matrixStack.empty()) {
-			currentTransform = matrixStack.top();
-			matrixStack.pop();
-		}
-	}
-
-	void Renderer::resetMatrix() {
-		while(!matrixStack.empty()) {
-			matrixStack.pop();
-		}
-		currentTransform = m_globalTransform;
-	}
 
 	void Renderer::gatherLights(const Shared<RenderableObject>& object) {
 		if (const auto light = std::dynamic_pointer_cast<Light>(object)) {
-			light->applyRenderTransform(currentTransform);
+			light->applyRenderTransform(m_currentTransform);
 			m_activeLights.push_back(light);
 		}
 		if (const auto mesh = std::dynamic_pointer_cast<Mesh>(object)) {
@@ -137,12 +105,12 @@ namespace Merlin {
 	void Renderer::renderDepth(const Shared<RenderableObject>& object, Shared<Shader> shader){
 		if (debug)Console::info() << "Rendering Depth" << Console::endl;
 		pushMatrix();
-		currentTransform *= object->transform();
+		m_currentTransform *= object->transform();
 
 		//The object is a mesh
 		if (const auto mesh = std::dynamic_pointer_cast<Mesh>(object)) {
 			if (mesh->castShadow()) {
-				shader->setMat4("model", currentTransform); //sync model matrix with GPU
+				shader->setMat4("model", m_currentTransform); //sync model matrix with GPU
 				mesh->draw();
 			}
 		}else if (const auto model = std::dynamic_pointer_cast<Model>(object)) {
@@ -168,7 +136,7 @@ namespace Merlin {
 		shader->use();
 		shader->setVec3("light_color", li.diffuse() + li.ambient() + li.specular());
 
-		shader->setMat4("model", currentTransform); //sync model matrix with GPU
+		shader->setMat4("model", m_currentTransform); //sync model matrix with GPU
 
 		shader->setMat4("view", camera.getViewMatrix()); //sync model matrix with GPU
 		shader->setMat4("projection", camera.getProjectionMatrix()); //sync model matrix with GPU
@@ -217,7 +185,7 @@ namespace Merlin {
 		else m_defaultEnvironment->attach(*shader);
 
 		if (shader->supportLights()) shader->setVec3("viewPos", camera.getPosition()); //sync model matrix with GPU
-		shader->setMat4("model", currentTransform); //sync model matrix with GPU
+		shader->setMat4("model", m_currentTransform); //sync model matrix with GPU
 		shader->setMat4("view", camera.getViewMatrix()); //sync model matrix with GPU
 		if(shader->supportLights()) shader->setInt("use_flat_shading", mesh.useFlatShading());
 		if(shader->supportShadows()) shader->setInt("useShadows", use_shadows);
@@ -301,7 +269,7 @@ namespace Merlin {
 
 			shader->use();
 			shader->setVec3("viewPos", camera.getPosition()); //sync model matrix with GPU
-			shader->setMat4("model", currentTransform); //sync model matrix with GPU
+			shader->setMat4("model", m_currentTransform); //sync model matrix with GPU
 			shader->setMat4("view", camera.getViewMatrix()); //sync model matrix with GPU
 			shader->setMat4("projection", camera.getProjectionMatrix()); //sync model matrix with GPU
 
@@ -345,7 +313,7 @@ namespace Merlin {
 			}
 
 			if (shader->supportLights()) shader->setVec3("viewPos", camera.getPosition()); //sync model matrix with GPU
-			shader->setMat4("model", currentTransform); //sync model matrix with GPU
+			shader->setMat4("model", m_currentTransform); //sync model matrix with GPU
 			shader->setMat4("view", camera.getViewMatrix()); //sync model matrix with GPU
 			if (shader->supportShadows())shader->setInt("useShadows", use_shadows);
 
@@ -377,7 +345,7 @@ namespace Merlin {
 
 	void Renderer::render(const Shared<RenderableObject>& object, const Camera& camera) {
 		pushMatrix();
-		currentTransform *= object->transform();
+		m_currentTransform *= object->transform();
 
 		if (object->isWireFrame()) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		else glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -414,41 +382,5 @@ namespace Merlin {
 		popMatrix();
 	}
 
-	Shared<Shader> Renderer::getShader(std::string n) {
-		return ShaderLibrary::instance().get(n);
-	}
 
-	Shared<MaterialBase> Renderer::getMaterial(std::string n) {
-		return MaterialLibrary::instance().get(n);
-	}
-
-	void Renderer::loadShader(const std::string& name, const std::string& vertexShaderPath, const std::string& fragmentShaderPath, const std::string& geomShaderPath) {
-		Shared<Shader> shader = Shader::create(name, vertexShaderPath, fragmentShaderPath, geomShaderPath);
-		ShaderLibrary::instance().add(shader);
-	}
-
-	void Renderer::addMaterial(Shared<MaterialBase> material) {
-		MaterialLibrary::instance().add(material);
-	}
-
-	void Renderer::addShader(Shared<Shader> shader) {
-		if (!shader->isCompiled()) Console::error("Renderer") << "Shader is not compiled. Compile the shader before adding them to the ShaderLibrary" << Console::endl;
-		ShaderLibrary::instance().add(shader);
-	}
-
-	void Renderer::clear() {
-		RendererBase::clear();
-		resetMatrix();
-		m_activeLights.clear();
-		Texture2D::resetTextureUnits();
-		//Console::success() << "Cleared screen" << Console::endl;
-	}
-
-	void Renderer::setEnvironmentGradientColor(float r, float g, float b) {
-		setEnvironmentGradientColor(glm::vec3(r, g, b));
-	}
-	void Renderer::setEnvironmentGradientColor(glm::vec3 color) {
-		if (m_currentEnvironment) m_currentEnvironment->setGradientColor(color);
-		m_defaultEnvironment->setGradientColor(color);
-	}
 }

@@ -29,8 +29,6 @@ project "merlin.example"
 	   ["Assets/*"] = "assets/**.*"
 	}
 
-	includedirs { solutiondir .. "/vendor/glfw/include" }
-
 	filter { "system:windows" }
 		ignoredefaultlibraries { "msvcrt" }
 
@@ -38,6 +36,7 @@ project "merlin.example"
 	{
 		solutiondir .. "/include",
 		solutiondir .. "/vendor",
+		solutiondir .. "/%{IncludeDir.glfw}",
 		solutiondir .. "/%{IncludeDir.glm}",
 		solutiondir .. "/%{IncludeDir.glad}",
 		solutiondir .. "/%{IncludeDir.tinyfiledialogs}",

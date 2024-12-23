@@ -47,7 +47,7 @@ project "merlin.particles"
 
 	links
 	{
-		"merlin.core",
+		"merlin",
 		"glad",
 		"glfw",
 		"imgui",
