@@ -17,7 +17,6 @@ namespace Merlin {
 		geometryPass(scene, camera);
 		lightingPass(camera);
 		finalCompositionPass();
-
 	}
 
 	void DeferredRenderer::renderEnvironment(const Environment& env, const Camera& camera){

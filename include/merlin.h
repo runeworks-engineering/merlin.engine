@@ -11,6 +11,7 @@
 #include "merlin/memory/ssbo.h"
 
 #include "merlin/graphics/renderer.h"
+#include "merlin/graphics/deferredrenderer.h"
 #include "merlin/graphics/screenQuadrenderer.h"
 
 #include "merlin/scene/cameraController.h"

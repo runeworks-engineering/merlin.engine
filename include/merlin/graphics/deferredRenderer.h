@@ -36,7 +36,6 @@ namespace Merlin {
 		void finalCompositionPass();
 
 		// Environment and post-processing
-		void renderEnvironment(const Environment& env, const Camera& camera);
 		void applyPostProcessing();
 
 

@@ -25,7 +25,8 @@ private:
 	IsoSurface_Ptr isosurface;
 
 	Scene scene;
-	Renderer renderer;
+	//Renderer renderer;
+	DeferredRenderer renderer;
 
 	Shared<PointLight>  light;
 
