@@ -12,8 +12,9 @@ namespace Merlin {
 	class RendererBase {
 	public:
 		RendererBase();
-		~RendererBase();
+		virtual ~RendererBase() = default;
 
+		virtual void reset();
 		virtual void clear();
 		void setBackgroundColor(float r, float g, float b, float a);
 

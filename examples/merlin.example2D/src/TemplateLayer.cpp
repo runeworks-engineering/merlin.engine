@@ -51,6 +51,7 @@ void TemplateLayer::onUpdate(Timestep ts){
 
 	renderer.clear();
 	renderer.renderScene(scene, camera());
+	renderer.reset();
 }
 
 void TemplateLayer::onImGuiRender(){	

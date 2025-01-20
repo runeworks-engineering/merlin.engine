@@ -24,36 +24,27 @@ namespace Merlin {
 		void renderEnvironment(const Environment& env, const Camera& camera);
 		void renderParticleSystem(const ParticleSystem& ps, const Camera& camera);
 		void renderTransformObject(const TransformObject& obj, const Camera& camera);
-	
-	public:
-
-		// Light management
 		void renderDepth(const Shared<RenderableObject>& object, Shared<Shader> depthShader);
 
-		// G-buffer and lighting pass management
 		void geometryPass(const Scene& scene, const Camera& camera);
 		void lightingPass(const Camera& camera);
 		void finalCompositionPass();
-
-		// Environment and post-processing
 		void applyPostProcessing();
 
-
+		void setupGBuffer(int width, int height);
+		void bindGBuffer();
+		void unbindGBuffer();
 	private:
 
-		FBO_Ptr g_buffer;
+		FBO_Ptr g_buffer; //Geometry pass
+		FBO_Ptr g_buffer_final; //For post-process
 
-		// G-buffer setup
-		GLuint m_gBuffer;
-		GLuint m_gPosition, m_gNormal, m_gAlbedoSpec, m_gMaterial;
+		Shader_Ptr m_lightingShader;
+		Shader_Ptr m_postProcessShader;
 
 		// Post-processing and tone mapping
 		bool m_enablePostProcessing = true;
 
-		// Utility functions
-		void setupGBuffer(int width, int height);
-		void bindGBuffer();
-		void unbindGBuffer();
 	};
 
 }

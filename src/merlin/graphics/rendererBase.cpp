@@ -30,7 +30,9 @@ namespace Merlin {
 	void RendererBase::clear() {
 		glClearColor(backgroundColor[0], backgroundColor[1], backgroundColor[2], backgroundColor[3]);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
 
+	void RendererBase::reset() {
 		resetMatrix();
 		m_activeLights.clear();
 		Texture2D::resetTextureUnits();

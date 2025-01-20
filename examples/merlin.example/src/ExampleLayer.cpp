@@ -212,6 +212,7 @@ void ExampleLayer::onUpdate(Timestep ts){
 
 	renderer.clear();
 	renderer.renderScene(scene, camera());
+	renderer.reset();
 }
 
 void ExampleLayer::onImGuiRender()

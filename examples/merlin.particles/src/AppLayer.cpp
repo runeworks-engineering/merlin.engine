@@ -129,6 +129,7 @@ void AppLayer::onUpdate(Timestep ts){
 	ps->solveLink(ps->getShader());
 	renderer.clear();
 	renderer.renderScene(scene, camera());
+	renderer.reset();
 	ps->detach(ps->getShader());
 
 	ps->solveLink(solver);

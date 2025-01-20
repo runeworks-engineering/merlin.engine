@@ -14,6 +14,18 @@ namespace Merlin {
 
 	void DeferredRenderer::renderScene(const Scene& scene, const Camera& camera) {
 		if (debug)Console::info() << "Rendering scene" << Console::endl;
+
+		for (const auto& node : scene.nodes()) {
+			if (!node->isHidden()) gatherLights(node);
+		}
+
+		if (m_activeLights.size() == 0 || use_default_light) {
+			m_activeLights.push_back(m_defaultAmbient);
+			m_activeLights.push_back(m_defaultDirLight);
+			m_activeLights.push_back(m_defaultDirLight2);
+			m_activeLights.push_back(m_defaultDirLight3);
+		}
+
 		geometryPass(scene, camera);
 		lightingPass(camera);
 		finalCompositionPass();
@@ -47,15 +59,67 @@ namespace Merlin {
 	}
 
 	void DeferredRenderer::geometryPass(const Scene& scene, const Camera& camera){
+		bindGBuffer();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		for (const auto& node : scene.nodes()) {
+			if (!node->isHidden()) render(node, camera);
+		}
+
+		unbindGBuffer();
+	}
+
+	void DeferredRenderer::lightingPass(const Camera& camera){
+
+		g_buffer_final->bind();
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		m_lightingShader->use();
+
+		// Bind G-buffer textures
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_gPosition);
+		
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, m_gNormal);
+
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, m_gAlbedoSpec);
+
+		// If you have extra textures, bind them as well
+		// glActiveTexture(GL_TEXTURE3);
+		// glBindTexture(GL_TEXTURE_2D, m_gMaterial);
+
+		// Set shader uniforms, e.g. camera info, light info
+		// m_lightingShader->setUniform("viewPos", camera.getPosition());
+
+		// Possibly pass an array of lights or do multiple passes
+		// for (int i = 0; i < lights.size(); i++) { ... }
+
+		// Render a full-screen quad
+		//renderFullScreenQuad();
+
+		g_buffer_final->unbind();
 
 	}
 
-	void DeferredRenderer::lightingPass(const Camera& camera)
-	{
-	}
+	void DeferredRenderer::finalCompositionPass(){
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	void DeferredRenderer::finalCompositionPass()
-	{
+		// Possibly a "final composition" shader
+		m_postProcessShader->use();
+
+		// Bind the color texture from the lighting pass FBO
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, m_lightingColorBuffer);
+
+		// render a fullscreen quad
+		//renderFullScreenQuad();
+
 	}
 
 	void DeferredRenderer::renderLight(const Light& li, const Camera& camera){
