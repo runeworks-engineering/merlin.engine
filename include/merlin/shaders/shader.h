@@ -37,7 +37,7 @@ namespace Merlin {
 			const std::string& geometry_src = "");
 
 
-		static Shared<Shader> create(	const std::string& name,
+		static shared<Shader> create(	const std::string& name,
 										const std::string& vertex_file_path,
 										const std::string& fragment_file_path,
 										const std::string& geometry_file_path = "", bool compile = true);
@@ -74,6 +74,6 @@ namespace Merlin {
 		std::string GeomShaderSrc = "";
 	};
 
-	typedef Shared<Shader> Shader_Ptr;
+	typedef shared<Shader> Shader_Ptr;
 }
 

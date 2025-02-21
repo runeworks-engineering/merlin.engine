@@ -53,7 +53,7 @@ namespace Merlin {
 	}
 
 
-	void DeferredRenderer::renderDepth(const Shared<RenderableObject>& object, Shared<Shader> shader){
+	void DeferredRenderer::renderDepth(const shared<RenderableObject>& object, shared<Shader> shader){
 		if (debug)Console::info() << "Rendering Depth" << Console::endl;
 
 	}
@@ -78,16 +78,16 @@ namespace Merlin {
 		m_lightingShader->use();
 
 		// Bind G-buffer textures
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_gPosition);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, m_gPosition);
 		
 
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, m_gNormal);
+		//glActiveTexture(GL_TEXTURE1);
+		//glBindTexture(GL_TEXTURE_2D, m_gNormal);
 
 
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, m_gAlbedoSpec);
+		//glActiveTexture(GL_TEXTURE2);
+		//glBindTexture(GL_TEXTURE_2D, m_gAlbedoSpec);
 
 		// If you have extra textures, bind them as well
 		// glActiveTexture(GL_TEXTURE3);
@@ -114,8 +114,8 @@ namespace Merlin {
 		m_postProcessShader->use();
 
 		// Bind the color texture from the lighting pass FBO
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, m_lightingColorBuffer);
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, m_lightingColorBuffer);
 
 		// render a fullscreen quad
 		//renderFullScreenQuad();
@@ -144,7 +144,7 @@ namespace Merlin {
 		render(obj.getZAxisMesh(), camera);
 	}
 
-	void DeferredRenderer::render(const Shared<RenderableObject>& object, const Camera& camera) {
+	void DeferredRenderer::render(const shared<RenderableObject>& object, const Camera& camera) {
 		pushMatrix();
 		m_currentTransform *= object->transform();
 

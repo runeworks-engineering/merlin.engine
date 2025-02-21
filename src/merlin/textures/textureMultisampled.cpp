@@ -41,8 +41,8 @@ namespace Merlin {
 		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_samples, m_internalFormat, m_width, m_height, GL_TRUE);
 	}
 
-	Shared<TextureMultisampled2D> TextureMultisampled2D::create(GLuint width, GLuint height, GLuint samples, TextureType t){
-		Shared<TextureMultisampled2D> tex = createShared<TextureMultisampled2D>(samples, t);
+	shared<TextureMultisampled2D> TextureMultisampled2D::create(GLuint width, GLuint height, GLuint samples, TextureType t){
+		shared<TextureMultisampled2D> tex = createShared<TextureMultisampled2D>(samples, t);
 
 		ChannelsProperty cb = TextureBase::getChannelsProperty(t);
 

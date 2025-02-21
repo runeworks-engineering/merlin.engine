@@ -21,8 +21,8 @@ namespace Merlin{
 		void reserve(GLuint width, GLuint height, GLuint depth = 0, GLuint channels = 3, GLuint bits = 8) override;
 		void resize(GLuint width, GLuint height, GLuint depth = 0) override;
 
-		static Shared<CubeMap> create(GLuint width, GLuint height, TextureType = TextureType::ENVIRONMENT);
-		static Shared<CubeMap> create(const std::vector<std::string>& paths, TextureType = TextureType::ENVIRONMENT);
+		static shared<CubeMap> create(GLuint width, GLuint height, TextureType = TextureType::ENVIRONMENT);
+		static shared<CubeMap> create(const std::vector<std::string>& paths, TextureType = TextureType::ENVIRONMENT);
 
 	private:
 		void loadFromFiles(const std::vector<std::string>& faces);

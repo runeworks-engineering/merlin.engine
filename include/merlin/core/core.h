@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include "merlin/core/glObject.h"
@@ -36,17 +35,17 @@
 
 
 template<typename T>
-using Scope = std::unique_ptr<T>;
+using scope = std::unique_ptr<T>;
 template<typename T, typename ... Args>
-constexpr Scope<T> createScope(Args&& ... args)
+constexpr scope<T> createScope(Args&& ... args)
 {
 	return std::make_unique<T>(std::forward<Args>(args)...);
 }
 
 template<typename T>
-using Shared = std::shared_ptr<T>;
+using shared = std::shared_ptr<T>;
 template<typename T, typename ... Args>
-constexpr Shared<T> createShared(Args&& ... args)
+constexpr shared<T> createShared(Args&& ... args)
 {
 	return std::make_shared<T>(std::forward<Args>(args)...);
 }

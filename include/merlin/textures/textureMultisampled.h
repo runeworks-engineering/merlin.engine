@@ -12,7 +12,7 @@ namespace Merlin {
 		void reserve(GLuint width, GLuint height, GLuint depth = 0, GLuint channels = 3, GLuint bits = 8) override;
 		void resize(GLuint width, GLuint height, GLuint depth = 0) override;
 
-		static Shared<TextureMultisampled2D> create(GLuint width, GLuint height, GLuint samples, TextureType = TextureType::ALBEDO);
+		static shared<TextureMultisampled2D> create(GLuint width, GLuint height, GLuint samples, TextureType = TextureType::ALBEDO);
 	private:
 		GLuint m_samples;
 	};

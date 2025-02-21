@@ -12,26 +12,26 @@ namespace Merlin {
 	class CameraController {
 	public:
 
-		CameraController(Shared<Camera> cam) : _Camera(cam) {}
+		CameraController(shared<Camera> cam) : _Camera(cam) {}
 		virtual void onUpdate(Timestep ts) = 0;
 		virtual void onEvent(Event& e) = 0;
 
 		Camera& getCamera() const { return *_Camera; }
-		Shared<Camera> shareCamera() const { return _Camera; }
+		shared<Camera> shareCamera() const { return _Camera; }
 		float getCameraSpeed() const { return _CameraSpeed; }
 		void setCameraSpeed(float speed) { _CameraSpeed = speed; }
 		void setZoomLevel(float zl);
 
 
 	protected:
-		Shared<Camera> _Camera;
+		shared<Camera> _Camera;
 		float _CameraSpeed = 1.0f;
 		float _ZoomLevel = 1.0f;
 	};
 
 	class CameraController3D : public CameraController {
 	public:
-		CameraController3D(Shared<Camera> cam);
+		CameraController3D(shared<Camera> cam);
 		virtual void onUpdate(Timestep ts) override;
 		virtual void onEvent(Event& e) override;
 
@@ -49,7 +49,7 @@ namespace Merlin {
 
 	class CameraController2D : public CameraController {
 	public:
-		CameraController2D(Shared<Camera> Camera);
+		CameraController2D(shared<Camera> Camera);
 		void onUpdate(Timestep ts) override;
 		void onEvent(Event& e) override;
 		
@@ -61,5 +61,5 @@ namespace Merlin {
 		glm::vec2 _deltaMousePos = { 0.0f, 0.0f };
 	};
 
-	typedef Shared<CameraController> CameraController_Ptr;
+	typedef shared<CameraController> CameraController_Ptr;
 }

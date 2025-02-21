@@ -317,8 +317,8 @@ namespace Merlin {
 		delete[] data;
 	}
 
-	Shared<Texture2D> Texture2D::create(GLuint width, GLuint height, TextureType t){
-		Shared<Texture2D> tex = createShared<Texture2D>(t);
+	shared<Texture2D> Texture2D::create(GLuint width, GLuint height, TextureType t){
+		shared<Texture2D> tex = createShared<Texture2D>(t);
 		tex->bind();
 
 		if (t == TextureType::SHADOW || t == TextureType::DEPTH) {
@@ -336,8 +336,8 @@ namespace Merlin {
 		return tex;
 	}
 
-	Shared<Texture2D> Texture2D::create(const ImageData& data, TextureType t){
-		Shared<Texture2D> tex = createShared<Texture2D>(t);
+	shared<Texture2D> Texture2D::create(const ImageData& data, TextureType t){
+		shared<Texture2D> tex = createShared<Texture2D>(t);
 		tex->bind();
 		tex->loadFromData(data);
 		tex->setInterpolationMode();
@@ -347,10 +347,10 @@ namespace Merlin {
 		return tex;
 	}
 
-	Shared<Texture2D> Texture2D::create(const std::string& path, TextureType t, bool flipped){
+	shared<Texture2D> Texture2D::create(const std::string& path, TextureType t, bool flipped){
 		ImageData data = TextureLoader::loadImageData(path, flipped);
 		
-		Shared<Texture2D> tex = createShared<Texture2D>(t);
+		shared<Texture2D> tex = createShared<Texture2D>(t);
 		tex->bind();
 		tex->loadFromData(data);
 		// Clean up if necessary
@@ -361,9 +361,9 @@ namespace Merlin {
 		return tex;
 	}
 	
-	Shared<Texture2D> Texture2D::create(GLuint width, GLuint height, GLuint channels, GLuint bits, TextureType type){
+	shared<Texture2D> Texture2D::create(GLuint width, GLuint height, GLuint channels, GLuint bits, TextureType type){
 
-		Shared<Texture2D> tex = createShared<Texture2D>(type);
+		shared<Texture2D> tex = createShared<Texture2D>(type);
 		tex->bind();
 
 		tex->reserve(width, height, 0, channels, bits);
@@ -445,8 +445,8 @@ namespace Merlin {
 		glTexImage3D(GL_TEXTURE_3D, 0, m_internalFormat, m_width, m_height, m_depth, 0, m_format, m_dataType, nullptr);
 	}
 
-	Shared<Texture3D> Texture3D::create(GLuint width, GLuint height, GLuint depth, GLuint channels, GLuint bits) {
-		Shared<Texture3D> tex = createShared<Texture3D>(TextureType::VOLUME);
+	shared<Texture3D> Texture3D::create(GLuint width, GLuint height, GLuint depth, GLuint channels, GLuint bits) {
+		shared<Texture3D> tex = createShared<Texture3D>(TextureType::VOLUME);
 		tex->bind();
 		tex->setInterpolationMode();
 		tex->setRepeatMode();

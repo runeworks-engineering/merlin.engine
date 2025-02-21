@@ -6,28 +6,28 @@
 #include "merlin/memory/vao.h"
 
 namespace Merlin {
-	class ScreenQuadRenderer : public RendererBase {
+	class PixelRenderer : public RendererBase {
 	public:
 		// Constructor
-		ScreenQuadRenderer();
+		PixelRenderer();
 
 		// Render the screen quad
 		void render();
-		void render(const Shared<TextureBase>& tex);
+		void render(const shared<TextureBase>& tex);
 
 		inline VAO& getVAO() { return m_vao; }
 		inline Shader& getShader() { return *m_shader; }
-		inline void setShader(Shared<Shader> shader) { m_shader = shader;  m_shader->use(); m_shader->setInt("screen", 0); }
+		inline void setShader(shared<Shader> shader) { m_shader = shader;  m_shader->use(); m_shader->setInt("screen", 0); }
 
 	private:
 		//Empty vertex array object for the binding quad
 		VAO m_vao;
 		// Shader program for rendering the screen quad
-		Shared<Shader> m_shader;
+		shared<Shader> m_shader;
 	};
 
-	typedef ScreenQuadRenderer SQRenderer;
-	typedef Shared<ScreenQuadRenderer> ScreenQuadRenderer_Ptr;
+	typedef PixelRenderer SQRenderer;
+	typedef shared<PixelRenderer> ScreenQuadRenderer_Ptr;
 }
 
 

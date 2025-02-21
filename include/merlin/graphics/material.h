@@ -148,7 +148,7 @@ namespace Merlin {
     };
     /**/
 
-    typedef Shared<MaterialBase> Material_Ptr;
+    typedef shared<MaterialBase> Material_Ptr;
 
 
 }

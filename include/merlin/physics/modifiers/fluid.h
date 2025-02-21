@@ -2,8 +2,7 @@
 #include "merlin/physics/physicsModifier.h"
 
 namespace Merlin {
-    class Fluid :
-        public PhysicsModifier
-    {
+    class Fluid : public PhysicsModifier {
+
     };
 }

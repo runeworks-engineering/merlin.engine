@@ -4,7 +4,7 @@
 namespace Merlin {
 
 	void PhongMaterial::loadTexture(const std::string& path, TextureType t, bool flipped) {
-		Shared<Texture2D> tex = Texture2D::create(path, t, flipped);
+		shared<Texture2D> tex = Texture2D::create(path, t, flipped);
 		tex->setInterpolationMode(GL_LINEAR, GL_LINEAR);
 		tex->generateMipmap();
 		switch (t) {
@@ -23,7 +23,7 @@ namespace Merlin {
 	}
 
 	void PBRMaterial::loadTexture(const std::string& path, TextureType t) {
-		Shared<Texture2D> tex = Texture2D::create(path, t);
+		shared<Texture2D> tex = Texture2D::create(path, t);
 		switch (t){
 		case Merlin::TextureType::ALBEDO:
 			setAlbedoTexture(tex);
@@ -203,7 +203,7 @@ namespace Merlin {
 	}
 
 	void Material::loadTexture(std::string path, TextureType t) {
-		Shared<Texture2D> tex = createShared<Texture2D>(t);
+		shared<Texture2D> tex = createShared<Texture2D>(t);
 		tex->bind();
 		tex->loadFromFile(path);
 		tex->setInterpolationMode(GL_LINEAR);
@@ -211,10 +211,10 @@ namespace Merlin {
 		addTexture(tex);
 	}
 
-	Shared<Texture2D> GenerateDefaultTexture(TextureType t) {
+	shared<Texture2D> GenerateDefaultTexture(TextureType t) {
 
 		// create a 1x1 texture with the default color
-		Shared<Texture2D> defaultTexture = std::make_shared<Texture2D>(t); // Adapt this line to your Texture class
+		shared<Texture2D> defaultTexture = std::make_shared<Texture2D>(t); // Adapt this line to your Texture class
 		defaultTexture->bind();
 
 		ImageData data;

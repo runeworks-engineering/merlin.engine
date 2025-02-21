@@ -58,19 +58,19 @@ namespace Merlin {
 
 		bool hasShader() const;
 
-		inline void setMaterial(Shared<MaterialBase> material) { m_material = material; }
+		inline void setMaterial(shared<MaterialBase> material) { m_material = material; }
 		inline void setMaterial(std::string materialName) { m_materialName = materialName; }
 		inline bool hasMaterial() const { return m_material != nullptr; }
-		inline const Shared<MaterialBase> getMaterial() const { return m_material; }
+		inline const shared<MaterialBase> getMaterial() const { return m_material; }
 		inline const std::string& getMaterialName() const { return m_materialName; }
 
 		void link(const std::string& shader, const std::string& field);
-		void detach(Shared<ShaderBase>);
-		void solveLink(Shared<ShaderBase>);
+		void detach(shared<ShaderBase>);
+		void solveLink(shared<ShaderBase>);
 		bool hasLink(const std::string& name) const;
 
-		inline void setMesh(Shared<Mesh> geometry) { m_geometry = geometry; }
-		inline Shared<Mesh> getMesh() const { return m_geometry; }
+		inline void setMesh(shared<Mesh> geometry) { m_geometry = geometry; }
+		inline shared<Mesh> getMesh() const { return m_geometry; }
 
 		inline void setDisplayMode(ParticleSystemDisplayMode mode) { m_displayMode = mode; }
 		inline ParticleSystemDisplayMode getDisplayMode() const { return m_displayMode; }
@@ -82,14 +82,14 @@ namespace Merlin {
 		template<typename T>
 		void addBuffer(const std::string& name, GLsizei size = 0);
 
-		static Shared<ParticleSystem> create(const std::string&, size_t count = 1);
+		static shared<ParticleSystem> create(const std::string&, size_t count = 1);
 
 
 
 	protected:
 		//Rendering
 		std::string m_materialName = "default";
-		Shared<MaterialBase> m_material = nullptr;
+		shared<MaterialBase> m_material = nullptr;
 
 		Shader_Ptr m_shader = nullptr;
 		std::string m_shaderName = "default";
@@ -109,7 +109,7 @@ namespace Merlin {
 		std::string m_currentProgram = "";
 	};
 
-	typedef Shared<ParticleSystem> ParticleSystem_Ptr;
+	typedef shared<ParticleSystem> ParticleSystem_Ptr;
 
 	template<typename T>
 	void ParticleSystem::addField(const std::string& name) {

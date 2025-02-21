@@ -13,7 +13,7 @@ namespace Merlin {
         RessourceManager() = default;
 
         void add(const std::string& name, std::shared_ptr<T> resource);
-        Shared<T> get(const std::string& name);
+        shared<T> get(const std::string& name);
         bool exist(const std::string& name);
 
         inline unsigned int size() { return resources.size(); };
@@ -50,7 +50,7 @@ namespace Merlin {
     class ShaderLibrary : public RessourceManager<Shader> {
         SINGLETON(ShaderLibrary)
     public:
-        inline void add(Shared<Shader> shader) { RessourceManager::add(shader->name(), shader); };
+        inline void add(shared<Shader> shader) { RessourceManager::add(shader->name(), shader); };
 
     private:
         ShaderLibrary();
@@ -62,7 +62,7 @@ namespace Merlin {
     class MaterialLibrary : public RessourceManager<MaterialBase> {
         SINGLETON(MaterialLibrary)
     public:
-        inline void add(Shared<MaterialBase> mat) { RessourceManager::add(mat->name(), mat); };
+        inline void add(shared<MaterialBase> mat) { RessourceManager::add(mat->name(), mat); };
 
     private:
         MaterialLibrary();

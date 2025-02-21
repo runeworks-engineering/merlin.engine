@@ -32,7 +32,7 @@ namespace Merlin {
 
 
     using VAO = VertexArray;
-    using VAO_Ptr = Shared<VertexArray>;
+    using VAO_Ptr = shared<VertexArray>;
 
     template<class T>
     void VertexArray::bindBuffer(VertexBuffer<T>& vb, const VertexBufferLayout& layout) {

@@ -16,14 +16,14 @@ void AppLayer::setupScene() {
 	camera().setPosition(glm::vec3(0.7, -35, 7.4));
 	camera().setRotation(glm::vec3(70, 0, +90));
 
-	Shared<Model> bunny = ModelLoader::loadModel("./assets/common/models/bunny.stl");
+	shared<Model> bunny = ModelLoader::loadModel("./assets/common/models/bunny.stl");
 	bunny->meshes()[0]->smoothNormals();
 	bunny->setMaterial("pearl");
 	bunny->scale(0.2);
 	bunny->translate(glm::vec3(0, 0, -0.5));
 	//scene.add(bunny);
 
-	Shared<DirectionalLight>  dirlight;
+	shared<DirectionalLight>  dirlight;
 	/**/
 	dirlight = createShared<DirectionalLight>("light1", glm::vec3(-0.5f, 0.5f, -0.8f));
 	dirlight->translate(dirlight->direction() * glm::vec3(-10));
@@ -49,7 +49,7 @@ void AppLayer::setupScene() {
 	/**/
 
 	/**/
-	Shared<AmbientLight> amLight = createShared<AmbientLight>("light4");
+	shared<AmbientLight> amLight = createShared<AmbientLight>("light4");
 	amLight->setAmbient(glm::vec3(0.1));
 	scene.add(amLight);
 	/**/
@@ -149,7 +149,7 @@ void AppLayer::onImGuiRender()
 	ImGui::End();
 
 	// Define a recursive lambda function to traverse the scene graph
-	std::function<void(const std::list<Shared<RenderableObject>>&)> traverseNodes = [&](const std::list<Shared<RenderableObject>>& nodes){
+	std::function<void(const std::list<shared<RenderableObject>>&)> traverseNodes = [&](const std::list<shared<RenderableObject>>& nodes){
 		for (auto& node : nodes){
 			bool node_open = ImGui::TreeNode(node->name().c_str());
 			if (node_open){

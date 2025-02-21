@@ -50,10 +50,10 @@ namespace Merlin {
 		}
 
 		inline Camera& camera() { return *m_camera; };
-		inline Shared<Camera> getCamera() { return m_camera; };
+		inline shared<Camera> getCamera() { return m_camera; };
 	private:
-		Shared<Camera> m_camera;
-		Shared<CameraController2D> cameraController;
+		shared<Camera> m_camera;
+		shared<CameraController2D> cameraController;
 	};
 
 	class Layer3D : public Layer
@@ -72,11 +72,11 @@ namespace Merlin {
 		}
 
 		inline Camera& camera() { return *m_camera; };
-		inline Shared<Camera> getCamera() { return m_camera; };
+		inline shared<Camera> getCamera() { return m_camera; };
 
 	private:
-		Shared<Camera> m_camera;
-		Shared<CameraController3D> cameraController;
+		shared<Camera> m_camera;
+		shared<CameraController3D> cameraController;
 	};
 
 }

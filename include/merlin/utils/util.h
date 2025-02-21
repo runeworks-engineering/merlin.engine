@@ -27,6 +27,7 @@ namespace Merlin {
 	template<typename T>
 	void debugVector(std::vector<T>& vec);
 
+	std::string get_uuid();
 
 }
 

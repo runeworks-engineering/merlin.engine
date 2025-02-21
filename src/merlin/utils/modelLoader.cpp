@@ -53,7 +53,7 @@ namespace Merlin {
     }
 
 
-    Shared<Mesh> processMesh(const std::string& path, aiMesh* mesh, const aiScene* scene) {
+    shared<Mesh> processMesh(const std::string& path, aiMesh* mesh, const aiScene* scene) {
         std::vector<Vertex> vertices;
         std::vector<GLuint> indices;
 
@@ -107,7 +107,7 @@ namespace Merlin {
         }
 
         // Process material
-        Shared<MaterialBase> material = nullptr;
+        shared<MaterialBase> material = nullptr;
         if (mesh->mMaterialIndex >= 0) {
             aiMaterial* mat = scene->mMaterials[mesh->mMaterialIndex];
 
@@ -130,10 +130,10 @@ namespace Merlin {
             mat->Get(AI_MATKEY_SHININESS, shininess);
             phongMaterial->setShininess(shininess/128.0);
 
-            material = Shared<MaterialBase>(phongMaterial);
+            material = shared<MaterialBase>(phongMaterial);
         }
 
-        Shared<Mesh> newMesh = Mesh::create(mesh->mName.C_Str(), vertices, indices);
+        shared<Mesh> newMesh = Mesh::create(mesh->mName.C_Str(), vertices, indices);
         if (!mesh->HasNormals()) {
             newMesh->computeNormals();
         }
@@ -144,7 +144,7 @@ namespace Merlin {
         return newMesh;
     }
 
-    void processNode(const std::string& path, aiNode* node, const aiScene* scene, std::vector<Shared<Mesh>>& meshes) {
+    void processNode(const std::string& path, aiNode* node, const aiScene* scene, std::vector<shared<Mesh>>& meshes) {
         for (unsigned int i = 0; i < node->mNumMeshes; i++) {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
             meshes.push_back(processMesh(path, mesh, scene));
@@ -156,7 +156,7 @@ namespace Merlin {
     }
 
     // Load a model from the specified file and return a pointer to a new Mesh object
-    Shared<Mesh> ModelLoader::loadMesh(const std::string& file_path) {
+    shared<Mesh> ModelLoader::loadMesh(const std::string& file_path) {
 
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(file_path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
@@ -181,14 +181,14 @@ namespace Merlin {
             return nullptr;
         }
 
-        std::vector<Shared<Mesh>> meshes;
+        std::vector<shared<Mesh>> meshes;
         processNode(file_path, scene->mRootNode, scene, meshes);
 
         return meshes[0];
     }
 
 	// Load a model from the specified file and return a pointer to a new Mesh object
-    Shared<Model> ModelLoader::loadModel(const std::string& file_path) {
+    shared<Model> ModelLoader::loadModel(const std::string& file_path) {
 
         Assimp::Importer importer;
         const aiScene* scene = importer.ReadFile(file_path.c_str(), aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
@@ -213,10 +213,10 @@ namespace Merlin {
             return nullptr;
         }
 
-        std::vector<Shared<Mesh>> meshes;
+        std::vector<shared<Mesh>> meshes;
         processNode(file_path, scene->mRootNode, scene, meshes);
 
-        Shared<Model> mdl = Model::create(getFileName(file_path), meshes);
+        shared<Model> mdl = Model::create(getFileName(file_path), meshes);
        
 
         return mdl;
@@ -227,13 +227,13 @@ namespace Merlin {
 
 
     /*
-    void loadMTL(Shared<Model> mdl) {
+    void loadMTL(shared<Model> mdl) {
 
     }*/
 
 
 /*
-    Shared<Model> ModelLoader::LoadGLTF(const std::string& file_path) {
+    shared<Model> ModelLoader::LoadGLTF(const std::string& file_path) {
         tinygltf::Model gltf_model;
         tinygltf::TinyGLTF loader;
         std::string err;
@@ -254,9 +254,9 @@ namespace Merlin {
 
 
         // Process materials
-        std::vector<Shared<Material>> materials;
+        std::vector<shared<Material>> materials;
         for (const auto& gltf_material : gltf_model.materials) {
-            Shared<Material> material = std::make_shared<Material>(gltf_material.name);
+            shared<Material> material = std::make_shared<Material>(gltf_material.name);
 
             // Parse PBR properties
             const auto& pbr = gltf_material.pbrMetallicRoughness;
@@ -276,7 +276,7 @@ namespace Merlin {
                 const auto& texture = gltf_model.textures[pbr.baseColorTexture.index];
                 const auto& image = gltf_model.images[texture.source];
                 
-                Shared<Texture> tex = createShared<Texture>();
+                shared<Texture> tex = createShared<Texture>();
 
                 // Load the texture and add it to the material
                 material->setTexture(tex);
@@ -287,7 +287,7 @@ namespace Merlin {
         }
 
 
-        Shared<Model> model = Model::create(getFileName(file_path));
+        shared<Model> model = Model::create(getFileName(file_path));
 
         for (const auto& mesh : gltf_model.meshes) {
             for (const auto& primitive : mesh.primitives) {
@@ -335,7 +335,7 @@ namespace Merlin {
                 }
                 
 
-                Shared<Mesh> mesh_instance = Mesh::create(mesh.name, vertices, indices);
+                shared<Mesh> mesh_instance = Mesh::create(mesh.name, vertices, indices);
                 if (primitive.material >= 0) {
                     mesh_instance->setMaterial(materials[primitive.material]);
                 }

@@ -37,7 +37,7 @@ namespace Merlin {
 		Console::trace("Mesh") << "Loaded " << m_vertices.size() << " vertices." << Console::endl;
 	}
 
-	Mesh::Mesh(std::string name, GLsizei count, Shared<VBO<>> vbo, GLuint mode){
+	Mesh::Mesh(std::string name, GLsizei count, shared<VBO<>> vbo, GLuint mode){
 		m_drawMode = mode;
 		m_elementCount = count;
 		m_vao = createShared<VAO>();
@@ -46,7 +46,7 @@ namespace Merlin {
 		Console::info("Mesh") << "Loaded " << m_vertices.size() << " vertices." << Console::endl;
 	}
 
-	Mesh::Mesh(std::string name, GLsizei count, Shared<VBO<>> vbo, Shared<IBO> ebo, GLuint mode) {
+	Mesh::Mesh(std::string name, GLsizei count, shared<VBO<>> vbo, shared<IBO> ebo, GLuint mode) {
 		m_drawMode = mode;
 		m_elementCount = count;
 		m_vao = createShared<VAO>();
@@ -92,15 +92,15 @@ namespace Merlin {
 		m_elementCount = count;
 	}
 
-	Shared<Mesh> Mesh::create(std::string name) {
+	shared<Mesh> Mesh::create(std::string name) {
 		return createShared<Mesh>(name);
 	}
 
-	Shared<Mesh> Mesh::create(std::string name, std::vector<Vertex>& vertices, GLuint mode) {
+	shared<Mesh> Mesh::create(std::string name, std::vector<Vertex>& vertices, GLuint mode) {
 		return createShared<Mesh>(name, vertices, mode);
 	}
 
-	Shared<Mesh> Mesh::create(std::string name, std::vector<Vertex>& vertices, std::vector<GLuint>& indices, GLuint mode) {
+	shared<Mesh> Mesh::create(std::string name, std::vector<Vertex>& vertices, std::vector<GLuint>& indices, GLuint mode) {
 		return createShared<Mesh>(name, vertices, indices, mode);
 	}
 

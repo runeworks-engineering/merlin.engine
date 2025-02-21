@@ -20,7 +20,7 @@ void TemplateLayer::onAttach(){
 	//renderer.showLights();
 
 
-	Shared<Model> model = Model::create("sphere1", Primitives::createSphere(0.5, 40, 40));
+	shared<Model> model = Model::create("sphere1", Primitives::createSphere(0.5, 40, 40));
 	model->setMaterial("gold");
 	scene.add(model);
 

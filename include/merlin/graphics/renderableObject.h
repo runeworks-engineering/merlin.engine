@@ -47,8 +47,8 @@ namespace Merlin {
 		inline void castShadow(bool state) { m_castShadow = state; }
 
 		//Hierachy
-		void addChild(const Shared<RenderableObject>& child);
-		void removeChild(Shared<RenderableObject> child);
+		void addChild(const shared<RenderableObject>& child);
+		void removeChild(shared<RenderableObject> child);
 		void setParent(RenderableObject* parent);
 
 		inline void show() { m_hidden = false; }
@@ -69,8 +69,8 @@ namespace Merlin {
 		inline void useFlatShading(bool value) { use_flat_shading = value; }
 		inline void useSmoothShading(bool value) { use_flat_shading = !value; }
 
-		std::list<Shared<RenderableObject>>& children();
-		Shared<RenderableObject> getChild(std::string name);
+		std::list<shared<RenderableObject>>& children();
+		shared<RenderableObject> getChild(std::string name);
 		RenderableObject* parent();
 
 	protected:
@@ -89,7 +89,7 @@ namespace Merlin {
 		RenderableObject* m_parent;
 		ObjectType m_type;
 
-		std::list<Shared<RenderableObject>> m_children;
+		std::list<shared<RenderableObject>> m_children;
 	};
 
 

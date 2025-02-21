@@ -8,9 +8,6 @@ namespace Merlin {
 		backgroundColor = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
 	}
 
-	RendererBase::~RendererBase() {
-	}
-
 	void RendererBase::initialize() {
 		resetGlobalTransform();
 		enableMultisampling();
@@ -140,24 +137,24 @@ namespace Merlin {
 		backgroundColor = glm::vec4(r, g, b, a);
 	}
 
-	Shared<Shader> RendererBase::getShader(std::string n) {
+	shared<Shader> RendererBase::getShader(std::string n) {
 		return ShaderLibrary::instance().get(n);
 	}
 
-	Shared<MaterialBase> RendererBase::getMaterial(std::string n) {
+	shared<MaterialBase> RendererBase::getMaterial(std::string n) {
 		return MaterialLibrary::instance().get(n);
 	}
 
 	void RendererBase::loadShader(const std::string& name, const std::string& vertexShaderPath, const std::string& fragmentShaderPath, const std::string& geomShaderPath) {
-		Shared<Shader> shader = Shader::create(name, vertexShaderPath, fragmentShaderPath, geomShaderPath);
+		shared<Shader> shader = Shader::create(name, vertexShaderPath, fragmentShaderPath, geomShaderPath);
 		ShaderLibrary::instance().add(shader);
 	}
 
-	void RendererBase::addMaterial(Shared<MaterialBase> material) {
+	void RendererBase::addMaterial(shared<MaterialBase> material) {
 		MaterialLibrary::instance().add(material);
 	}
 
-	void RendererBase::addShader(Shared<Shader> shader) {
+	void RendererBase::addShader(shared<Shader> shader) {
 		if (!shader->isCompiled()) Console::error("Renderer") << "Shader is not compiled. Compile the shader before adding them to the ShaderLibrary" << Console::endl;
 		ShaderLibrary::instance().add(shader);
 	}
@@ -190,7 +187,7 @@ namespace Merlin {
 	}
 
 
-	void RendererBase::gatherLights(const Shared<RenderableObject>& object) {
+	void RendererBase::gatherLights(const shared<RenderableObject>& object) {
 		if (const auto light = std::dynamic_pointer_cast<Light>(object)) {
 			light->applyRenderTransform(m_currentTransform);
 			m_activeLights.push_back(light);

@@ -102,7 +102,7 @@ namespace Merlin {
         static void destroy(GLuint id);
     };
 
-    typedef Shared<AbstractBufferObject> AbstractBufferObject_Ptr;
+    typedef shared<AbstractBufferObject> AbstractBufferObject_Ptr;
     
     template <typename T>
     class BufferObject : public AbstractBufferObject {

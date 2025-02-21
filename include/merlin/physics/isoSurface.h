@@ -15,7 +15,7 @@ namespace Merlin {
 	//https://github.com/mwalczyk/marching-cubes/tree/master
 
 	class IsoSurface;
-	typedef Shared<IsoSurface> IsoSurface_Ptr;
+	typedef shared<IsoSurface> IsoSurface_Ptr;
 
 	class IsoSurface : public RenderableObject{
 	public:

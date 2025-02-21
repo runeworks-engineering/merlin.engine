@@ -7,12 +7,7 @@
 
 namespace Merlin {
 
-	Renderer::Renderer() {}
-
-	Renderer::~Renderer() {}
-
-
-	void Renderer::gatherLights(const Shared<RenderableObject>& object) {
+	void Renderer::gatherLights(const shared<RenderableObject>& object) {
 		if (const auto light = std::dynamic_pointer_cast<Light>(object)) {
 			light->applyRenderTransform(m_currentTransform);
 			m_activeLights.push_back(light);
@@ -82,7 +77,7 @@ namespace Merlin {
 	void Renderer::renderEnvironment(const Environment& env, const Camera& camera){
 		if(debug)Console::info() << "Rendering Environment" << Console::endl;
 		if (!use_environment) return;
-		Shared<Shader> shader = getShader("default.skybox");
+		shared<Shader> shader = getShader("default.skybox");
 		if (!shader) {
 			Console::error("Renderer") << "Renderer failed to gather materials and shaders" << Console::endl;
 			return;
@@ -102,7 +97,7 @@ namespace Merlin {
 	}
 
 
-	void Renderer::renderDepth(const Shared<RenderableObject>& object, Shared<Shader> shader){
+	void Renderer::renderDepth(const shared<RenderableObject>& object, shared<Shader> shader){
 		if (debug)Console::info() << "Rendering Depth" << Console::endl;
 		pushMatrix();
 		m_currentTransform *= object->transform();
@@ -127,7 +122,7 @@ namespace Merlin {
 
 	void Renderer::renderLight(const Light& li, const Camera& camera){
 		if (debug)Console::info() << "Rendering Light" << Console::endl;
-		Shared<Shader> shader = getShader("default.light");
+		shared<Shader> shader = getShader("default.light");
 		if (!shader) {
 			Console::error("Renderer") << "Renderer failed to gather materials and shaders" << Console::endl;
 			return;
@@ -213,10 +208,10 @@ namespace Merlin {
 	}
 
 
-	void Renderer::castShadow(Shared<Light> light, const Scene& scene) {
+	void Renderer::castShadow(shared<Light> light, const Scene& scene) {
 		if (debug)Console::info() << "Cast Shadow" << Console::endl;
-		Shared<FrameBuffer> fbo;
-		Shared<Shader> shader;
+		shared<FrameBuffer> fbo;
+		shared<Shader> shader;
 
 		if (light->type() == LightType::Directional || light->type() == LightType::Spot) shader = getShader("shadow.depth");
 		else if (light->type() == LightType::Point) shader = getShader("shadow.omni");
@@ -343,7 +338,7 @@ namespace Merlin {
 		render(obj.getZAxisMesh(), camera);
 	}
 
-	void Renderer::render(const Shared<RenderableObject>& object, const Camera& camera) {
+	void Renderer::render(const shared<RenderableObject>& object, const Camera& camera) {
 		pushMatrix();
 		m_currentTransform *= object->transform();
 

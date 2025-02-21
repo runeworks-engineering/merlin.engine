@@ -5,7 +5,7 @@
 
 namespace Merlin{
 
-	Shared<ParticleSystem> ParticleSystem::create(const std::string& name, size_t count) {
+	shared<ParticleSystem> ParticleSystem::create(const std::string& name, size_t count) {
 		return std::make_shared<ParticleSystem>(name, count);
 	}
 
@@ -177,7 +177,7 @@ namespace Merlin{
 		return m_links.find(shader) != m_links.end();
 	}
 
-	void ParticleSystem::detach(Shared<ShaderBase> shader) {
+	void ParticleSystem::detach(shared<ShaderBase> shader) {
 		if (hasLink(shader->name())) {
 			for (auto& entry : m_links[shader->name()]) {
 				if (hasField(entry))
@@ -193,7 +193,7 @@ namespace Merlin{
 		}
 	}
 
-	void ParticleSystem::solveLink(Shared<ShaderBase> shader) {
+	void ParticleSystem::solveLink(shared<ShaderBase> shader) {
 		if (hasLink(shader->name())) {
 			for (auto& entry : m_links[shader->name()]) {
 				if(hasField(entry))

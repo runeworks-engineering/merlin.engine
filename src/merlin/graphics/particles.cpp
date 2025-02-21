@@ -5,7 +5,7 @@
 
 namespace Merlin {
 
-	Shared<Particles> Particles::create(const std::string& name, size_t count) {
+	shared<Particles> Particles::create(const std::string& name, size_t count) {
 		return std::make_shared<Particles>(name, count);
 	}
 

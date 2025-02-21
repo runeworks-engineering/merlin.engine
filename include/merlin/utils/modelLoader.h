@@ -11,11 +11,11 @@ namespace Merlin{
 	class ModelLoader {
 	public:
 		// Load a model from the specified file and return a pointer to a new Mesh object
-		static Shared<Model> loadModel(const std::string& filepath);
-		static Shared<Mesh> loadMesh(const std::string& filepath);
+		static shared<Model> loadModel(const std::string& filepath);
+		static shared<Mesh> loadMesh(const std::string& filepath);
 
 		// Load a GLTF file and extract the data
-		//static Shared<Model> LoadGLTF(const std::string& file_path);
+		//static shared<Model> LoadGLTF(const std::string& file_path);
 
 	private:
 
@@ -47,7 +47,7 @@ namespace Merlin{
 		//ParseGeometry
 		//static bool ParseGEOM(const std::string& file_path, Vertices& vertices, Indices& indices);
 
-		//static void loadMTL(Shared<Model> mdl);
+		//static void loadMTL(shared<Model> mdl);
 		// Parse a any file and extract the data
 		static bool parseMesh(const std::string& file_path, Vertices& vertices, Indices& indices);
 	};

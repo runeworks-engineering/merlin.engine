@@ -88,8 +88,8 @@ namespace Merlin {
         }
     }
 
-    Shared<CubeMap> CubeMap::create(GLuint width, GLuint height, TextureType t){
-        Shared<CubeMap> cm = createShared<CubeMap>(t);
+    shared<CubeMap> CubeMap::create(GLuint width, GLuint height, TextureType t){
+        shared<CubeMap> cm = createShared<CubeMap>(t);
         cm->bind();
         if (t == TextureType::SHADOW || t == TextureType::DEPTH) {
             cm->allocate(width, height, GL_DEPTH_STENCIL, GL_DEPTH24_STENCIL8, GL_UNSIGNED_INT_24_8);
@@ -105,8 +105,8 @@ namespace Merlin {
         return cm;
     }
 
-    Shared<CubeMap> CubeMap::create(const std::vector<std::string>& paths, TextureType t){
-        Shared<CubeMap> cm = createShared<CubeMap>(t);
+    shared<CubeMap> CubeMap::create(const std::vector<std::string>& paths, TextureType t){
+        shared<CubeMap> cm = createShared<CubeMap>(t);
         cm->autoSetUnit();
         cm->bind();
         cm->loadFromFiles(paths);

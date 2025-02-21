@@ -9,11 +9,10 @@
 namespace Merlin {
 	class Renderer : public RendererBase {
 	public:
-		Renderer();
-		~Renderer();
+		Renderer() {};
 
 		//Render methods
-		void render(const Shared<RenderableObject>& object, const Camera& camera);
+		void render(const shared<RenderableObject>& object, const Camera& camera);
 		void renderScene(const Scene& model, const Camera& camera);
 		void renderLight(const Light& li, const Camera& camera);
 		void renderMesh(const Mesh& mesh, const Camera& camera);
@@ -22,9 +21,9 @@ namespace Merlin {
 		void renderTransformObject(const TransformObject& obj, const Camera& camera);
 
 		//Shadows
-		void castShadow(Shared<Light> light, const Scene& scene);
-		void renderDepth(const Shared<RenderableObject>& object, Shared<Shader> shader);
-		void gatherLights(const Shared<RenderableObject>& object);
+		void castShadow(shared<Light> light, const Scene& scene);
+		void renderDepth(const shared<RenderableObject>& object, shared<Shader> shader);
+		void gatherLights(const shared<RenderableObject>& object);
 
 	};
 }

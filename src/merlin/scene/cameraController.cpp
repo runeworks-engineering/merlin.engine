@@ -12,7 +12,7 @@ namespace Merlin {
 		_Camera->setZoom(zl);
 	}
 
-	CameraController3D::CameraController3D(Shared<Camera> cam) : CameraController(cam) {}
+	CameraController3D::CameraController3D(shared<Camera> cam) : CameraController(cam) {}
 
 	void CameraController3D::onUpdate(Timestep ts)
 	{
@@ -90,7 +90,7 @@ namespace Merlin {
 	}
 
 
-	CameraController2D::CameraController2D(Shared<Camera> cam) : CameraController(cam){}
+	CameraController2D::CameraController2D(shared<Camera> cam) : CameraController(cam){}
 
 	void CameraController2D::onUpdate(Timestep ts)
 	{

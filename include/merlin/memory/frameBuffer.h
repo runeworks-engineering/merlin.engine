@@ -6,7 +6,7 @@
 #include "merlin/memory/renderBuffer.h"
 
 namespace Merlin {
-    class ScreenQuadRenderer;
+    class PixelRenderer;
     class FrameBuffer{
     public:
         FrameBuffer(int width, int height);
@@ -22,9 +22,9 @@ namespace Merlin {
          
         void setDrawBuffer(std::vector<unsigned int> buffers = std::vector<unsigned int>());
 
-        void attachColorTexture(Shared<TextureBase> tex);
-        void attachDepthStencilRBO(Shared<RenderBuffer> rbo);
-        void attachDepthStencilTexture(Shared<TextureBase> tex);
+        void attachColorTexture(shared<TextureBase> tex);
+        void attachDepthStencilRBO(shared<RenderBuffer> rbo);
+        void attachDepthStencilTexture(shared<TextureBase> tex);
 
 
         void renderAttachement(GLuint id);
@@ -46,5 +46,5 @@ namespace Merlin {
     };
 
     typedef FrameBuffer FBO;
-    typedef Shared<FBO> FBO_Ptr;
+    typedef shared<FBO> FBO_Ptr;
 }

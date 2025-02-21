@@ -41,7 +41,7 @@ namespace Merlin {
 		m_ID = nextID++;
 	}
 
-	Shared<RenderableObject> RenderableObject::getChild(std::string name) {
+	shared<RenderableObject> RenderableObject::getChild(std::string name) {
 		for (auto child : m_children) {
 			if (child->name() == name) return child;
 		}
@@ -62,14 +62,14 @@ namespace Merlin {
 		}
 	}
 
-	void RenderableObject::addChild(const Shared<RenderableObject>& child) {
+	void RenderableObject::addChild(const shared<RenderableObject>& child) {
 		if (child != nullptr) {
 			m_children.push_back(child);
 			child->setParent(this);
 		}
 		else Console::warn("SceneNode") << "Empty node child ignored" << Console::endl;
 	}
-	void RenderableObject::removeChild(Shared<RenderableObject> child) {
+	void RenderableObject::removeChild(shared<RenderableObject> child) {
 		m_children.remove(child);
 	}
 
@@ -86,7 +86,7 @@ namespace Merlin {
 	}
 
 
-	std::list<Shared<RenderableObject>>& RenderableObject::children() {
+	std::list<shared<RenderableObject>>& RenderableObject::children() {
 		return m_children;
 	}
 

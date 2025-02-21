@@ -94,7 +94,7 @@ void ExampleLayer::onAttach(){
 	renderer.setEnvironmentGradientColor(0.903, 0.803, 0.703);
 	renderer.showLights();
 
-	Shared<Model> bunny = ModelLoader::loadModel("./assets/common/models/bunny.stl");
+	shared<Model> bunny = ModelLoader::loadModel("./assets/common/models/bunny.stl");
 	bunny->meshes()[0]->smoothNormals();
 	bunny->setMaterial("pearl");
 	bunny->scale(0.2);
@@ -111,7 +111,7 @@ void ExampleLayer::onAttach(){
 	scene.add(light);
 	/**/
 
-	Shared<DirectionalLight>  dirlight;
+	shared<DirectionalLight>  dirlight;
 
 	/**/
 	dirlight = createShared<DirectionalLight>("light1", glm::vec3(-0.5f, 0.5f, -0.8f));
@@ -135,7 +135,7 @@ void ExampleLayer::onAttach(){
 	/**/
 
 	/**/
-	Shared<AmbientLight> amLight = createShared<AmbientLight>("light4");
+	shared<AmbientLight> amLight = createShared<AmbientLight>("light4");
 	amLight->setAmbient(glm::vec3(0.1));
 	scene.add(amLight);
 	/**/
@@ -227,7 +227,7 @@ void ExampleLayer::onImGuiRender()
 	ImGui::End();
 
 	// Define a recursive lambda function to traverse the scene graph
-	std::function<void(const std::list<Shared<RenderableObject>>&)> traverseNodes = [&](const std::list<Shared<RenderableObject>>& nodes){
+	std::function<void(const std::list<shared<RenderableObject>>&)> traverseNodes = [&](const std::list<shared<RenderableObject>>& nodes){
 		for (auto& node : nodes){
 			bool node_open = ImGui::TreeNode(node->name().c_str());
 			if (node_open){

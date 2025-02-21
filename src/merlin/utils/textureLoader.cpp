@@ -34,7 +34,7 @@ ImageData TextureLoader::loadImageData(const std::string& filepath, bool flipped
 }
 
 
-Shared<Texture2D> TextureLoader::loadTexture(const std::string& filepath, TextureType t) {
+shared<Texture2D> TextureLoader::loadTexture(const std::string& filepath, TextureType t) {
     return Texture2D::create(filepath, t);
 }
 

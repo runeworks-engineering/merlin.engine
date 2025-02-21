@@ -91,6 +91,6 @@ namespace Merlin {
 		float _zoom;
 	};
 
-	typedef Shared<Camera> Camera_Ptr;
+	typedef shared<Camera> Camera_Ptr;
 
 }

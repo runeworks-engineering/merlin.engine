@@ -8,40 +8,40 @@ namespace Merlin {
         m_transform = glm::mat4(1.0f);
     }
 
-    Model::Model(const std::string& name, const Shared<Mesh>& mesh) : RenderableObject(name) {
+    Model::Model(const std::string& name, const shared<Mesh>& mesh) : RenderableObject(name) {
         m_meshes.push_back(mesh);
         m_transform = glm::mat4(1.0f);
     }
 
-    Model::Model(const std::string& name, const std::vector<Shared<Mesh>>& meshes) : RenderableObject(name) {
+    Model::Model(const std::string& name, const std::vector<shared<Mesh>>& meshes) : RenderableObject(name) {
         m_meshes = meshes;
         m_transform = glm::mat4(1.0f);
     }
 
-    Shared<Model> Model::create(std::string name) {
+    shared<Model> Model::create(std::string name) {
         return createShared<Model>(name);
     }
 
-    Shared<Model> Model::create(const std::string& name, const Shared<Mesh>& mesh) {
+    shared<Model> Model::create(const std::string& name, const shared<Mesh>& mesh) {
         return createShared<Model>(name, mesh);
     }
 
-    Shared<Model> Model::create(const std::string& name, const std::vector<Shared<Mesh>>& meshes) {
+    shared<Model> Model::create(const std::string& name, const std::vector<shared<Mesh>>& meshes) {
         return createShared<Model>(name, meshes);
     }
 
 
-    void Model::addMesh(const Shared<Mesh>& mesh) {
+    void Model::addMesh(const shared<Mesh>& mesh) {
         m_meshes.push_back(mesh);
     }
 
-	void Model::setShader(const Shared<Shader>& shader) {
+	void Model::setShader(const shared<Shader>& shader) {
 		for (auto& mesh : m_meshes) {
 			mesh->setShader(shader);
 		}
 	}
 
-	void Model::setMaterial(Shared<MaterialBase> material) {
+	void Model::setMaterial(shared<MaterialBase> material) {
 		for (auto& mesh : m_meshes) {
 			mesh->setMaterial(material);
 		}
@@ -63,8 +63,8 @@ namespace Merlin {
     void Model::draw(const Camera& camera) const {
         for (const auto& mesh : m_meshes) {
             if (mesh->hasMaterial() && mesh->hasShader()) {
-				Shared<Shader> shader = mesh->getShader();
-				Shared<MaterialBase> mat = mesh->getMaterial();
+				shared<Shader> shader = mesh->getShader();
+				shared<MaterialBase> mat = mesh->getMaterial();
 
                 shader->use();
                 mat->attach(*shader);

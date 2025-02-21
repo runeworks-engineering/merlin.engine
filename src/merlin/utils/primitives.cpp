@@ -4,7 +4,7 @@
 
 namespace Merlin {
 
-	Shared<Mesh> Primitives::createCircle(float r, int res) {
+	shared<Mesh> Primitives::createCircle(float r, int res) {
 		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
 
@@ -34,7 +34,7 @@ namespace Merlin {
 		return Mesh::create("Circle", vertices, indices, GL_TRIANGLES);
 	}
 
-	Shared<Mesh> Primitives::createOutlinedCircle(float r, int res) {
+	shared<Mesh> Primitives::createOutlinedCircle(float r, int res) {
 		std::vector<Vertex> vertices;
 
 		for (int i = 0; i < res; ++i) {
@@ -49,7 +49,7 @@ namespace Merlin {
 		return Mesh::create("Circle", vertices, GL_LINE_STRIP);
 	}
 
-	Shared<Mesh> Primitives::createRectangle(float x, float y) {
+	shared<Mesh> Primitives::createRectangle(float x, float y) {
 		Vertex v0 = Vertex{ glm::vec3(-x / 2.0f,-y / 2.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f) };
 		Vertex v1 = Vertex{ glm::vec3(x / 2.0f, -y / 2.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f) };
 		Vertex v2 = Vertex{ glm::vec3(x / 2.0f, y / 2.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(1.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f) };
@@ -62,7 +62,7 @@ namespace Merlin {
 	}
 
 
-	Shared<Mesh> Primitives::createQuadRectangle(float x, float y, bool centered) {
+	shared<Mesh> Primitives::createQuadRectangle(float x, float y, bool centered) {
 
 		float x_lo;
 		float x_up;
@@ -94,7 +94,7 @@ namespace Merlin {
 		return m;
 	}
 
-	Shared<Mesh> Primitives::createFloor(const int groundNumTiles, const float groundTileSize) {
+	shared<Mesh> Primitives::createFloor(const int groundNumTiles, const float groundTileSize) {
 
 		glm::vec2 squareVerts[] = { glm::vec2(0, 0), glm::vec2(1, 0), glm::vec2(1, 1), glm::vec2(0, 1) };
 
@@ -179,14 +179,14 @@ namespace Merlin {
 		return result;
 	}
 
-	Shared<Mesh> Primitives::createPoint() {
+	shared<Mesh> Primitives::createPoint() {
 		Vertices v = {
 			Vertex{glm::vec3(0,0,0), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.0f, 0.0f)}
 		};
 		return Mesh::create("Point", v, GL_POINTS);
 	}
 
-	Shared<Mesh> Primitives::createLine(float length, glm::vec3 dir) {
+	shared<Mesh> Primitives::createLine(float length, glm::vec3 dir) {
 		Vertices v = {
 			Vertex{glm::vec3(0,0,0)},
 			Vertex{glm::normalize(dir) * length}
@@ -195,7 +195,7 @@ namespace Merlin {
 		return Mesh::create("Line", v, GL_LINES);
 	}
 
-	Shared<Mesh> Primitives::createCoordSystem() {
+	shared<Mesh> Primitives::createCoordSystem() {
 		Vertices v = {
 			Vertex{ glm::vec3(0.2f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)},
 			Vertex{ glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f)},
@@ -208,11 +208,11 @@ namespace Merlin {
 		return Mesh::create("CoordinateSystem", v, GL_LINES);
 	}
 
-	Shared<Mesh> Primitives::createQuadCube(float w, bool centered) {
+	shared<Mesh> Primitives::createQuadCube(float w, bool centered) {
 		return createQuadCube(w, w, w, centered);
 	}
 
-	Shared<Mesh> Primitives::createQuadCube(float x, float y, float z, bool centered) {
+	shared<Mesh> Primitives::createQuadCube(float x, float y, float z, bool centered) {
 
 		float x_lo;
 		float x_up;
@@ -275,9 +275,9 @@ namespace Merlin {
 		return m;
 	}
 
-	Shared<Mesh> Primitives::createCube(float w) { return createCube(w, w, w); }
+	shared<Mesh> Primitives::createCube(float w) { return createCube(w, w, w); }
 
-	Shared<Mesh> Primitives::createCube(float x, float y, float z) {
+	shared<Mesh> Primitives::createCube(float x, float y, float z) {
 
 		float x_lo = -x / 2.0f;
 		float x_up = x / 2.0f;
@@ -329,7 +329,7 @@ namespace Merlin {
 		return Mesh::create("Cube", v);
 	}
 
-	Shared<Mesh> Primitives::createCone(float r, float h, int res) {
+	shared<Mesh> Primitives::createCone(float r, float h, int res) {
 		const float angleStep = glm::two_pi<float>() / res;
 
 		// Generate vertices
@@ -368,7 +368,7 @@ namespace Merlin {
 		return createShared<Mesh>("Cone", vertices, indices, GL_TRIANGLES);
 	}
 
-	Shared<Mesh> Primitives::createCylinder(float r, float h, int res) {
+	shared<Mesh> Primitives::createCylinder(float r, float h, int res) {
 		const float angleStep = glm::two_pi<float>() / res;
 
 		// Generate indices
@@ -419,7 +419,7 @@ namespace Merlin {
 
 
 	/*
-	Shared<Mesh> Primitives::createSphere(float r, int hres, int vres) {
+	shared<Mesh> Primitives::createSphere(float r, int hres, int vres) {
 
 		std::vector<glm::vec3> position;
 		std::vector<glm::vec3> normals;
@@ -570,7 +570,7 @@ namespace Merlin {
 
 //hres sector
 //vres stack
-	Shared<Mesh> Primitives::createSphere(float r, int hres, int vres) {
+	shared<Mesh> Primitives::createSphere(float r, int hres, int vres) {
 		float PI = 3.14159265359;
 		std::vector<glm::vec3> position;
 		std::vector<glm::vec3> normals;
@@ -649,7 +649,7 @@ namespace Merlin {
 	}
 		
 
-	Shared<Mesh> Primitives::createFromQuad(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, GLuint mode) {
+	shared<Mesh> Primitives::createFromQuad(std::vector<Vertex>& vertices, std::vector<GLuint>& indices, GLuint mode) {
 		std::vector<GLuint> indices_buffer;
 		GLuint a; GLuint b;
 		GLuint c; GLuint d;

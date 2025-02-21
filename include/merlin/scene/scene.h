@@ -13,28 +13,28 @@
 namespace Merlin {
 
 	class Scene : public RenderableObject {
-		Shared<RenderableObject> m_rootNode = nullptr;
-		Shared<RenderableObject> m_currentNode = nullptr;
-		Shared<Environment> m_environment = nullptr;
+		shared<RenderableObject> m_rootNode = nullptr;
+		shared<RenderableObject> m_currentNode = nullptr;
+		shared<Environment> m_environment = nullptr;
 
 	public:
 		Scene(std::string name = "scene");
 
-		void add(Shared<Mesh>);
-		void add(Shared<Model>);
-		void add(Shared<ParticleSystem>);
-		void add(Shared<IsoSurface>);
-		//void add(Shared<deprecated_GenericParticleSystem>);
-		void add(Shared<Light>);
-		void add(Shared<TransformObject> t);
+		void add(shared<Mesh>);
+		void add(shared<Model>);
+		void add(shared<ParticleSystem>);
+		void add(shared<IsoSurface>);
+		//void add(shared<deprecated_GenericParticleSystem>);
+		void add(shared<Light>);
+		void add(shared<TransformObject> t);
 
 		bool hasEnvironment() const;
-		void setEnvironment(Shared<Environment> environment);
-		Shared<Environment> getEnvironment() const;
+		void setEnvironment(shared<Environment> environment);
+		shared<Environment> getEnvironment() const;
 
-		const std::list<Shared<RenderableObject>>& nodes() const;
+		const std::list<shared<RenderableObject>>& nodes() const;
 
-		inline static Shared<Scene> create() { return createShared<Scene>(); };
+		inline static shared<Scene> create() { return createShared<Scene>(); };
 	};
 	
 }

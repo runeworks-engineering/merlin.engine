@@ -13,34 +13,34 @@ namespace Merlin {
     public:
 
         Model(const std::string& name);
-        Model(const std::string& name, const Shared<Mesh>& mesh);
-        Model(const std::string& name, const std::vector<Shared<Mesh>>& mesh);
+        Model(const std::string& name, const shared<Mesh>& mesh);
+        Model(const std::string& name, const std::vector<shared<Mesh>>& mesh);
 
-        void addMesh(const Shared<Mesh>& mesh);
+        void addMesh(const shared<Mesh>& mesh);
         void draw(const Camera& camera) const;
 
         void enableWireFrameMode() override;
         void disableWireFrameMode() override;
 
 
-        void setShader(const Shared<Shader>& shader);
-        void setMaterial(Shared<MaterialBase> material);
+        void setShader(const shared<Shader>& shader);
+        void setMaterial(shared<MaterialBase> material);
         void setShader(const std::string& shader);
         void setMaterial(const std::string& material);
 
-        inline const std::vector<Shared<Mesh>>& meshes() const { return m_meshes; }
+        inline const std::vector<shared<Mesh>>& meshes() const { return m_meshes; }
 
-        static Shared<Model> create(std::string name);
-        static Shared<Model> create(const std::string& name, const Shared<Mesh>& mesh);
-        static Shared<Model> create(const std::string& name, const std::vector<Shared<Mesh>>& mesh);
+        static shared<Model> create(std::string name);
+        static shared<Model> create(const std::string& name, const shared<Mesh>& mesh);
+        static shared<Model> create(const std::string& name, const std::vector<shared<Mesh>>& mesh);
 
 
 
     protected:
-        std::vector<Shared<Mesh>> m_meshes;
+        std::vector<shared<Mesh>> m_meshes;
         //TODO : Group Meshes by Shaders and Material to optimize draw call
     };
 
-    typedef Shared<Model> Model_Ptr;
+    typedef shared<Model> Model_Ptr;
 
 }

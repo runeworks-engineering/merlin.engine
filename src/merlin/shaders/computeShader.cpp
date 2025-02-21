@@ -151,7 +151,7 @@ namespace Merlin {
 
 	ComputeShaderLibrary::ComputeShaderLibrary() {
 
-		Shared<ComputeShader> defaultShader = createShared<ComputeShader>("default");
+		shared<ComputeShader> defaultShader = createShared<ComputeShader>("default");
 
 		std::string defaultSrc = R"( 
 			#version 330 core

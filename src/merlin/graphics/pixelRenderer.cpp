@@ -1,16 +1,16 @@
 #include "pch.h"
-#include "merlin/graphics/screenQuadrenderer.h"
+#include "merlin/graphics/pixelRenderer.h"
 #include "merlin/graphics/ressourceManager.h"
 
 namespace Merlin {
-	ScreenQuadRenderer::ScreenQuadRenderer() : m_shader(nullptr) {
+	PixelRenderer::PixelRenderer() : m_shader(nullptr) {
 		m_shader = ShaderLibrary::instance().get("screen.space");
 		if (!m_shader) {
-			Console::error("ScreenQuadRenderer") << "ShaderLibrary failed to retrieve screen space shader" << Console::endl;
+			Console::error("PixelRenderer") << "ShaderLibrary failed to retrieve screen space shader" << Console::endl;
 		}
 	}
 
-	void ScreenQuadRenderer::render() {
+	void PixelRenderer::render() {
 		if (!m_shader) return;
 		m_shader->use(); //Activate shader
 		glBindVertexArray(m_vao.id());
@@ -20,7 +20,7 @@ namespace Merlin {
 		glBindVertexArray(0);
 	}
 
-	void ScreenQuadRenderer::render(const Shared<TextureBase>& tex) {
+	void PixelRenderer::render(const shared<TextureBase>& tex) {
 		if (!m_shader) return;
 		tex->bind(); //bind texture
 		m_shader->use(); //Activate shader

@@ -9,21 +9,18 @@ using namespace Merlin;
 const float radius = 3;
 
 ExampleLayer::ExampleLayer(){
-	Window* w = &Application::get().getWindow();
-	int height = w->getHeight();
-	int width = w->getWidth();
-	camera = createShared<Camera>(width, height, Projection::Perspective);
-	camera->setNearPlane(0.1f);
-	camera->setFarPlane(100.0f);
-	camera->setFOV(55); //Use 90.0f as we are using cubemaps
-	camera->setPosition(glm::vec3(0.7, -7, 2.4));
-	camera->setRotation(glm::vec3(0, 0, +90));
-	cameraController = createShared<CameraController3D>(camera);
+	camera().setNearPlane(0.1f);
+	camera().setFarPlane(100.0f);
+	camera().setFOV(55); //Use 90.0f as we are using cubemaps
+	camera().setPosition(glm::vec3(0.7, -7, 2.4));
+	camera().setRotation(glm::vec3(0, 0, +90));
 }
 
 ExampleLayer::~ExampleLayer(){}
 
 void ExampleLayer::onAttach(){
+	Layer3D::onAttach();
+
 	Console::setLevel(ConsoleLevel::_TRACE);
 
 	renderer.initialize();
@@ -31,11 +28,11 @@ void ExampleLayer::onAttach(){
 	renderer.setEnvironmentGradientColor(0.903, 0.803, 0.703);
 	renderer.showLights();
 	
-	Shared<Model> model = ModelLoader::loadModel("./assets/models/model.obj");
+	shared<Model> model = ModelLoader::loadModel("./assets/models/model.obj");
 	//model->translate(glm::vec3(-0.5, 0, 0));
 
-	Shared<Model> floor = Model::create("floor", Primitives::createRectangle(10, 10));
-	Shared<PhongMaterial> floorMat = createShared<PhongMaterial>("floormat");
+	shared<Model> floor = Model::create("floor", Primitives::createRectangle(10, 10));
+	shared<PhongMaterial> floorMat = createShared<PhongMaterial>("floormat");
 	floorMat->loadTexture("./assets/textures/planks.png", TextureType::DIFFUSE);
 	floorMat->loadTexture("./assets/textures/planks_specular.png", TextureType::SPECULAR);
 	floorMat->setAmbient(glm::vec3(0.25, 0.20725, 0.20725));
@@ -54,7 +51,7 @@ void ExampleLayer::onAttach(){
 	scene.add(light);
 	/**/
 
-	Shared<DirectionalLight>  dirlight;
+	shared<DirectionalLight>  dirlight;
 
 	/**/
 	dirlight = createShared<DirectionalLight>("light1", glm::vec3(-0.5f, 0.5f, -0.8f));
@@ -78,7 +75,7 @@ void ExampleLayer::onAttach(){
 	/**/
 
 	/**/
-	Shared<AmbientLight> amLight = createShared<AmbientLight>("light4");
+	shared<AmbientLight> amLight = createShared<AmbientLight>("light4");
 	amLight->setAmbient(glm::vec3(0.1));
 	scene.add(amLight);
 	/**/
@@ -94,7 +91,7 @@ void ExampleLayer::onAttach(){
 	//scene.setCamera(camera);
 
 	/*
-	Shared<Environment> env;
+	shared<Environment> env;
 	env = createShared<Environment>("env", 2048);
 	//env->setCubeMap(light->getShadowMap());
 
@@ -107,7 +104,7 @@ void ExampleLayer::onAttach(){
 		"./assets/textures/skybox/back.jpg"
 	};
 
-	Shared<CubeMap> sky = CubeMap::create(skyBoxPath);
+	shared<CubeMap> sky = CubeMap::create(skyBoxPath);
 	env->setCubeMap(sky);
 
 	scene.setEnvironment(env);
@@ -128,17 +125,12 @@ void ExampleLayer::onAttach(){
 }
 
 
-void ExampleLayer::onDetach(){}
-
-void ExampleLayer::onEvent(Event& event){
-	camera->onEvent(event);
-	cameraController->onEvent(event);
-}
 
 float t = 0.0;
 
 void ExampleLayer::onUpdate(Timestep ts){
-	cameraController->onUpdate(ts);
+	Layer3D::onUpdate(ts);
+
 	const float hpi = 3.14159265358;
 	t += ts;
 
@@ -161,22 +153,15 @@ void ExampleLayer::onUpdate(Timestep ts){
 	isosurface->compute();
 	*/
 	renderer.clear();
-	renderer.renderScene(scene, *camera);
+	renderer.renderScene(scene, camera());
 	renderer.reset();
 }
 
 void ExampleLayer::onImGuiRender()
 {
-	ImGui::Begin("Camera");
-
-	model_matrix_translation = camera->getPosition();
-	if (ImGui::DragFloat3("Camera position", &model_matrix_translation.x, -100.0f, 100.0f)) {
-		camera->setPosition(model_matrix_translation);
-
-	}ImGui::End();
 
 	// Define a recursive lambda function to traverse the scene graph
-	std::function<void(const std::list<Shared<RenderableObject>>&)> traverseNodes = [&](const std::list<Shared<RenderableObject>>& nodes){
+	std::function<void(const std::list<shared<RenderableObject>>&)> traverseNodes = [&](const std::list<shared<RenderableObject>>& nodes){
 		for (auto& node : nodes){
 			bool node_open = ImGui::TreeNode(node->name().c_str());
 			if (node_open){
@@ -189,6 +174,7 @@ void ExampleLayer::onImGuiRender()
 			}
 		}
 	};
+
 
 	// draw the scene graph starting from the root node
 	ImGui::Begin("Scene Graph");

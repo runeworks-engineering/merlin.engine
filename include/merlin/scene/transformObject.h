@@ -14,7 +14,7 @@ namespace Merlin {
     public:
 
         TransformObject(const std::string& name, float size = 1);
-        static Shared<TransformObject> create(std::string name, float size = 1);
+        static shared<TransformObject> create(std::string name, float size = 1);
 
         inline const Mesh_Ptr& getXAxisMesh() const { return x_axis; }
         inline const Mesh_Ptr& getYAxisMesh() const { return y_axis; }
@@ -26,6 +26,6 @@ namespace Merlin {
         Mesh_Ptr z_axis;
     };
 
-    typedef Shared<TransformObject> TransformObject_Ptr;
+    typedef shared<TransformObject> TransformObject_Ptr;
 
 }

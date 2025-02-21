@@ -27,7 +27,7 @@ namespace Merlin{
 
 		void printLimits();
 
-		static Shared<ComputeShader> create(const std::string& n, const std::string& file_path, bool compile = true, ShaderType type = ShaderType::COMPUTE_SHADER) {
+		static shared<ComputeShader> create(const std::string& n, const std::string& file_path, bool compile = true, ShaderType type = ShaderType::COMPUTE_SHADER) {
 			return createShared<ComputeShader>(n, file_path, compile, type); 
 		}
 
@@ -53,7 +53,7 @@ namespace Merlin{
 		inline GLuint getStage() const { return m_stage; }
 		inline GLuint getStageCount() const { return m_stageCount; }
 
-		static Shared<StagedComputeShader> create(const std::string& n, const std::string& file_path, GLuint numberOfStage, bool compile = true) {
+		static shared<StagedComputeShader> create(const std::string& n, const std::string& file_path, GLuint numberOfStage, bool compile = true) {
 			return createShared<StagedComputeShader>(n, file_path, numberOfStage, compile);
 		};
 
@@ -67,15 +67,15 @@ namespace Merlin{
 	class ComputeShaderLibrary : public RessourceManager<ComputeShader>{
 	public:
 		ComputeShaderLibrary();
-		inline void add(Shared<ComputeShader> shader) { RessourceManager::add(shader->name(), shader); };
+		inline void add(shared<ComputeShader> shader) { RessourceManager::add(shader->name(), shader); };
 
 		void dispatch(const std::string& key);
 		void dispatch(const std::string& key, GLuint width, GLuint height = 1, GLuint layers = 1);
 
 	};
 
-	typedef Shared<ComputeShader> ComputeShader_Ptr;
-	typedef Shared<StagedComputeShader> StagedComputeShader_Ptr;
+	typedef shared<ComputeShader> ComputeShader_Ptr;
+	typedef shared<StagedComputeShader> StagedComputeShader_Ptr;
 }
 
 

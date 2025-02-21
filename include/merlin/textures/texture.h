@@ -100,10 +100,10 @@ namespace Merlin {
 
 		void exportPNG(const std::string& filename);
 
-		static Shared<Texture2D> create(GLuint width, GLuint height, TextureType = TextureType::ALBEDO);
-		static Shared<Texture2D> create(const ImageData& data, TextureType = TextureType::ALBEDO);
-		static Shared<Texture2D> create(const std::string& path, TextureType = TextureType::ALBEDO, bool flipped = false);
-		static Shared<Texture2D> create(GLuint width, GLuint height, GLuint channels = 3, GLuint bits = 8, TextureType type = TextureType::ALBEDO);
+		static shared<Texture2D> create(GLuint width, GLuint height, TextureType = TextureType::ALBEDO);
+		static shared<Texture2D> create(const ImageData& data, TextureType = TextureType::ALBEDO);
+		static shared<Texture2D> create(const std::string& path, TextureType = TextureType::ALBEDO, bool flipped = false);
+		static shared<Texture2D> create(GLuint width, GLuint height, GLuint channels = 3, GLuint bits = 8, TextureType type = TextureType::ALBEDO);
 
 	
 	private:	
@@ -112,7 +112,7 @@ namespace Merlin {
 		GLuint m_minFilter, m_magFilter, m_wrapS, m_wrapT;
 	};
 
-	typedef Shared<Texture2D> Texture2D_Ptr;
+	typedef shared<Texture2D> Texture2D_Ptr;
 
 
 	class Texture3D : public TextureBase {
@@ -131,7 +131,7 @@ namespace Merlin {
 		void reserve(GLuint width, GLuint height, GLuint depth, GLuint channels = 3, GLuint bits = 8) override;
 		void resize(GLuint width, GLuint height, GLuint depth) override;
 
-		static Shared<Texture3D> create(GLuint width, GLuint height, GLuint depth, GLuint channels = 1, GLuint bits = 8);
+		static shared<Texture3D> create(GLuint width, GLuint height, GLuint depth, GLuint channels = 1, GLuint bits = 8);
 
 
 	private:
@@ -139,5 +139,5 @@ namespace Merlin {
 		GLuint m_minFilter, m_magFilter, m_wrapS, m_wrapT;
 	};
 
-	typedef Shared<Texture3D> Texture3D_Ptr;
+	typedef shared<Texture3D> Texture3D_Ptr;
 }

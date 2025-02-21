@@ -51,7 +51,7 @@ namespace Merlin {
 		void useDefaultLight(bool state = true);
 		bool useDefaultLight();
 
-		void gatherLights(const Shared<RenderableObject>& object);
+		void gatherLights(const shared<RenderableObject>& object);
 
 		void setEnvironmentGradientColor(float r, float g, float b);
 		void setEnvironmentGradientColor(glm::vec3 color);
@@ -64,12 +64,12 @@ namespace Merlin {
 		void resetMatrix();
 
 		//Shader management shortcut
-		Shared<Shader> getShader(std::string n);
-		Shared<MaterialBase> getMaterial(std::string n);
+		shared<Shader> getShader(std::string n);
+		shared<MaterialBase> getMaterial(std::string n);
 
 		void loadShader(const std::string& name, const std::string& vertexShaderPath, const std::string& fragmentShaderPath, const std::string& geomShaderPath = "");
-		void addMaterial(Shared<MaterialBase> material);
-		void addShader(Shared<Shader> shader);
+		void addMaterial(shared<MaterialBase> material);
+		void addShader(shared<Shader> shader);
 
 
 	protected:
@@ -84,12 +84,12 @@ namespace Merlin {
 		float m_scene_scale = 1.0;
 
 		//Light
-		Shared<AmbientLight> m_defaultAmbient;
-		Shared<DirectionalLight> m_defaultDirLight;
-		Shared<DirectionalLight> m_defaultDirLight2;
-		Shared<DirectionalLight> m_defaultDirLight3;
+		shared<AmbientLight> m_defaultAmbient;
+		shared<DirectionalLight> m_defaultDirLight;
+		shared<DirectionalLight> m_defaultDirLight2;
+		shared<DirectionalLight> m_defaultDirLight3;
 
-		std::vector<Shared<Light>> m_activeLights;
+		std::vector<shared<Light>> m_activeLights;
 
 		//Matrix stack
 		glm::mat4 m_globalTransform = glm::mat4(1);
@@ -98,7 +98,7 @@ namespace Merlin {
 
 		//Environement
 		glm::vec4 backgroundColor;
-		Shared<Environment> m_defaultEnvironment = nullptr;
-		Shared<Environment> m_currentEnvironment = nullptr;
+		shared<Environment> m_defaultEnvironment = nullptr;
+		shared<Environment> m_currentEnvironment = nullptr;
 	};
 }

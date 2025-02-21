@@ -34,31 +34,31 @@ namespace Merlin {
 
 		void setShader(Shader_Ptr shader) {	m_shader = shader;}
 		inline void setShader(std::string shaderName) { m_shaderName = shaderName; }
-		inline void setMaterial(Shared<MaterialBase> material) { m_material = material; }
+		inline void setMaterial(shared<MaterialBase> material) { m_material = material; }
 		inline void setMaterial(std::string materialName) { m_materialName = materialName; }
-		inline void setMesh(Shared<Mesh> geometry) { m_geometry = geometry; }
+		inline void setMesh(shared<Mesh> geometry) { m_geometry = geometry; }
 		inline void setDisplayMode(ParticlesDisplayMode mode) { m_displayMode = mode; }
 
 		Shader_Ptr getShader() const {return m_shader;}
 		inline const std::string& getShaderName() const { return m_shaderName; }
 		inline bool hasShader() const { return m_shader != nullptr; }
-		inline const Shared<MaterialBase> getMaterial() const { return m_material; }
+		inline const shared<MaterialBase> getMaterial() const { return m_material; }
 		inline const std::string& getMaterialName() const { return m_materialName; }
 		inline bool hasMaterial() const { return m_material != nullptr; }
 
-		inline Shared<Mesh> getMesh() const { return m_geometry; }
+		inline shared<Mesh> getMesh() const { return m_geometry; }
 		inline ParticlesDisplayMode getDisplayMode() const { return m_displayMode; }
 		
 		
 
-		static Shared<Particles> create(const std::string&, size_t count = 1);
+		static shared<Particles> create(const std::string&, size_t count = 1);
 
 
 
 	protected:
 		//Rendering
 		std::string m_materialName = "default";
-		Shared<MaterialBase> m_material = nullptr;
+		shared<MaterialBase> m_material = nullptr;
 
 		Shader_Ptr m_shader = nullptr;
 		std::string m_shaderName = "default";

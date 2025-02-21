@@ -54,7 +54,7 @@ namespace Merlin {
         }
     }
 
-    void FrameBuffer::attachColorTexture(Shared<TextureBase> tex) {
+    void FrameBuffer::attachColorTexture(shared<TextureBase> tex) {
         if (m_attatchments.size() == MaxColorAttachement) {
             Console::error("FrameBuffer") << "This framebuffer cannot handle more color attachment (" << m_attatchments.size() << "/" << MaxColorAttachement << ")" << Console::endl;
             return;
@@ -66,13 +66,13 @@ namespace Merlin {
         checkErrors("Error creating GL_COLOR_ATTACHMENT");
     }
 
-    void FrameBuffer::attachDepthStencilRBO(Shared<RenderBuffer> rbo) {
+    void FrameBuffer::attachDepthStencilRBO(shared<RenderBuffer> rbo) {
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo->id());
         // Check that the framebuffer is complete
         checkErrors("Error creating GL_DEPTH_STENCIL_ATTACHMENT");
     }
 
-    void FrameBuffer::attachDepthStencilTexture(Shared<TextureBase> tex) {
+    void FrameBuffer::attachDepthStencilTexture(shared<TextureBase> tex) {
         //depth_stencil_texture->bind();
         if(tex->textureClass() == TextureClass::TEXTURE2D || tex->textureClass() == TextureClass::TEXTURE2D_MULTISAMPLED)
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, tex->getTarget(), tex->id(), 0);
@@ -83,7 +83,7 @@ namespace Merlin {
         checkErrors("Error creating GL_DEPTH_STENCIL_ATTACHMENT");
     }
     /*
-    void FrameBuffer::setDepthAttachment(Shared<RenderBuffer> rbo) {
+    void FrameBuffer::setDepthAttachment(shared<RenderBuffer> rbo) {
         if (depth_rbo || depth_texture) {
             Console::error("FrameBuffer") << "GL_DEPTH_ATTACHMENT already set !" << Console::endl;
             return;
@@ -98,7 +98,7 @@ namespace Merlin {
         checkErrors("Error creating GL_DEPTH_ATTACHMENT");
     }
 
-    void FrameBuffer::setDepthAttachment(Shared<TextureBase> tex) {
+    void FrameBuffer::setDepthAttachment(shared<TextureBase> tex) {
         if (depth_texture) {
             Console::error("FrameBuffer") << "GL_DEPTH_ATTACHMENT already set as a Texture !" << Console::endl;
             return;

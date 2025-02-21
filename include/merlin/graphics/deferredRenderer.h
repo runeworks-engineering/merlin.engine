@@ -18,13 +18,13 @@ namespace Merlin {
 		void renderScene(const Scene& scene, const Camera& camera);
 
 	private:
-		void render(const Shared<RenderableObject>& object, const Camera& camera);
+		void render(const shared<RenderableObject>& object, const Camera& camera);
 		void renderLight(const Light& li, const Camera& camera);
 		void renderMesh(const Mesh& mesh, const Camera& camera);
 		void renderEnvironment(const Environment& env, const Camera& camera);
 		void renderParticleSystem(const ParticleSystem& ps, const Camera& camera);
 		void renderTransformObject(const TransformObject& obj, const Camera& camera);
-		void renderDepth(const Shared<RenderableObject>& object, Shared<Shader> depthShader);
+		void renderDepth(const shared<RenderableObject>& object, shared<Shader> depthShader);
 
 		void geometryPass(const Scene& scene, const Camera& camera);
 		void lightingPass(const Camera& camera);

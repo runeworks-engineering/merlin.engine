@@ -105,7 +105,7 @@ namespace Merlin {
 		ShaderType m_type = ShaderType::ABSTRACT;
 	};
 
-	typedef Shared<ShaderBase> GenericShader_Ptr;	
+	typedef shared<ShaderBase> GenericShader_Ptr;	
 
 
 	template <class T>

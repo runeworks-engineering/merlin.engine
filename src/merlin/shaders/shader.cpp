@@ -14,7 +14,7 @@
 
 namespace Merlin {
 
-	Shared<Shader> Shader::create(	const std::string& name, 
+	shared<Shader> Shader::create(	const std::string& name, 
 									const std::string& vertex_file_path,
 									const std::string& fragment_file_path,
 									const std::string& geometry_file_path, bool compile) {

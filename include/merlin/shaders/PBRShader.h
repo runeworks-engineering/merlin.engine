@@ -12,7 +12,7 @@ namespace Merlin {
 			const std::string fpath,
 			const std::string gpath = "", bool compile = true);
 
-		static Shared<PBRShader> create(const std::string& name,
+		static shared<PBRShader> create(const std::string& name,
 			const std::string& vertex_file_path,
 			const std::string& fragment_file_path,
 			const std::string& geometry_file_path = "", bool compile = true);
@@ -21,6 +21,6 @@ namespace Merlin {
 
 	};
 
-	typedef Shared<PBRShader> PBRShader_Ptr;
+	typedef shared<PBRShader> PBRShader_Ptr;
 }
 
