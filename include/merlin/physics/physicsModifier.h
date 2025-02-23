@@ -8,7 +8,7 @@ namespace Merlin {
 		SOFT_BODY, 
 		RIGID_BODY,
 		HEAT_TRANSFER,
-		PHASE_CHANGER,
+		PHASE_CHANGER
 	};
 
 	class PhysicsModifier{

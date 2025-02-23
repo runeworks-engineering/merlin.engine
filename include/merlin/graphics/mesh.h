@@ -52,6 +52,7 @@ namespace Merlin {
 		inline const shared<MaterialBase> getMaterial() const { return m_material; }
 		inline const std::string& getMaterialName() const { return m_materialName; }
 
+		inline bool hasBoundingBox() const { return m_hasBoundingBox;  }
 		inline BoundingBox getBoundingBox() const { return m_bbox; }
 
 		static shared<Mesh> create(std::string name);
@@ -67,6 +68,7 @@ namespace Merlin {
 		std::vector<GLuint> m_indices;
 		std::vector<int> m_voxels;
 
+		bool m_hasBoundingBox = false;
 		BoundingBox m_bbox = { glm::vec3(), glm::vec3() };
 
 		std::string m_materialName = "default";

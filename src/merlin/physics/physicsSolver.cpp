@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "merlin/physics/physicsSolver.h"
+#include "merlin/physics/particleSampler.h"
 
 namespace Merlin {
 
@@ -10,51 +11,19 @@ namespace Merlin {
     void PhysicsSolver::init() {
         // Log the start of the physics engine initialization.
         Console::info("PhysicsSolver") << "Physics engine starting..." << Console::endl;
-
-        // -------------------------------------------------------------------------
-        // 1. Create Particle Systems
-        // -------------------------------------------------------------------------
-        // Create the primary particle system for the simulation.
-        // The maximum number of particles is assumed to be defined in your settings.
-        m_particles = ParticleSystem::create("ParticleSystem", 10000);
-
-        // Create a secondary particle system for the bins used in neighbor search.
-        // This system can also be used for visualizing the load.
-        m_bins = ParticleSystem::create("BinSystem", 1000);
-
-        // -------------------------------------------------------------------------
-        // 2. Compute the Simulation Domain
-        // -------------------------------------------------------------------------
-        //Extend the domain to include all elements
-        for (const auto& entity : m_entity) {
-            if (entity->isActive()) { // Assuming isActive() indicates an enabled entity.
-                m_domain = BoundingBox::unionBox(m_domain, entity->getBoundingBox());
-            }
-        }
-
-        // -------------------------------------------------------------------------
-        // 3. Particle Sampling using Voxelized Sampling
-        // -------------------------------------------------------------------------
-        // Initialize a container to hold the sampled particles.
-
-        ///////// std::vector<ParticleData> sampledParticles;
-
-        // Define the sampling spacing (e.g., based on your particle radius).
-        // This spacing determines the density of particles from the voxelization.
-        float spacing = 1.0f; // Replace with settings.particleRadius * 2.0f or a similar value.
+        std::vector<std::vector<glm::vec3>> sampledParticles;
 
         // Iterate over each active entity and perform voxelized sampling.
         for (const auto& entity : m_entity) {
             if (entity->isActive()) {
-                // Sample the entity geometry to generate particles.
-                ///////// auto samples = VoxelizedSampler::sample(entity, spacing);
-
+               sampledParticles.push_back(entity->sample());
+      
                 // For each modifier attached to the entity, initialize the sample.
                 // For example, the Heat Transfer modifier might assign an initial temperature.
-                // 
-                ///////// for (auto& modPair : entity->getModifiers()) {
-                /////////     modPair.second->initializeSample(samples);
-                ///////// }
+                
+                for (auto& modPair : entity->getModifiers()) {
+                    //modPair.second->initializeSample(samples);
+                }
 
                 // Append this entity's samples to the overall particle sample vector.
                /////////  sampledParticles.insert(sampledParticles.end(), samples.begin(), samples.end());
@@ -77,6 +46,9 @@ namespace Merlin {
         ///////// particles->solveLink(/* pointer to solver shader, if needed */);
         ///////// bins->solveLink(/* pointer to bin shader, if needed */);
 
+        m_particles = ParticleSystem::create("ParticleSystem", 1);
+        m_bins = ParticleSystem::create("BinSystem", 1);
+
         // -------------------------------------------------------------------------
         // 5. Final Setup
         // -------------------------------------------------------------------------
@@ -98,6 +70,11 @@ namespace Merlin {
 	
 	}
 
+    void PhysicsSolver::setSettings(PhysicsSettings settings) {
+        m_settings = settings;
+        warmUnstagedChanges();
+    }
+
 	void PhysicsSolver::add(PhysicsEntity_Ptr entity) {
 		m_entity.push_back(entity);
         warmUnstagedChanges();
@@ -109,7 +86,7 @@ namespace Merlin {
 
     void PhysicsSolver::setDomain(BoundingBox aabb) {
         m_domain = aabb;
-        
+        warmUnstagedChanges();
     }
 
 	bool PhysicsSolver::useIndexSorting() {
