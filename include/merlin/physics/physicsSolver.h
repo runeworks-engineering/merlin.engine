@@ -1,15 +1,14 @@
 #pragma once
 #include "merlin/core/core.h"
-#include "merlin/physics/physicsEntity.h"
-#include "merlin/physics/physicsModifier.h"
-#include "merlin/physics/physicsModifier.h"
-#include "merlin/physics/particleSystem.h"
+#include "merlin/core/timestep.h"
+#include "merlin/Physics/physicsEntity.h"
+#include "merlin/Physics/particleSystem.h"
 
 namespace Merlin {
 	struct PhysicsSettings {
 		// --- physics settings ---
 		float particle_radius = 1.0;
-		float smoothingRadius = 3 * particleRadius;
+		float smoothingRadius = 3 * particle_radius;
 		float cell_width = smoothingRadius;
 
 		Uniform<float> timestep = Uniform<float>("timestep", 1.0f / 60.0f);

@@ -50,39 +50,3 @@ namespace Merlin{
 	typedef shared<PhysicsEntity> PhysicsEntity_Ptr;
 
 }
-
-template<>
-shared<Fluid> PhysicsEntity::getModifier<Fluid>() {
-	if (hasModifier(PhysicsModifierType::FLUID))
-		return std::dynamic_pointer_cast<Fluid>(m_modifiers[PhysicsModifierType::FLUID]);
-}
-
-template<>
-shared<SoftBody> PhysicsEntity::getModifier<SoftBody>() {
-	if (hasModifier(PhysicsModifierType::SOFT_BODY))
-		return std::dynamic_pointer_cast<SoftBody>(m_modifiers[PhysicsModifierType::SOFT_BODY]);
-}
-
-template<>
-shared<RigidBody> PhysicsEntity::getModifier<RigidBody>() {
-	if (hasModifier(PhysicsModifierType::RIGID_BODY))
-		return std::dynamic_pointer_cast<RigidBody>(m_modifiers[PhysicsModifierType::RIGID_BODY]);
-}
-
-template<>
-shared<HeatTransfer> PhysicsEntity::getModifier<HeatTransfer>() {
-	if (hasModifier(PhysicsModifierType::HEAT_TRANSFER))
-		return std::dynamic_pointer_cast<HeatTransfer>(m_modifiers[PhysicsModifierType::HEAT_TRANSFER]);
-}
-
-template<>
-shared<PhaseChanger> PhysicsEntity::getModifier<PhaseChanger>() {
-	if (hasModifier(PhysicsModifierType::PHASE_CHANGER))
-		return std::dynamic_pointer_cast<PhaseChanger>(m_modifiers[PhysicsModifierType::PHASE_CHANGER]);
-}
-
-template<>
-shared<ShellSampling> PhysicsEntity::getModifier<ShellSampling>() {
-	if (hasModifier(PhysicsModifierType::SHELL_SAMPLING))
-		return std::dynamic_pointer_cast<ShellSampling>(m_modifiers[PhysicsModifierType::SHELL_SAMPLING]);
-}
