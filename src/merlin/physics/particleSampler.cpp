@@ -9,8 +9,8 @@ namespace Merlin {
     ParticleSampler::~ParticleSampler() {
     }
 
-    std::vector<glm::vec3> ParticleSampler::sample(Mesh_Ptr mesh) {
-        return std::vector<glm::vec3>();
+    std::vector<glm::vec4> ParticleSampler::sample(Mesh_Ptr mesh) {
+        return std::vector<glm::vec4>();
     }
 
     bool ParticleSampler::hasVolume() const{

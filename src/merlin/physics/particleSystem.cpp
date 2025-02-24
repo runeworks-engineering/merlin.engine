@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "merlin/physics/particleSystem.h"
 #include "merlin/utils/primitives.h"
-#include "merlin/graphics/ressourceManager.h"
+#include "merlin/utils/ressourceManager.h"
 
 namespace Merlin{
 
@@ -116,6 +116,16 @@ namespace Merlin{
 		}
 		else Console::error("ParticleSystem") << name << " is not registered in the particle system." << Console::endl;
 	}
+
+	void ParticleSystem::removeAllField() {
+		m_fields.clear();
+	}
+
+	void ParticleSystem::removeAllBuffer() {
+		m_buffers.clear();
+	}
+
+
 
 	void ParticleSystem::writeField(const std::string& name, GLsizei typesize,  void* data){
 		if (hasField(name)) {

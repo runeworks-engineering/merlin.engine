@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "merlin/graphics/particles.h"
 #include "merlin/utils/primitives.h"
-#include "merlin/graphics/ressourceManager.h"
+#include "merlin/utils/ressourceManager.h"
 
 namespace Merlin {
 

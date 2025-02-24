@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "merlin/physics/isoSurface.h"
-#include "merlin/graphics/ressourceManager.h"
+#include "merlin/utils/ressourceManager.h"
 
 namespace Merlin {
 	IsoSurface::IsoSurface(const std::string& name, glm::ivec3 volumeSize) {

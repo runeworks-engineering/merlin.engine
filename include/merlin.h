@@ -7,7 +7,6 @@
 #include "merlin/memory/ssbo.h"
 #include "merlin/memory/bindingPointManager.h"
 
-
 #include "merlin/graphics/renderer.h"
 #include "merlin/graphics/deferredrenderer.h"
 #include "merlin/graphics/pixelrenderer.h"

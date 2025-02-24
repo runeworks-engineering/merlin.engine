@@ -38,6 +38,8 @@ namespace Merlin {
 
 		void clearField(const std::string& name);
 		void clearBuffer(const std::string& name);
+		void removeAllField();
+		void removeAllBuffer();
 
 		void writeField(const std::string& name, GLsizei typesize, void* data);
 		void writeBuffer(const std::string& name, GLsizei typesize, GLsizei elements, void* data);

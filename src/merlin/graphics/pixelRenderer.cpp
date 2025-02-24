@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "merlin/graphics/pixelRenderer.h"
-#include "merlin/graphics/ressourceManager.h"
+#include "merlin/utils/ressourceManager.h"
 
 namespace Merlin {
 	PixelRenderer::PixelRenderer() : m_shader(nullptr) {

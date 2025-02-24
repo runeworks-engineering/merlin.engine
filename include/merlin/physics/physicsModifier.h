@@ -5,10 +5,13 @@
 namespace Merlin {
 	enum class PhysicsModifierType{
 		FLUID,
-		SOFT_BODY, 
+		SOFT_BODY,
 		RIGID_BODY,
+		GRANULAR_BODY,
 		HEAT_TRANSFER,
-		PHASE_CHANGER
+		PHASE_CHANGER,
+		PLASTICITY,
+		EMITTER
 	};
 
 	class PhysicsModifier{
@@ -19,12 +22,16 @@ namespace Merlin {
 		void enable(bool state = true);
 		void disable();
 
+		bool isActive() const;
 		PhysicsModifierType type();
+
+		virtual void dummy() {};
 
 	private:
 		bool m_active = true;
 		PhysicsModifierType m_type;
 	};
+
 	typedef shared<PhysicsModifier> PhysicsModifier_Ptr;
 }
 

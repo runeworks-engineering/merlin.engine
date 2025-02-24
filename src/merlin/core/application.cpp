@@ -3,7 +3,7 @@
 
 #include "merlin/core/log.h"
 #include "merlin/core/input.h"
-#include "merlin/graphics/ressourceManager.h"
+#include "merlin/utils/ressourceManager.h"
 #include <glfw/glfw3.h>
 
 

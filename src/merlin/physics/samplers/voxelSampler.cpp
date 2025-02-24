@@ -6,7 +6,7 @@ namespace Merlin {
     VoxelSampler::VoxelSampler(float spacing, float thickness) : m_spacing(spacing), m_thickness(thickness){
     }
 
-    std::vector<glm::vec3> VoxelSampler::sample(Mesh_Ptr mesh) {
+    std::vector<glm::vec4> VoxelSampler::sample(Mesh_Ptr mesh) {
         // Ensure the mesh is ready for voxelization.
         if(!mesh->hasBoundingBox());
         mesh->computeBoundingBox();
@@ -28,7 +28,7 @@ namespace Merlin {
         const auto& voxels = mesh->getVoxels();
 
         // Reserve memory for particles; note that not every voxel will be active.
-        std::vector<glm::vec3> particles;
+        std::vector<glm::vec4> particles;
         particles.reserve(totalVoxels);
 
         // Loop over each voxel in the grid.
@@ -45,7 +45,7 @@ namespace Merlin {
                 float y = aabb.min.y + (vy + 0.5f) * m_spacing;
                 float z = aabb.min.z + (vz + 0.5f) * m_spacing;
 
-                particles.push_back(glm::vec3(x, y, z));
+                particles.push_back(glm::vec4(x, y, z, 1.0));
 
             }
         }

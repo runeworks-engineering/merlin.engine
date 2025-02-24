@@ -2,6 +2,7 @@
 
 #include "merlin/core/core.h"
 #include "merlin/graphics/material.h"
+#include "merlin/shaders/computeShader.h"
 
 #include <unordered_map>
 
@@ -58,6 +59,18 @@ namespace Merlin {
 
     };
 
+
+    class ComputeShaderLibrary : public RessourceManager<ComputeShader> {
+        SINGLETON(ComputeShaderLibrary)
+    public:
+        inline void add(shared<ComputeShader> shader) { RessourceManager::add(shader->name(), shader); };
+        StagedComputeShader_Ptr getStagedComputeShader(const std::string&);
+
+    private:
+        ComputeShaderLibrary();
+        void LoadDefaultShaders();
+    
+    };
 
     class MaterialLibrary : public RessourceManager<MaterialBase> {
         SINGLETON(MaterialLibrary)

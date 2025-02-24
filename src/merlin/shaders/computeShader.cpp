@@ -148,39 +148,6 @@ namespace Merlin {
 
 
 
-
-	ComputeShaderLibrary::ComputeShaderLibrary() {
-
-		shared<ComputeShader> defaultShader = createShared<ComputeShader>("default");
-
-		std::string defaultSrc = R"( 
-			#version 330 core
-			layout (local_size_x = 1) in;
-			void main() {}
-		)";
-
-		defaultShader->compileFromSrc(defaultSrc);
-		//defaultShader->noMaterial();
-		add(defaultShader);
-	}
-
-	
-	void ComputeShaderLibrary::dispatch(const std::string& key) {
-		if (!exist(key)) {
-			Console::error("ComputeShaderLibrary") << "Shader " << key << " not found ! Using default shader instead." << Console::endl;
-			return;
-		}
-		resources[key]->dispatch();
-	}
-	void ComputeShaderLibrary::dispatch(const std::string& key, GLuint width, GLuint height, GLuint layers) {
-		if (!exist(key)) {
-			Console::error("ComputeShaderLibrary") << "Shader " << key << " not found ! Using default shader instead." << Console::endl;
-			return;
-		}
-		resources[key]->dispatch(width, height, layers);
-	}
-
-
 	StagedComputeShader::StagedComputeShader(const std::string& n, const std::string& file_path, GLuint numberOfStage, bool compile) : ComputeShader(n, file_path, compile, ShaderType::STAGED_COMPUTE_SHADER) {
 		m_stage = 0;
 		m_stageCount = numberOfStage;

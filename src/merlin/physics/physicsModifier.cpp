@@ -14,6 +14,10 @@ namespace Merlin {
 		m_active = false;
 	}
 
+	bool PhysicsModifier::isActive() const{
+		return m_active;
+	}
+
 	PhysicsModifierType PhysicsModifier::type() {
 		return m_type;
 	}

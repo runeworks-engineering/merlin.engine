@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "merlin/graphics/rendererBase.h"
 #include "merlin/core/core.h"
+#include "merlin/utils/ressourceManager.h"
 
 namespace Merlin {
 

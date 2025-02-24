@@ -4,7 +4,7 @@
 #include <string>
 #include <memory>
 
-#include "shaderBase.h"
+#include "merlin/shaders/shaderBase.h"
 
 namespace Merlin {
 

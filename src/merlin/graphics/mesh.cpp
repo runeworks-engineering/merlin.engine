@@ -186,6 +186,7 @@ namespace Merlin {
 		m_bbox.min = min;
 		m_bbox.max = max;
 		m_bbox.centroid = (min + max) / 2.0f;
+		m_bbox.size = glm::abs(m_bbox.max - m_bbox.min);
 		m_hasBoundingBox = true;
 		Console::info("Mesh") << "Bounding box is " << m_bbox.max - m_bbox.min << " starting at " << m_bbox.min << " and ending at " << m_bbox.max << Console::endl;
 	}

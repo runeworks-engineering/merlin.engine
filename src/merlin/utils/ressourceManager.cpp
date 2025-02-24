@@ -1,5 +1,6 @@
 #include "pch.h"
-#include "merlin/graphics/ressourceManager.h"
+#include "merlin/core/core.h"
+#include "merlin/utils/ressourceManager.h"
 #include "merlin/utils/util.h"
 
 namespace Merlin {
@@ -25,6 +26,23 @@ namespace Merlin {
 		shared<Shader> sh = Shader::create("debug.normals", "assets/common/shaders/graphics/debug.normals.vert", "assets/common/shaders/graphics/debug.normals.frag", "assets/common/shaders/graphics/debug.normals.geom");
 		add(sh);
 
+	}
+
+	StagedComputeShader_Ptr ComputeShaderLibrary::getStagedComputeShader(const std::string& key){
+		ComputeShader_Ptr shader = get(key);
+		if (!shader) return nullptr;
+		return std::dynamic_pointer_cast<StagedComputeShader>(shader);
+	}
+
+	ComputeShaderLibrary::ComputeShaderLibrary() {
+		LoadDefaultShaders();
+	}
+
+	void ComputeShaderLibrary::LoadDefaultShaders() {
+		add(StagedComputeShader::create("prefix.sum", "assets/common/physics/prefix.sum.comp", 4, false));
+		add(StagedComputeShader::create("solver", "assets/shaders/solver/solver.comp", 9, false));
+		add(ComputeShader::create("isoGen", "assets/shaders/solver/isoGen.comp", false));
+		add(ComputeShader::create("sectionGen", "assets/shaders/solver/texturePlot.comp", false));
 	}
 
 	MaterialLibrary::MaterialLibrary() {

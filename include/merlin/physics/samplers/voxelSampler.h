@@ -9,7 +9,7 @@ namespace Merlin {
 		VoxelSampler(float spacing, float thickness = 0);
 		~VoxelSampler() {};
 
-		std::vector<glm::vec3> sample(Mesh_Ptr mesh) override;
+		std::vector<glm::vec4> sample(Mesh_Ptr mesh) override;
 
 	private:
 		float m_spacing;

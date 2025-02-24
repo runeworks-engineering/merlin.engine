@@ -1,7 +1,6 @@
 #pragma once
 #include "merlin/core/core.h"
 #include "merlin/shaders/shaderBase.h"
-#include "merlin/graphics/ressourceManager.h"
 
 namespace Merlin{
 
@@ -60,17 +59,6 @@ namespace Merlin{
 	protected:
 		GLuint m_stage = 0;
 		GLuint m_stageCount = 0;
-
-	};
-
-
-	class ComputeShaderLibrary : public RessourceManager<ComputeShader>{
-	public:
-		ComputeShaderLibrary();
-		inline void add(shared<ComputeShader> shader) { RessourceManager::add(shader->name(), shader); };
-
-		void dispatch(const std::string& key);
-		void dispatch(const std::string& key, GLuint width, GLuint height = 1, GLuint layers = 1);
 
 	};
 

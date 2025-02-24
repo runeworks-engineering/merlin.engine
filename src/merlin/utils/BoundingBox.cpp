@@ -11,7 +11,7 @@ namespace Merlin {
 
         // Compute the centroid as the midpoint of the new bounding box
         result.centroid = (result.min + result.max) * 0.5f;
-
+        result.size = glm::abs(result.max - result.min);
         return result;
 	}
 

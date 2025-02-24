@@ -3,7 +3,7 @@
 
 namespace Merlin {
 	struct BoundingBox {
-		glm::vec3 min, max, centroid;
+		glm::vec3 min, max, centroid, size;
 
 		static BoundingBox unionBox(BoundingBox a, BoundingBox b);
 	};

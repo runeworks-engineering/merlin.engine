@@ -10,7 +10,7 @@ namespace Merlin {
         ParticleSampler();
         ~ParticleSampler();
 
-        virtual std::vector<glm::vec3> sample(Mesh_Ptr mesh);
+        virtual std::vector<glm::vec4> sample(Mesh_Ptr mesh);
         virtual bool hasVolume() const;
 
     private:
