@@ -3,6 +3,7 @@
 #include "merlin/graphics/renderableObject.h"
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Merlin {
 	
@@ -105,6 +106,36 @@ namespace Merlin {
 
 	void RenderableObject::scale(float v) {
 		m_transform = glm::scale(m_transform, glm::vec3(v));
+	}
+
+	void RenderableObject::alignToDirection(const glm::vec3& targetDirection){
+
+		glm::vec3 forward = glm::vec3(1, 0, 0);  // The arrow's original direction (X+)
+		glm::vec3 direction = glm::normalize(targetDirection);  // Ensure the direction is normalized
+
+		if (glm::length(direction) < 1e-6f) {
+			return; // Avoid division by zero
+		}
+
+		// Compute rotation axis (perpendicular to both vectors)
+		glm::vec3 rotationAxis = glm::cross(forward, direction);
+		float dot = glm::dot(forward, direction);
+
+		if (glm::length(rotationAxis) < 1e-6f) {
+			// If vectors are nearly parallel (dot is close to ±1), handle separately
+			if (dot > 0.0f) return;  // Already aligned, do nothing
+			else rotationAxis = glm::vec3(0, 1, 0); // 180-degree rotation, arbitrary axis
+		}
+
+		// Compute the rotation quaternion
+		float angle = acos(glm::clamp(dot, -1.0f, 1.0f)); // Ensure within valid range
+		glm::quat rotationQuat = glm::angleAxis(angle, glm::normalize(rotationAxis));
+
+		// Convert quaternion to rotation matrix
+		glm::mat4 rotationMatrix = glm::toMat4(rotationQuat);
+		m_transform = rotationMatrix * m_transform;
+
+		
 	}
 
 	void RenderableObject::setPosition(glm::vec3 v) {

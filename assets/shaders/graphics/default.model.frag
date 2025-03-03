@@ -80,6 +80,8 @@ uniform bool useShadows = false;
 uniform vec3 viewPos;
 uniform mat4 model;
 uniform bool use_vertex_color = false;
+uniform bool use_normal_map = true;
+uniform int debugMode = 0;
 
 // array of offset direction for sampling
 vec3 gridSamplingDisk[20] = vec3[]
@@ -243,17 +245,19 @@ void main() {
 
 	//Load material textures
 	vec3 N = vin.tangentBasis * vin.normal;
+    if(!use_normal_map) N = normalize(vin.normal);
 	if(material.use_normal_tex){
         N = texture(material.normal_tex, uv).rgb * 2.0f - 1.0;
+        N = normalize(vin.tangentBasis * N);
     }
     N = normalize(N);
 	
-	vec3 I = normalize(vin.position - vin.viewPos);
-	vec3 R = reflect(I, N);
-
-	R = vec3(R.x, -R.z, -R.y);
+	vec3 I = normalize(vin.viewPos - vin.position);
+	vec3 R = reflect(-I, vin.normal);
+    R = vec3(R.x, R.z, -R.y);
+	//R = vec3(R.x, R.z, -R.y);
 	vec3 skyColor;
-	if(environment.use_skybox_tex) skyColor = mix(vec3(1),textureLod(environment.skybox_tex, R, 6.0).rgb, material.shininess);
+	if(environment.use_skybox_tex) skyColor = textureLod(environment.skybox_tex, R, 6.0).rgb;
 	else skyColor = vec3(-R.y*0.5+0.8);
     
     vec3 viewDir = normalize(vin.viewPos - vin.position);
@@ -267,16 +271,24 @@ void main() {
 	
 	vec3 specularColor;
 	if (material.use_specular_tex) specularColor = material.specular_color * texture(material.specular_tex, uv).r;
-	else specularColor = material.specular_color + skyColor*0.1;
+	else specularColor = mix(material.specular_color, skyColor, max(min(material.shininess/128.0,1.0), 0.0));
 
     for (int i = 0; i < numLights; ++i) {
         finalColor += calculateLight(lights[i], N, vin.position, viewDir, ambientColor, diffuseColor, specularColor);
     }
+    finalColor = mix(finalColor, skyColor,  max(min(material.shininess/128.0,1.0), 0.0));
+
     float gamma = 0.6;
-    FragColor.rgb = pow(finalColor.rgb * (use_vertex_color ? vin.color.rgb : vec3(1.0)), vec3(1.0/gamma));
-    //FragColor.rgb = N* 0.9 + FragColor.rgb * 0.1;
-    //FragColor.rgb = normalize(vin.tangentBasis * (-lights[0].direction));
-    //FragColor.rgb = N;
+
+    if(debugMode == 0)
+        FragColor.rgb = pow(finalColor.rgb * (use_vertex_color ? vin.color.rgb : vec3(1.0)), vec3(1.0/gamma));
+    else if(debugMode == 1)
+        FragColor.rgb = skyColor;
+    else if(debugMode == 21)
+        FragColor.rgb = normalize(vin.normal);
+    else if(debugMode == 3) 
+        FragColor.rgb = normalize(vin.tangentBasis * (-lights[0].direction));
+
     FragColor.a = material.alpha;
 
 }

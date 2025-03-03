@@ -142,7 +142,6 @@ namespace Merlin {
             }
         }
 
-
         //-------------------------- RIGID_BODY -------------------------
 
         if (hasPhysics(PhysicsModifierType::RIGID_BODY)) {
@@ -153,7 +152,6 @@ namespace Merlin {
                 add_PBD_Buffers();
             }
         }
-
 
 
         //-------------------------- SOFT_BODY -------------------------

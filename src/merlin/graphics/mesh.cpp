@@ -152,6 +152,8 @@ namespace Merlin {
 		// Normalize the accumulated normals and assign them to the vertices
 		for (auto& vertex : m_vertices) {
 			vertex.normal = glm::normalize(normalMap[vertex.position]);
+			vertex.tangent = glm::vec3(0);
+			vertex.bitangent = glm::vec3(0);
 		}
 
 		// Update the Vertex Array Object (VAO) with the new normals
@@ -191,6 +193,28 @@ namespace Merlin {
 		Console::info("Mesh") << "Bounding box is " << m_bbox.max - m_bbox.min << " starting at " << m_bbox.min << " and ending at " << m_bbox.max << Console::endl;
 	}
 
+	void Mesh::swapNormals() {
+		m_swap_normals = !m_swap_normals;
+	}
+
+	void Mesh::flipFace() {
+		for (size_t i = 0; i < m_indices.size(); i += 3) {
+			GLuint i0 = m_indices[i];
+			GLuint i1 = m_indices[i + 1];
+			GLuint i2 = m_indices[i + 2];
+
+			glm::vec3 v0 = m_vertices[i0].position;
+			glm::vec3 v1 = m_vertices[i1].position;
+			glm::vec3 v2 = m_vertices[i2].position;
+
+			m_vertices[i1].position = v2;
+			m_vertices[i2].position = v1;
+		}
+
+		updateVAO();
+	}
+
+	
 
 	void Mesh::computeNormals(){
 		// Initialize all normals to zero
@@ -223,7 +247,7 @@ namespace Merlin {
 
 		// Normalize the accumulated normals
 		for (auto& vertex : m_vertices) {
-			vertex.normal = glm::normalize(vertex.normal);
+			vertex.normal = -glm::normalize(vertex.normal);
 		}
 
 		//Update VAO, VBO
@@ -273,10 +297,12 @@ namespace Merlin {
 
 	void Mesh::updateVAO() {
 		//Update VAO, VBO
+		m_vao->bind();
 		VBO vbo(m_vertices);
 		EBO ebo(m_indices);
 		m_vao->bindBuffer(ebo);
 		m_vao->addBuffer(vbo, Vertex::getLayout());
+		m_vao->unbind();
 	}
 
 
@@ -311,22 +337,28 @@ namespace Merlin {
 	void Mesh::applyMeshTransform(){
 		for (auto& vertex : m_vertices) {
 			vertex.position = transform() * glm::vec4(vertex.position,1.0);
-			vertex.normal = transform() * glm::vec4(vertex.normal,0.0);
+			vertex.normal = glm::normalize(transform() * glm::vec4(vertex.normal,0.0));
 		}
 		computeBoundingBox();
 		updateVAO();
 		setTransform(glm::mat4(1));
 	}
 
-	void Mesh::centerMeshOrigin(){
+	void Mesh::centerMeshOrigin() {
 		computeBoundingBox();
+
+		// Apply transformation directly to the vertices
+		glm::vec3 centroid = m_bbox.centroid;
+		glm::mat4 transform = glm::translate(glm::mat4(1.0f), -centroid);
+
 		for (auto& vertex : m_vertices) {
-			vertex.position -= m_bbox.centroid;
+			vertex.position = transform * glm::vec4(vertex.position, 1.0);
+			vertex.normal = transform * glm::vec4(vertex.normal, 0.0);
 		}
+
+		computeBoundingBox();
 		updateVAO();
 		setTransform(glm::mat4(1));
-		translate(m_bbox.centroid);
-		computeBoundingBox();
 	}
 
 	

@@ -14,8 +14,7 @@ namespace Merlin {
         Ambient = 0,
         Point = 1,
         Directional = 2,
-        Spot = 3,
-        
+        Spot = 3
     };
 
 	class Light : public RenderableObject{
@@ -23,18 +22,27 @@ namespace Merlin {
         Light(const std::string& name, LightType type, const glm::vec3& ambient = glm::vec3(0.05), const glm::vec3& diffuse = glm::vec3(0.7), const glm::vec3& specular = glm::vec3(0.5))
             : RenderableObject(name), ambient_(ambient), diffuse_(diffuse), specular_(specular), type_(type) {
             
-            switch (type){
+            switch (type_){
             case Merlin::LightType::Ambient:
-                m_mesh = Primitives::createPoint();
+                m_mesh = Primitives::createSphere(0.03, 20, 20);
+                m_mesh->centerMeshOrigin();
+                m_mesh->applyMeshTransform();
                 break;
             case Merlin::LightType::Point:
-                m_mesh = Primitives::createSphere(2);
+                m_mesh = Primitives::createSphere(0.3, 20, 20);
+                m_mesh->centerMeshOrigin();
+                m_mesh->applyMeshTransform();
                 break;
             case Merlin::LightType::Directional:
-                m_mesh = Primitives::createCylinder(1,2,20);
+                m_mesh = Primitives::createCylinder(0.03,1,20);
+                m_mesh->centerMeshOrigin();
+                m_mesh->applyMeshTransform();
+                m_mesh->rotate(glm::vec3(0, -glm::pi<float>() * 0.5, 0));
+                m_mesh->applyMeshTransform();
                 break;
             case Merlin::LightType::Spot:
                 m_mesh = Primitives::createCone(1, 2, 20);
+                m_mesh->centerMeshOrigin();
                 m_mesh->rotate(glm::vec3(90 * DEG_TO_RAD, 0, 0));
                 m_mesh->applyMeshTransform();
                 break;
@@ -82,7 +90,7 @@ namespace Merlin {
 
     protected : 
         GLuint m_shadowResolution = 512;
-
+        shared<Mesh> m_mesh = nullptr;
     private:
         glm::vec3 ambient_;
         glm::vec3 diffuse_;
@@ -91,7 +99,7 @@ namespace Merlin {
         glm::vec3 attenuation_ = glm::vec3(1.0, 0.09f, 0.0032f); //constant, linear, quadratic
         LightType type_;
 
-        inline static shared<Mesh> m_mesh = nullptr;
+        
 
         glm::mat4 renderTransform = glm::identity<glm::mat4>();
 	};

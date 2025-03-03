@@ -24,12 +24,13 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 model;
 uniform vec3 viewPos;
-
+uniform bool swap_normals = false;
 
 void main() {
 	vout.position = vec3(model * vec4(_position, 1.0f));
 	vout.color = _color;
-	vout.normal = _normal;
+	if(swap_normals) vout.normal = -_normal;
+	else vout.normal = _normal;
 	vout.texcoord = _texcoord;
 	vout.viewPos = viewPos;
 
@@ -39,7 +40,7 @@ void main() {
 		vec3 T = normalize(vec3(model * vec4(_tangent, 0.0)));
 		vec3 B = normalize(vec3(model * vec4(_bitangent, 0.0)));
 		vec3 N = normalize(vec3(model * vec4(_normal, 0.0)));
-	
+		if(swap_normals) N = -N;
 		// re-orthogonalize T with respect to N
 		T = normalize(T - dot(T, N) * N);
 		// then retrieve perpendicular vector B with the cross product of T and N

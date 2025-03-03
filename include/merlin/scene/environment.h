@@ -5,7 +5,7 @@
 #include "merlin/graphics/renderableObject.h"
 
 namespace Merlin {
-
+	//https://matheowis.github.io/HDRI-to-CubeMap/
 	class Environment : public RenderableObject {
 	public:
 		Environment(std::string name, GLuint resolution = 512);

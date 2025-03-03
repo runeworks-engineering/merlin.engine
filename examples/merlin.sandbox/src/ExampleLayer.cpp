@@ -11,23 +11,20 @@ const float radius = 3;
 ExampleLayer::ExampleLayer(){
 	camera().setNearPlane(0.1f);
 	camera().setFarPlane(100.0f);
-	camera().setFOV(55); //Use 90.0f as we are using cubemaps
+	camera().setFOV(45); //Use 90.0f as we are using cubemaps
 	camera().setPosition(glm::vec3(0.7, -7, 2.4));
 	camera().setRotation(glm::vec3(0, 0, +90));
 }
 
 ExampleLayer::~ExampleLayer(){}
 
-void ExampleLayer::onAttach(){
-	Layer3D::onAttach();
-
-	Console::setLevel(ConsoleLevel::_TRACE);
-
+void ExampleLayer::createScene() {
 	renderer.initialize();
 	renderer.enableSampleShading();
 	renderer.setEnvironmentGradientColor(0.903, 0.803, 0.703);
+	renderer.enableEnvironment();
 	renderer.showLights();
-	
+
 	shared<Model> model = ModelLoader::loadModel("./assets/models/model.obj");
 	//model->translate(glm::vec3(-0.5, 0, 0));
 
@@ -40,11 +37,11 @@ void ExampleLayer::onAttach(){
 	floorMat->setSpecular(glm::vec3(0.296648, 0.296648, 0.296648));
 	floorMat->setShininess(0.125);
 	floor->setMaterial(floorMat);
-	
+
 
 	/**/
 	light = createShared<PointLight>("light0");
-	light->translate(glm::vec3(radius, radius, 3));
+	light->translate(glm::vec3(radius, radius, 4));
 	light->setAttenuation(glm::vec3(0.6, 0.08, 0.008));
 	light->setAmbient(0.05, 0.05, 0.05);
 	light->setDiffuse(1, 1, 1);
@@ -55,21 +52,24 @@ void ExampleLayer::onAttach(){
 
 	/**/
 	dirlight = createShared<DirectionalLight>("light1", glm::vec3(-0.5f, 0.5f, -0.8f));
-	dirlight->translate(dirlight->direction() * glm::vec3(-10));
+	dirlight->alignToDirection(dirlight->direction());
+	dirlight->translate(glm::vec3(-10, 0, 0));
 	dirlight->setDiffuse(glm::vec3(1.0, 1.0, 1.0));
 	scene.add(dirlight);
 	/**/
 
 	/**/
 	dirlight = createShared<DirectionalLight>("light2", glm::vec3(0.5f, 0.5f, -0.8f));
-	dirlight->translate(dirlight->direction() * glm::vec3(-10));
+	dirlight->alignToDirection(dirlight->direction());
+	dirlight->translate(glm::vec3(-10, 0, 0));
 	dirlight->setDiffuse(glm::vec3(1));
 	scene.add(dirlight);
 	/**/
 
 	/**/
 	dirlight = createShared<DirectionalLight>("light3", glm::vec3(0.0f, -0.5f, -0.8f));
-	dirlight->translate(dirlight->direction() * glm::vec3(-10));
+	dirlight->alignToDirection(dirlight->direction());
+	dirlight->translate(glm::vec3(-10, 0, 0));
 	dirlight->setDiffuse(glm::vec3(1));
 	scene.add(dirlight);
 	/**/
@@ -80,37 +80,65 @@ void ExampleLayer::onAttach(){
 	scene.add(amLight);
 	/**/
 
-	Model_Ptr cube = Model::create("cube", Primitives::createCube(0.5));
-	cube->setMaterial("jade");
-	cube->translate(glm::vec3(-1,-1,0.25));
-	renderer.disableFaceCulling();
-	scene.add(cube);
+	//Model_Ptr cube = Model::create("cube", Primitives::createCube(0.5));
+	Mesh_Ptr custom_mesh = ModelLoader::loadMesh("./assets/models/dragon.obj");
+	
+	custom_mesh->rotate(glm::vec3(glm::pi<float>()*0.5,0,0));
+	custom_mesh->rotate(glm::vec3(0, 0.8, 0));
+	custom_mesh->smoothNormals();
+	custom_mesh->scale(0.1);
+	custom_mesh->applyMeshTransform();
+
+	custom_mesh->translate(glm::vec3(-2, -2, 2));
+
+	Model_Ptr dragon = createShared<Model>("dragon", custom_mesh);
+	dragon->setMaterial("gold");
+	dragon->useNormalMap(false);
+
+
+	//renderer.disableFaceCulling();
+
+	scene.add(dragon);
 	scene.add(model);
 	scene.add(floor);
 
-	//scene.setCamera(camera);
 
-	/*
+	Model_Ptr cube = Model::create("cube", Primitives::createCube(2));
+	cube->translate(glm::vec3(-2, -2, 1));
+	cube->setMaterial("chrome");
+	scene.add(cube);
+
 	shared<Environment> env;
 	env = createShared<Environment>("env", 2048);
-	//env->setCubeMap(light->getShadowMap());
 
 	std::vector<std::string> skyBoxPath = {
-		"./assets/textures/skybox/right.jpg",
-		"./assets/textures/skybox/left.jpg",
-		"./assets/textures/skybox/top.jpg",
-		"./assets/textures/skybox/bottom.jpg",
-		"./assets/textures/skybox/front.jpg",
-		"./assets/textures/skybox/back.jpg"
+		"./assets/textures/skybox/front.png",
+		"./assets/textures/skybox/back.png",
+		"./assets/textures/skybox/top.png",
+		"./assets/textures/skybox/bottom.png",
+		"./assets/textures/skybox/left.png",
+		"./assets/textures/skybox/right.png"
 	};
 
 	shared<CubeMap> sky = CubeMap::create(skyBoxPath);
 	env->setCubeMap(sky);
-
 	scene.setEnvironment(env);
-	*/
+
 
 	scene.add(TransformObject::create("origin", 2));
+}
+
+void ExampleLayer::createPhysics() {
+	solver.init();
+}
+
+void ExampleLayer::onAttach(){
+	Layer3D::onAttach();
+
+	Console::setLevel(ConsoleLevel::_TRACE);
+
+	createScene();
+	//createPhysics();
 
 	//noise = ComputeShader::create("noise", "assets/noise.comp");
 	//glm::ivec3 pWkgSize = glm::ivec3(8, 8, 8); //Number of thread per workgroup
@@ -152,9 +180,11 @@ void ExampleLayer::onUpdate(Timestep ts){
 	isosurface->setIsoLevel(0.1);
 	isosurface->compute();
 	*/
+
 	renderer.clear();
 	renderer.renderScene(scene, camera());
 	renderer.reset();
+
 }
 
 void ExampleLayer::onImGuiRender()

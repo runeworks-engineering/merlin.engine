@@ -33,6 +33,7 @@ namespace Merlin {
 		void setPosition(glm::vec3 v);
 		void scale(glm::vec3 v);
 		void scale(float v);
+		void alignToDirection(const glm::vec3& direction);//align to direction
 
 		//Getters
 		const glm::vec3& position() const;
@@ -53,7 +54,7 @@ namespace Merlin {
 
 		inline void show() { m_hidden = false; }
 		inline void hide() { m_hidden = true; }
-		inline bool isHidden() { return m_hidden; }
+		inline bool isHidden() const { return m_hidden; }
 
 		bool hasParent() const;
 		bool hasChildren() const;
@@ -65,9 +66,11 @@ namespace Merlin {
 		inline const bool useVertexColors() const { return use_vertex_color; }
 		inline void useVertexColors(bool value) { use_vertex_color = value; }
 		inline const bool useFlatShading() const { return use_flat_shading; }
-		inline const bool useSmoothShading() const { return !use_flat_shading; }
 		inline void useFlatShading(bool value) { use_flat_shading = value; }
+		inline const bool useSmoothShading() const { return !use_flat_shading; }
 		inline void useSmoothShading(bool value) { use_flat_shading = !value; }
+		inline const bool useNormalMap() const { return use_normal_map; }
+		inline void useNormalMap(bool value) { use_normal_map = value; }
 
 		std::list<shared<RenderableObject>>& children();
 		shared<RenderableObject> getChild(std::string name);
@@ -79,6 +82,7 @@ namespace Merlin {
 		int m_ID;
 
 		bool use_vertex_color = false;
+		bool use_normal_map = true;
 		bool use_flat_shading = false;
 
 		bool m_wireframe = false;

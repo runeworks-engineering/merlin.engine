@@ -24,6 +24,8 @@ namespace Merlin {
 		void voxelizeSurface(float size, float thickness);
 
 		void computeBoundingBox();
+		void swapNormals();
+		void flipFace();
 		void computeNormals();
 		void smoothNormals();
 		void calculateIndices();
@@ -41,6 +43,7 @@ namespace Merlin {
 		inline bool hasIndices() const { return m_indices.size() > 0; }
 		inline bool hasShader() const { return m_shader != nullptr; }
 		inline bool hasMaterial() const { return m_material != nullptr; }
+		inline bool hasInvertedNormals() const { return m_swap_normals; }
 
 		inline GLuint getDrawMode() const { return m_drawMode; }
 		inline const std::vector<int>& getVoxels() const { return m_voxels;  }
@@ -62,6 +65,7 @@ namespace Merlin {
 	private:
 		VAO_Ptr m_vao;
 		GLuint m_drawMode;
+		bool m_swap_normals = false;
 
 		GLuint m_elementCount = 0;
 		std::vector<Vertex> m_vertices;
