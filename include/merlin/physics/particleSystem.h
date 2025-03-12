@@ -30,8 +30,10 @@ namespace Merlin {
 
 		AbstractBufferObject_Ptr getField(const std::string& name) const;
 		AbstractBufferObject_Ptr getBuffer(const std::string& name) const;
+		const std::map<std::string, GLuint>& getCopyBufferStructure() const;
 		
-		void addField(AbstractBufferObject_Ptr buf);
+
+		void addField(AbstractBufferObject_Ptr buf, bool sortable);
 		void addBuffer(AbstractBufferObject_Ptr buf);
 		bool hasField(const std::string& name) const;
 		bool hasBuffer(const std::string& name) const;
@@ -79,7 +81,7 @@ namespace Merlin {
 
 		//templates
 		template<typename T>
-		void addField(const std::string& name);
+		void addField(const std::string& name, bool sortable);
 
 		template<typename T>
 		void addBuffer(const std::string& name, GLsizei size = 0);
@@ -105,6 +107,7 @@ namespace Merlin {
 		//Simulation
 		std::map<std::string, ComputeShader_Ptr> m_programs; //Shader to compute the particle position
 		std::map<std::string, AbstractBufferObject_Ptr> m_fields; //Buffer to store particles fields
+		std::map<std::string, GLuint> m_sortableFields; //Buffer to store particles fields that needs to be sorted
 		std::map<std::string, AbstractBufferObject_Ptr> m_buffers; //Buffer to store particles fields
 		std::map<std::string, std::set<std::string>> m_links;
 
@@ -114,13 +117,17 @@ namespace Merlin {
 	typedef shared<ParticleSystem> ParticleSystem_Ptr;
 
 	template<typename T>
-	void ParticleSystem::addField(const std::string& name) {
+	void ParticleSystem::addField(const std::string& name, bool sortable) {
 		if(hasField(name)) {
 			Console::warn("ParticleSystem") << name << "has been overwritten" << Console::endl;
 		}
 		SSBO_Ptr<T> f = SSBO<T>::create(name, m_instancesCount);
 		m_fields[name] = f;
 		 
+		if (sortable) {
+			m_sortableFields[name] = sizeof(T);
+		}
+
 		if (hasLink(m_currentProgram)) {
 			link(m_currentProgram, f->name());
 		}

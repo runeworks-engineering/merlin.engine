@@ -2,7 +2,7 @@
 #include "merlin/core/core.h"
 #include "merlin/core/console.h"
 
-
+#include <map>
 #include <vector>
 #include <glm/glm.hpp>
 #include <glad/gl.h>
@@ -83,6 +83,8 @@ namespace Merlin {
         inline void setType(GLuint typeSize) { m_type = typeSize; }
         inline void setElements(GLsizeiptr elements) { m_elements = elements; }
 
+
+
     protected:
         BufferUsage m_usage;
         BufferTarget m_target;
@@ -91,6 +93,7 @@ namespace Merlin {
 
         bool m_isMutable = true;
         bool m_isAllocated = false;
+		static const std::map<std::string, GLuint> m_typeMap;
 
     private:
         GLsizeiptr m_size = 0;      //buffer size in bytes

@@ -55,7 +55,7 @@ namespace Merlin {
 
         virtual void attach(int id, Shader& shader) = 0;
         virtual void detach() {};
-        virtual void attachShadow(Shader&, float scale = 10){}
+        virtual void attachShadow(Shader&, const std::vector<glm::vec3>& points){}
 
         virtual shared<FBO> shadowFBO() { return nullptr; }
         virtual shared<TextureBase> shadowMap() { return nullptr; }
@@ -108,22 +108,24 @@ namespace Merlin {
     public:
         DirectionalLight(const std::string& name, const glm::vec3& direction = glm::vec3(0, 0, -1))
             : Light(name, LightType::Directional), direction_(direction) {
-            m_shadowResolution = 512;
+            m_shadowResolution = 1024;
             generateShadowMap();
             m_castShadow = true;
+            alignToDirection(direction_);
         }
         DirectionalLight(const std::string& name, const glm::vec3& direction, const glm::vec3& ambient, const glm::vec3& diffuse, const glm::vec3& specular)
             : Light(name, LightType::Directional, ambient, diffuse, specular), direction_(direction) {
-            m_shadowResolution = 512;
+            m_shadowResolution = 1024;
             generateShadowMap();
             m_castShadow = true;
+            alignToDirection(direction_);
         }
 
         const glm::vec3& direction() const { return direction_; }
 
         void attach(int id, Shader&) override;
         void detach() override;
-        void attachShadow(Shader&, float scale = 10) override;
+        void attachShadow(Shader&, const std::vector<glm::vec3>& points) override;
         inline shared<FBO> shadowFBO() override { return m_shadowFBO; }
         inline shared<TextureBase> shadowMap() override { return m_shadowMap; }
         void setShadowResolution(GLuint res) override;
@@ -176,7 +178,7 @@ namespace Merlin {
         void generateShadowMap();
         void detach() override;
         void attach(int id, Shader&) override;
-        void attachShadow(Shader&, float scale = 10) override;
+        void attachShadow(Shader&, const std::vector<glm::vec3>& points) override;
         void setShadowResolution(GLuint res) override;
         inline shared<FBO> shadowFBO() override { return m_shadowFBO; }
         inline shared<TextureBase> shadowMap() override { return m_shadowMap; }
@@ -230,7 +232,7 @@ namespace Merlin {
         SpotLight(const std::string& name, const glm::vec3& position = glm::vec3(0), const glm::vec3& direction = glm::vec3(0, 0, -1), float cutOff = 50.0f)
             : Light(name, LightType::Spot), direction_(direction), cutOff_(cutOff) {
             setPosition(position);
-            m_shadowResolution = 512;
+            m_shadowResolution = 1024;
             generateShadowMap();
             setAttenuation(glm::vec3(0.1, 0.001, 0.0008));
             m_castShadow = true;
@@ -239,7 +241,7 @@ namespace Merlin {
         SpotLight(const std::string& name, const glm::vec3& position, const glm::vec3& direction, float cutOff, const glm::vec3& ambient, const glm::vec3& diffuse, const glm::vec3& specular)
             : Light(name, LightType::Spot, ambient, diffuse, specular), direction_(direction), cutOff_(cutOff) {
             setPosition(position);
-            m_shadowResolution = 512;
+            m_shadowResolution = 1024;
             generateShadowMap();
             setAttenuation(glm::vec3(0.1, 0.001, 0.0008));
             m_castShadow = true;
@@ -251,7 +253,7 @@ namespace Merlin {
         void attach(int id, Shader&) override;
         void detach() override;
 
-        void attachShadow(Shader&, float scale = 10) override;
+        void attachShadow(Shader&, const std::vector<glm::vec3>& points) override;
         inline shared<FBO> shadowFBO() override { return m_shadowFBO; }
         inline shared<TextureBase> shadowMap() override { return m_shadowMap; }
         void setShadowResolution(GLuint res) override;

@@ -3,6 +3,7 @@
 #include "merlin/memory/bindingPointManager.h"
 
 namespace Merlin {
+ 
     void AbstractBufferObject::releaseBindingPoint() {
         if(m_bindingPoint < 16) BindingPointManager::instance().releaseBindingPoint(m_target, m_bindingPoint);
         m_bindingPoint = -1;

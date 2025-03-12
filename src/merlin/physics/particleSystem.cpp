@@ -5,6 +5,7 @@
 
 namespace Merlin{
 
+
 	shared<ParticleSystem> ParticleSystem::create(const std::string& name, size_t count) {
 		return std::make_shared<ParticleSystem>(name, count);
 	}
@@ -64,6 +65,10 @@ namespace Merlin{
 		}
 	}
 
+	const std::map<std::string, GLuint>& ParticleSystem::getCopyBufferStructure() const{
+		return m_sortableFields;
+	}
+
 	AbstractBufferObject_Ptr ParticleSystem::getBuffer(const std::string& name) const {
 		if (hasBuffer(name)) {
 			return m_buffers.at(name);
@@ -75,11 +80,16 @@ namespace Merlin{
 	}
 
 
-	void ParticleSystem::addField(AbstractBufferObject_Ptr field) {
+	void ParticleSystem::addField(AbstractBufferObject_Ptr field, bool sortable) {
 		if (hasField(field->name())) {
 			Console::warn("ParticleSystem") << field->name() << "has been overwritten" << Console::endl;
 		}
 		m_fields[field->name()] = field;
+
+		if (sortable) {
+			m_sortableFields[field->name()] = field->type();
+		}
+
 		if (hasLink(m_currentProgram)) {
 			link(m_currentProgram, field->name());
 		}

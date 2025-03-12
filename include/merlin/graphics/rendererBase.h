@@ -52,6 +52,8 @@ namespace Merlin {
 		bool useDefaultLight();
 
 		void gatherLights(const shared<RenderableObject>& object);
+		const std::vector<glm::vec3>& getScenePoints() const;
+		void addPoint(glm::vec3);
 
 		void setEnvironmentGradientColor(float r, float g, float b);
 		void setEnvironmentGradientColor(glm::vec3 color);
@@ -81,8 +83,6 @@ namespace Merlin {
 		bool display_lights = false;
 		bool use_default_light = false; //Use has backup if no light set
 
-		float m_scene_scale = 1.0;
-
 		//Light
 		shared<AmbientLight> m_defaultAmbient;
 		shared<DirectionalLight> m_defaultDirLight;
@@ -90,6 +90,8 @@ namespace Merlin {
 		shared<DirectionalLight> m_defaultDirLight3;
 
 		std::vector<shared<Light>> m_activeLights;
+
+		std::vector<glm::vec3> m_scenePoints;
 
 		//Matrix stack
 		glm::mat4 m_globalTransform = glm::mat4(1);

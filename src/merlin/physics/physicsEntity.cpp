@@ -3,6 +3,8 @@
 #include "merlin/utils/util.h"
 #include "merlin/physics/samplers/voxelSampler.h"
 
+using namespace Merlin::Utils;
+
 namespace Merlin {
 
 	PhysicsEntity::PhysicsEntity(const std::string& name, ParticleSampler_Ptr sampler) :

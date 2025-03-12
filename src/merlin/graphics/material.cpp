@@ -88,6 +88,10 @@ namespace Merlin {
 
 		}
 
+		if (m_diffuse_tex || m_specular_tex || m_normal_tex) {
+			shader.setVec2("material.texture_repeat", m_tex_repeat);
+		}else shader.setVec2("material.texture_repeat", glm::vec2(1,1));
+
 		shader.setFloat("material.shininess", m_shininess*128);
 		shader.setFloat("material.alpha", m_alpha);
 	}

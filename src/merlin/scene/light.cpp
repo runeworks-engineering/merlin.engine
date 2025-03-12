@@ -49,21 +49,40 @@ namespace Merlin {
 		}
 	}
 
-	void DirectionalLight::attachShadow(Shader& shader, float scale) {
-		float near_plane = 0.01 * scale;
-		float far_plane = scale * 2.0;
-		glm::mat4 lightProjection = glm::ortho(-0.5f * scale, 0.5f * scale, -0.5f * scale, 0.5f * scale, near_plane, far_plane);
+	void DirectionalLight::attachShadow(Shader& shader, const std::vector<glm::vec3>& points) {
 
-		// Assuming lightDirection is normalized
-		glm::vec3 lightDirection = direction(); // Your light direction function
 		glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
 
 		// Check if the light direction is collinear with the default up vector
-		if (glm::abs(glm::dot(lightDirection, upVector)) > 0.999f) {
+		if (glm::abs(glm::dot(direction(), upVector)) > 0.999f)
 			upVector = glm::vec3(1.0f, 0.0f, 0.0f); // Choose an alternative up vector
+
+		glm::mat4 lightView = glm::lookAt(-direction(), glm::vec3(0.0f, 0.0f, 0.0f), upVector);
+
+		// Déterminer les plans near et far
+		float near_plane = std::numeric_limits<float>::max();
+		float far_plane = std::numeric_limits<float>::lowest();
+		float left = std::numeric_limits<float>::max();
+		float right = std::numeric_limits<float>::lowest();
+		float top = std::numeric_limits<float>::lowest();
+		float bottom = std::numeric_limits<float>::max();
+
+		for (const auto& wpoint : points) {
+			const auto& point = glm::vec3(lightView * glm::vec4(wpoint, 1.0f));
+			near_plane = std::min(near_plane, point.z);
+			far_plane = std::max(far_plane, point.z);
+			left = std::min(left, point.x);
+			right = std::max(right, point.x);
+			bottom = std::min(bottom, point.y);
+			top = std::max(top, point.y);
 		}
 
-		glm::mat4 lightView = glm::lookAt(-scale * lightDirection, glm::vec3(0.0f, 0.0f, 0.0f), upVector);
+		// Ajuster les valeurs pour éviter les artefacts
+		//near_plane = 1.0 * near_plane;
+		//far_plane = 1.0 * far_plane;
+
+		glm::mat4 lightProjection = glm::ortho(left, right, bottom, top, near_plane, far_plane);
+
 		m_lightSpaceMatrix = lightProjection * lightView;
 		mesh().setTransform(lightView);
 
@@ -163,38 +182,43 @@ namespace Merlin {
 	}
 
 
-	void PointLight::attachShadow(Shader& shader, float scale) {
+	void PointLight::attachShadow(Shader& shader, const std::vector<glm::vec3>& points) {
+		glm::vec3 pos = position();
 
-		float near_plane = 0.1 * scale;
-		float far_plane = scale * 2.2;
+		// Déterminer les plans near et far
+		float near_plane = std::numeric_limits<float>::max();
+		float far_plane = std::numeric_limits<float>::lowest();
+
+		for (const auto& point : points) {
+			near_plane = std::min(near_plane, glm::length(point - pos));
+			far_plane = std::max(far_plane, glm::length(point - pos));
+		}
+
+		//Console::print() << "Near: " << near_plane << " Far: " << far_plane << Console::endl;
+		// Ajuster les valeurs pour éviter les artefacts
+		near_plane = 0.2 * std::max(near_plane, 0.1f);
+		far_plane = std::max(far_plane, near_plane + 0.1f);
+
 		m_lightSpaceMatrix = glm::perspective(glm::radians(90.0f), 1.0f, near_plane, far_plane);
 
 		m_shadowTransforms.clear();
 		// Correct orientations for each face of the cubemap
-		glm::vec3 pos = position();
-
-		m_shadowTransforms.push_back(m_lightSpaceMatrix *
-			glm::lookAt(pos, pos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0))); // Positive X
-		m_shadowTransforms.push_back(m_lightSpaceMatrix *
-			glm::lookAt(pos, pos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0))); // Negative X
-		m_shadowTransforms.push_back(m_lightSpaceMatrix *
-			glm::lookAt(pos, pos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0))); // Positive Y
-		m_shadowTransforms.push_back(m_lightSpaceMatrix *
-			glm::lookAt(pos, pos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0))); // Negative Y
-		m_shadowTransforms.push_back(m_lightSpaceMatrix *
-			glm::lookAt(pos, pos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0))); // Positive Z
-		m_shadowTransforms.push_back(m_lightSpaceMatrix *
-			glm::lookAt(pos, pos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0))); // Negative Z
-
+		m_shadowTransforms.push_back(m_lightSpaceMatrix * glm::lookAt(pos, pos + glm::vec3(1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0))); // Positive X
+		m_shadowTransforms.push_back(m_lightSpaceMatrix * glm::lookAt(pos, pos + glm::vec3(-1.0, 0.0, 0.0), glm::vec3(0.0, -1.0, 0.0))); // Negative X
+		m_shadowTransforms.push_back(m_lightSpaceMatrix * glm::lookAt(pos, pos + glm::vec3(0.0, 1.0, 0.0), glm::vec3(0.0, 0.0, 1.0))); // Positive Y
+		m_shadowTransforms.push_back(m_lightSpaceMatrix * glm::lookAt(pos, pos + glm::vec3(0.0, -1.0, 0.0), glm::vec3(0.0, 0.0, -1.0))); // Negative Y
+		m_shadowTransforms.push_back(m_lightSpaceMatrix * glm::lookAt(pos, pos + glm::vec3(0.0, 0.0, 1.0), glm::vec3(0.0, -1.0, 0.0))); // Positive Z
+		m_shadowTransforms.push_back(m_lightSpaceMatrix * glm::lookAt(pos, pos + glm::vec3(0.0, 0.0, -1.0), glm::vec3(0.0, -1.0, 0.0))); // Negative Z
 
 		for (int i = 0; i < m_shadowTransforms.size(); i++) {
 			shader.setMat4("shadowMatrices[" + std::to_string(i) + "]", m_shadowTransforms[i]);
 		}
-
-		shader.setVec3("lightPos", position());
+		
+		shader.setVec3("lightPos", pos);
 		shader.setFloat("far_plane", far_plane);
 	}
-	
+
+
 	void AmbientLight::attach(int id, Shader& shader) {
 		std::string base = "lights[" + std::to_string(id) + "]";
 		shader.setVec3(base + ".ambient", ambient());
@@ -243,9 +267,39 @@ namespace Merlin {
 		}
 	}
 
-	void SpotLight::attachShadow(Shader& shader, float scale) {
+	void SpotLight::attachShadow(Shader& shader, const std::vector<glm::vec3>& points) {
+		glm::vec3 upVector = glm::vec3(0.0f, 1.0f, 0.0f);
+
+		// Check if the light direction is collinear with the default up vector
+		if (glm::abs(glm::dot(direction(), upVector)) > 0.999f)
+			upVector = glm::vec3(1.0f, 0.0f, 0.0f); // Choose an alternative up vector
+
+		glm::mat4 lightView = glm::lookAt(position(), position() + direction(), upVector);
+
+		// Déterminer les plans near et far
+		float near_plane = std::numeric_limits<float>::max();
+		float far_plane = std::numeric_limits<float>::lowest();
+
+		for (const auto& wpoint : points) {
+			const auto& point = glm::vec3(lightView * glm::vec4(wpoint, 1.0f));
+			near_plane = std::min(near_plane, point.z);
+			far_plane = std::max(far_plane, point.z);
+		}
+
+		// Ajuster les valeurs pour éviter les artefacts
+		//near_plane = std::max(near_plane, 0.1f);
+		//far_plane = std::max(far_plane, near_plane + 0.1f);
+
+		glm::mat4 lightProjection = glm::perspective(glm::radians(cutOff()), 1.0f, near_plane, far_plane);
+
+		m_lightSpaceMatrix = lightProjection * lightView;
+		mesh().setTransform(lightView);
+
 		shader.setMat4("lightSpaceMatrix", m_lightSpaceMatrix);
 	}
+
+
+
 
 	void SpotLight::generateShadowMap() {
 		if (!m_shadowMap) {

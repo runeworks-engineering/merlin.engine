@@ -39,11 +39,13 @@ namespace Merlin {
         glm::vec3 m_ambient_color;
         glm::vec3 m_diffuse_color;
         glm::vec3 m_specular_color;
+        glm::vec2 m_tex_repeat;
         float m_shininess;
         float m_alpha;
+        
 
     public:
-        PhongMaterial(std::string name) : MaterialBase(name, MaterialType::PHONG), m_ambient_color(0.2f, 0.2f, 0.2f), m_diffuse_color(1.0f, 1.0f, 1.0f), m_specular_color(1.0f, 1.0f, 1.0f), m_shininess(0.2), m_alpha(1.0){}
+        PhongMaterial(std::string name) : MaterialBase(name, MaterialType::PHONG), m_ambient_color(0.2f, 0.2f, 0.2f), m_diffuse_color(1.0f, 1.0f, 1.0f), m_specular_color(1.0f, 1.0f, 1.0f), m_tex_repeat(1,1), m_shininess(0.2), m_alpha(1.0){}
 
         inline void setAmbient(const glm::vec3& ambient) { m_ambient_color = ambient; };
         inline void setDiffuse(const glm::vec3& diffuse) { m_diffuse_color = diffuse; };
@@ -56,6 +58,7 @@ namespace Merlin {
         inline void setDiffuseTexture(Texture2D_Ptr tex) { m_diffuse_tex = tex; }
         inline void setSpecularTexture(Texture2D_Ptr tex) { m_specular_tex = tex; }
         inline void setNormalTexture(Texture2D_Ptr tex) { m_normal_tex = tex; }
+        inline void setTextureRepeat(glm::vec2 txrep) { m_tex_repeat = txrep; }
 
         void attach(Shader& shader) const override;
         void detach() const override;

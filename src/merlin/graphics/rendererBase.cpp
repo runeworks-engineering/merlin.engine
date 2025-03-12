@@ -33,6 +33,7 @@ namespace Merlin {
 	void RendererBase::reset() {
 		resetMatrix();
 		m_activeLights.clear();
+		m_scenePoints.clear();
 		Texture2D::resetTextureUnits();
 	}
 
@@ -206,5 +207,12 @@ namespace Merlin {
 		for (const auto& child : object->children()) {
 			if (!child->isHidden()) gatherLights(child);
 		}
+	}
+
+	const std::vector<glm::vec3>& RendererBase::getScenePoints() const {
+		return m_scenePoints;
+	}
+	void RendererBase::addPoint(glm::vec3 pt){
+		m_scenePoints.push_back(pt);
 	}
 }

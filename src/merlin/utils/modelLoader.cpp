@@ -10,6 +10,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+using namespace Merlin::Utils;
+
 namespace Merlin {
 
 

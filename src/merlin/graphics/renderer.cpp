@@ -14,9 +14,24 @@ namespace Merlin {
 		}
 		if (const auto mesh = std::dynamic_pointer_cast<Mesh>(object)) {
 			BoundingBox bb = mesh->getBoundingBox();
-			glm::vec3 size = bb.max - bb.min;
-			float maxScale = glm::max(glm::max(size.x, size.y), size.z);
-			if (maxScale > m_scene_scale)m_scene_scale = maxScale;
+			
+
+			// Ajouter les sommets de la bounding box
+			std::vector<glm::vec3> corners = {
+				bb.min,
+				glm::vec3(bb.min.x, bb.min.y, bb.max.z),
+				glm::vec3(bb.min.x, bb.max.y, bb.min.z),
+				glm::vec3(bb.min.x, bb.max.y, bb.max.z),
+				glm::vec3(bb.max.x, bb.min.y, bb.min.z),
+				glm::vec3(bb.max.x, bb.min.y, bb.max.z),
+				glm::vec3(bb.max.x, bb.max.y, bb.min.z),
+				bb.max
+			};
+
+			for (const auto& corner : corners) {
+				addPoint(corner);
+			}
+
 		}
 		if (const auto model = std::dynamic_pointer_cast<Model>(object)) {
 			for (const auto& mesh : model->meshes()) {
@@ -95,6 +110,7 @@ namespace Merlin {
 		glDepthFunc(GL_LESS);
 		env.detach();
 	}
+
 
 
 	void Renderer::renderDepth(const shared<RenderableObject>& object, shared<Shader> shader){
@@ -233,7 +249,7 @@ namespace Merlin {
 
 		Texture2D::resetTextureUnits();
 		shader->use();
-		light->attachShadow(*shader, m_scene_scale);
+		light->attachShadow(*shader, getScenePoints());
 		
 		for (const auto& node : scene.nodes()) {
 			if (!node->isHidden()) {

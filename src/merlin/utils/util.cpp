@@ -5,7 +5,36 @@
 
 #include <random>
 
-namespace Merlin {	
+namespace Merlin::Utils {	
+
+	const std::map<std::string, GLuint> m_typeMap = {
+		{"int", 4},
+		{"float", 4},
+		{"uint", 4},
+		{"bool", 4},
+		{"double", 8},
+		{"dvec2", 16},
+		{"dvec3", 24},
+		{"dvec4", 32},
+		{"ivec2", 8},
+		{"ivec3", 12},
+		{"ivec4", 16},
+		{"uvec2", 8},
+		{"uvec3", 12},
+		{"uvec4", 16},
+		{"vec2", 8},
+		{"vec3", 12},
+		{"vec4", 16},
+		{"mat2", 16},
+		{"mat2x3", 24},
+		{"mat2x4", 32},
+		{"mat3x2", 24},
+		{"mat3", 36},
+		{"mat3x4", 48},
+		{"mat4x2", 32},
+		{"mat4x3", 48},
+		{"mat4", 64}
+	};
 
 	FileType getFileType(const std::string& file_path) {
 		std::string extension = getFileExtension(file_path);
@@ -88,6 +117,16 @@ namespace Merlin {
 
 		// Return the part of the filepath of last folder
 		return filepath.substr(0, pos+1);
+	}
+
+	const std::map<std::string, GLuint>& getGLTypes(){
+		return m_typeMap;
+	}
+
+	const GLuint getGLTypeSize(const std::string& name){
+		if (m_typeMap.find(name) != m_typeMap.end())
+			return m_typeMap.at(name);
+		else return -1;
 	}
 
 

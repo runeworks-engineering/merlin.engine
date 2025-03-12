@@ -11,7 +11,7 @@
 #include "merlin/graphics/deferredrenderer.h"
 #include "merlin/graphics/pixelrenderer.h"
 
-#include "merlin/physics/PhysicsSolver.h"
+#include "merlin/physics/PhysicsSolver3D.h"
 
 #include "merlin/utils/modelLoader.h"
 #include "merlin/utils/primitives.h"
