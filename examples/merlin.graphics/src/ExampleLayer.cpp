@@ -127,7 +127,7 @@ void ExampleLayer::createScene() {
 }
 
 void ExampleLayer::createPhysics() {
-	solver.init();
+	//solver.init();
 }
 
 void ExampleLayer::onAttach(){

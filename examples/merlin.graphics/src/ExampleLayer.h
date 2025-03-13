@@ -20,7 +20,7 @@ private:
 	Scene scene;
 	
 	Renderer renderer;
-	PhysicsSolver solver;
+	//PhysicsSolver solver;
 
 	shared<PointLight>  light;
 };
