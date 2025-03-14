@@ -61,7 +61,7 @@ namespace Merlin {
 		defaultMaterial->setSpecular(glm::vec3(0.70, 0.70, 0.70));
 		defaultMaterial->setShininess(0.25);
 
-		shared<PhongMaterial> defaultWhite = createShared<PhongMaterial>("defaultWhite");
+		shared<PhongMaterial> defaultWhite = createShared<PhongMaterial>("white");
 		defaultWhite->setAmbient(glm::vec3(1.0, 1.0, 1.0));
 		defaultWhite->setDiffuse(glm::vec3(0.55, 0.55, 0.55));
 		defaultWhite->setSpecular(glm::vec3(0.70, 0.70, 0.70));

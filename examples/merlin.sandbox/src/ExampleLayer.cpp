@@ -30,11 +30,15 @@ void ExampleLayer::createScene() {
 
 	//renderer.setRenderMode(RenderMode::UNLIT);
 
-	domain = Primitives::createCube(100);
-	domain->enableWireFrameMode();
+	domain = Primitives::createHollowCube(100, 0.1);
+	//domain = Primitives::createHollowBox(100, 100, 100, 0.1);
+	domain->setMaterial("white");
+	domain->setRenderMode(RenderMode::UNLIT);
+	//domain->enableWireFrameMode();
 
-	fluid = Primitives::createCube(20);
-	fluid->enableWireFrameMode();
+	fluid = Primitives::createHollowCube(20, 0.1);
+	fluid->setMaterial("white");
+	fluid->setRenderMode(RenderMode::UNLIT);
 
 	scene = Scene::create("scene");
 

@@ -37,13 +37,11 @@ namespace Merlin {
                 m_mesh = Primitives::createCylinder(0.03,1,20);
                 m_mesh->centerMeshOrigin();
                 m_mesh->applyMeshTransform();
-                m_mesh->rotate(glm::vec3(0, -glm::pi<float>() * 0.5, 0));
                 m_mesh->applyMeshTransform();
                 break;
             case Merlin::LightType::Spot:
                 m_mesh = Primitives::createCone(1, 2, 20);
                 m_mesh->centerMeshOrigin();
-                m_mesh->rotate(glm::vec3(90 * DEG_TO_RAD, 0, 0));
                 m_mesh->applyMeshTransform();
                 break;
             default:

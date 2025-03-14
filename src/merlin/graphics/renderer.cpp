@@ -48,7 +48,7 @@ namespace Merlin {
 		if (debug)Console::info() << "Rendering scene" << Console::endl;
 
 		//Gather lights
-	
+		
 
 		for (const auto& node : scene.nodes()) {
 			if (!node->isHidden()) gatherLights(node);
@@ -56,7 +56,8 @@ namespace Merlin {
 
 		if(debug)Console::info() << "Rendering scene shadows" << Console::endl;
 
-		if (m_activeLights.size() == 0 || use_default_light) {
+		bool hasLights = m_activeLights.size() != 0;
+		if (!hasLights || use_default_light) {
 			m_activeLights.push_back(m_defaultAmbient);
 			m_activeLights.push_back(m_defaultDirLight);
 			m_activeLights.push_back(m_defaultDirLight2);
@@ -77,6 +78,14 @@ namespace Merlin {
 		if (debug)Console::info() << "Rendering scene objects" << Console::endl;
 		for (const auto& node : scene.nodes()) {
 			render(node, camera);
+		}
+
+		//Render default lights
+		if (display_lights && (!hasLights || use_default_light)) {
+			render(m_defaultAmbient, camera);
+			render(m_defaultDirLight, camera);
+			render(m_defaultDirLight2, camera);
+			render(m_defaultDirLight3, camera);
 		}
 
 		if (scene.hasEnvironment()) {
@@ -183,9 +192,6 @@ namespace Merlin {
 		Texture2D::resetTextureUnits();
 		shader->use();
 
-		
-		Console::print() << int(m_renderMode) << Console::endl;
-
 		if (shader->name() == "default.phong" || shader->name() == "default.pbr") {
 			switch (m_renderMode) {
 			case RenderMode::UNLIT:
@@ -255,7 +261,6 @@ namespace Merlin {
 				m_activeLights[i]->detach();
 			}
 		}
-
 	}
 
 

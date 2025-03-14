@@ -329,6 +329,95 @@ namespace Merlin {
 		return Mesh::create("Cube", v);
 	}
 
+	shared<Mesh> Primitives::createHollowCube(float w, float th) { return createHollowBox(w, w, w, th); }
+
+	shared<Mesh> Primitives::createHollowBox(float x, float y, float z, float thickness) {
+		std::vector<Vertex> vertices;
+		std::vector<GLuint> indices;
+
+		// Helper function to create a beam (box) between two points
+		auto createBeam = [&](glm::vec3 start, glm::vec3 end, float thickness) {
+			glm::vec3 direction = glm::normalize(end - start);
+			start = start - direction * thickness * 0.5f;
+			end = end + direction * thickness * 0.5f;
+
+			glm::vec3 up = glm::vec3(0.0f, 0.0f, 1.0f);
+			if (glm::abs(glm::dot(direction, up)) > 0.99f) {
+				up = glm::vec3(0.0f, 1.0f, 0.0f);
+			}
+			glm::vec3 right = glm::normalize(glm::cross(direction, up));
+			up = glm::normalize(glm::cross(right, direction));
+
+			glm::vec3 halfThickness = glm::vec3(thickness) * 0.5f;
+
+			std::vector<glm::vec3> beamVertices = {
+				start - halfThickness * right - halfThickness * up, // 0
+				start + halfThickness * right - halfThickness * up, // 1
+				start + halfThickness * right + halfThickness * up, // 2
+				start - halfThickness * right + halfThickness * up, // 3
+				end - halfThickness * right - halfThickness * up,   // 4
+				end + halfThickness * right - halfThickness * up,   // 5
+				end + halfThickness * right + halfThickness * up,   // 6
+				end - halfThickness * right + halfThickness * up    // 7
+			};
+
+			for (const auto& v : beamVertices) {
+				vertices.push_back(Vertex(v, glm::vec3(0.0f), glm::vec3(1.0f)));
+			}
+
+			std::vector<GLuint> beamIndices = {
+				0, 1, 2, 0, 2, 3, // Front face
+				4, 5, 6, 4, 6, 7, // Back face
+				0, 1, 5, 0, 5, 4, // Bottom face
+				1, 2, 6, 1, 6, 5, // Right face
+				2, 3, 7, 2, 7, 6, // Top face
+				3, 0, 4, 3, 4, 7  // Left face
+			};
+
+			GLuint offset = vertices.size() - 8;
+			for (const auto& index : beamIndices) {
+				indices.push_back(offset + index);
+			}
+			};
+
+		// Define the 8 corners of the box
+		glm::vec3 corners[8] = {
+			{-x / 2, -y / 2, -z / 2}, 
+			{ x / 2, -y / 2, -z / 2},
+			{ x / 2, y / 2, -z / 2}, 
+			{-x / 2,  y / 2, -z / 2},
+			{-x / 2, -y / 2,  z / 2}, 
+			{ x / 2, -y / 2,  z / 2},
+			{ x / 2,  y / 2,  z / 2}, 
+			{-x / 2,  y / 2,  z / 2}
+		};
+
+		glm::vec3 offsetX = glm::vec3(thickness * 0.5f,0,0) ;
+
+		// Create beams for the 12 edges of the box
+		createBeam(corners[0], corners[1], thickness);
+		createBeam(corners[1], corners[2], thickness);
+		createBeam(corners[2], corners[3], thickness);
+		createBeam(corners[3], corners[0], thickness);
+		createBeam(corners[4], corners[5], thickness);
+		createBeam(corners[5], corners[6], thickness);
+		createBeam(corners[6], corners[7], thickness);
+		createBeam(corners[7], corners[4], thickness);
+		createBeam(corners[0], corners[4], thickness);
+		createBeam(corners[1], corners[5], thickness);
+		createBeam(corners[2], corners[6], thickness);
+		createBeam(corners[3], corners[7], thickness);
+
+		Mesh_Ptr box = Mesh::create("HollowBox", vertices, indices, GL_TRIANGLES);
+		box->useFlatShading();
+		box->computeNormals();
+		return box;
+	}
+
+
+	
+
+
 	shared<Mesh> Primitives::createCone(float r, float h, int res) {
 		const float angleStep = glm::two_pi<float>() / res;
 
@@ -416,6 +505,35 @@ namespace Merlin {
 		Mesh_Ptr mesh = createShared<Mesh>("Cylinder", vertices, indices, GL_TRIANGLES);
 
 		return mesh;
+	}
+
+	shared<Model> Primitives::createArrow(float size, glm::vec3 color, int res){
+		Mesh_Ptr axis_cyl;
+		Mesh_Ptr axis_cone;
+
+		float cone_height = size / 10;
+		float cone_radius = size / 25;
+		float cylinder_radius = size / 40;
+		float cylinder_height = size;
+
+		axis_cyl = Primitives::createCylinder(cylinder_radius, cylinder_height, res);
+		axis_cone = Primitives::createCone(cone_radius, cone_height, res);
+
+		axis_cone->translate(glm::vec3(size, 0, 0));
+		//axis_cone->rotate(glm::vec3(0, 0, -glm::pi<float>()*0.5));
+		//axis_cone->applyMeshTransform();
+		axis_cone->computeNormals();
+		axis_cone->smoothNormals();
+
+		Model_Ptr x_axis = Model::create("x_axis", { axis_cyl , axis_cone });
+
+		shared<PhongMaterial> xMaterial = createShared<PhongMaterial>("xMaterial");
+		xMaterial->setAmbient(color);
+
+		x_axis->setMaterial(xMaterial);
+		x_axis->setRenderMode(RenderMode::UNLIT);
+
+		return x_axis;
 	}
 
 
