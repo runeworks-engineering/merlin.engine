@@ -10,6 +10,11 @@ namespace Merlin {
         m_domain = domain;
         m_cell_size = cellsize;
 
+        if (domain.size.x == 0 || domain.size.y == 0) {
+            Console::error("NNS") << "Domain is empty" << Console::endl;
+            return;
+        }
+
         computeThreadLayout();
 
         m_maxBound = glm::uvec3(m_domain.size / m_cell_size);

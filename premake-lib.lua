@@ -123,4 +123,5 @@ group "Examples"
 	include "examples/merlin.example2D"
 	include "examples/merlin.particles"
 	include "examples/merlin.graphics"
+	include "examples/merlin.sandbox"
 	

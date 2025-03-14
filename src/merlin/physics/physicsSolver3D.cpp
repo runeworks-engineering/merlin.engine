@@ -29,6 +29,11 @@ namespace Merlin {
         Console::info("PhysicsSolver3D") << "Physics engine starting..." << Console::endl;
         clean();
 
+        if (m_domain.isEmpty()) {
+           Console::error("PhysicsSolver3D") << "Domain is empty, please set a domain before init" << Console::endl;
+           return;
+        }
+
         //-------------------------------- SCENE SCAN ---------------------------------
         Console::info("PhysicsSolver3D") << "Scanning physics scene" << Console::endl;
         std::vector<glm::vec4> particle_positions;

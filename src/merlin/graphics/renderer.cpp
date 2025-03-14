@@ -351,9 +351,9 @@ namespace Merlin {
 
 	void Renderer::renderTransformObject(const TransformObject& obj, const Camera& camera) {
 		if (debug)Console::info() << "Rendering TransformObject" << Console::endl;
-		render(obj.getXAxisMesh(), camera);
-		render(obj.getYAxisMesh(), camera);
-		render(obj.getZAxisMesh(), camera);
+		render(obj.getXAxisModel(), camera);
+		render(obj.getYAxisModel(), camera);
+		render(obj.getZAxisModel(), camera);
 	}
 
 	void Renderer::render(const shared<RenderableObject>& object, const Camera& camera) {

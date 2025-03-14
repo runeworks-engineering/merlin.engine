@@ -5,9 +5,39 @@
 namespace Merlin {
 
     TransformObject::TransformObject(const std::string& name, float size) : TransformObject::RenderableObject(name) {
-        x_axis = Primitives::createCylinder(size/40, size, 10);
-        y_axis = Primitives::createCylinder(size/40, size, 10);
-        z_axis = Primitives::createCylinder(size/40, size, 10);
+        Mesh_Ptr axis_cyl;
+        Mesh_Ptr axis_cone;
+
+        axis_cyl = Primitives::createCylinder(size/40, size, 10);
+        axis_cone = Primitives::createCone(size / 20, size / 20, 20);
+        axis_cone->translate(glm::vec3(size, 0, 0));
+        //axis_cone->rotate(glm::vec3(0, 0, -glm::pi<float>()*0.5));
+        //axis_cone->applyMeshTransform();
+        axis_cone->computeNormals();
+        axis_cone->smoothNormals();
+
+        x_axis = Model::create("x_axis", { axis_cyl , axis_cone });
+
+        axis_cyl = Primitives::createCylinder(size / 40, size, 10);
+        axis_cone = Primitives::createCone(size / 20, size / 20, 20);
+        axis_cone->translate(glm::vec3(size, 0, 0));
+        //axis_cone->rotate(glm::vec3(0, 0, -glm::pi<float>() * 0.5));
+        //axis_cone->applyMeshTransform();
+        axis_cone->computeNormals();
+        axis_cone->smoothNormals();
+
+        y_axis = Model::create("y_axis", { axis_cyl , axis_cone });
+
+        axis_cyl = Primitives::createCylinder(size / 40, size, 10);
+        axis_cone = Primitives::createCone(size / 20, size / 20, 20);
+        axis_cone->translate(glm::vec3(size, 0, 0));
+        //axis_cone->rotate(glm::vec3(0, 0, -glm::pi<float>() * 0.5));
+        //axis_cone->applyMeshTransform();
+        axis_cone->computeNormals();
+        axis_cone->smoothNormals();
+
+        z_axis = Model::create("z_axis", { axis_cyl , axis_cone });
+
 
         /*
         x_axis->calculateNormals();

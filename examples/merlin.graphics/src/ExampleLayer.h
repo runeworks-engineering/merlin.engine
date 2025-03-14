@@ -10,7 +10,6 @@ public:
 	virtual ~ExampleLayer();
 
 	void createScene();
-	void createPhysics();
 
 	virtual void onAttach() override;
 	virtual void onUpdate(Timestep ts) override;
@@ -20,7 +19,7 @@ private:
 	Scene scene;
 	
 	Renderer renderer;
-	//PhysicsSolver solver;
+	
 
 	shared<PointLight>  light;
 };

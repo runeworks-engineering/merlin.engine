@@ -126,10 +126,6 @@ void ExampleLayer::createScene() {
 	scene.add(TransformObject::create("origin", 2));
 }
 
-void ExampleLayer::createPhysics() {
-	//solver.init();
-}
-
 void ExampleLayer::onAttach(){
 	Layer3D::onAttach();
 

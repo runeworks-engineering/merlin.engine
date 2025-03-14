@@ -18,11 +18,29 @@ namespace Merlin {
 		enableFaceCulling();
 		m_defaultEnvironment = createShared<Environment>("defaultEnvironment", 16);
 		m_defaultAmbient = createShared<AmbientLight>("defaultAmbientLight");
-		m_defaultAmbient->setAmbient(glm::vec3(0.2));
-		m_defaultDirLight = createShared<DirectionalLight>("defaultDirLight", glm::vec3(1, -0.6, -1) * glm::vec3(3));
-		m_defaultDirLight2 = createShared<DirectionalLight>("defaultDirLight2", glm::vec3(-0.5, 0.6, -1) * glm::vec3(3));
-		m_defaultDirLight3 = createShared<DirectionalLight>("defaultDirLight3", glm::vec3(-1.0, -0.6, -0.6) * glm::vec3(3));
 
+		/**/
+		m_defaultDirLight = createShared<DirectionalLight>("light1", glm::vec3(-0.5f, 0.5f, -0.8f));
+		m_defaultDirLight->translate(glm::vec3(-10, 0, 0));
+		m_defaultDirLight->setDiffuse(glm::vec3(1.0, 1.0, 1.0));
+		/**/
+
+		/**/
+		m_defaultDirLight2 = createShared<DirectionalLight>("light2", glm::vec3(0.5f, 0.5f, -0.8f));
+		m_defaultDirLight2->translate(glm::vec3(-10, 0, 0));
+		m_defaultDirLight2->setDiffuse(glm::vec3(1));
+		/**/
+
+		/**/
+		m_defaultDirLight3 = createShared<DirectionalLight>("light3", glm::vec3(0.0f, -0.5f, -0.8f));
+		m_defaultDirLight3->translate(glm::vec3(-10, 0, 0));
+		m_defaultDirLight3->setDiffuse(glm::vec3(1));
+		/**/
+
+		/**/
+		m_defaultAmbient = createShared<AmbientLight>("light4");
+		m_defaultAmbient->setAmbient(glm::vec3(0.2));
+		/**/
 	}
 
 	void RendererBase::clear() {

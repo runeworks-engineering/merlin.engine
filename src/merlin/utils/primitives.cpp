@@ -209,10 +209,10 @@ namespace Merlin {
 	}
 
 	shared<Mesh> Primitives::createQuadCube(float w, bool centered) {
-		return createQuadCube(w, w, w, centered);
+		return createQuadBox(w, w, w, centered);
 	}
 
-	shared<Mesh> Primitives::createQuadCube(float x, float y, float z, bool centered) {
+	shared<Mesh> Primitives::createQuadBox(float x, float y, float z, bool centered) {
 
 		float x_lo;
 		float x_up;
@@ -275,9 +275,9 @@ namespace Merlin {
 		return m;
 	}
 
-	shared<Mesh> Primitives::createCube(float w) { return createCube(w, w, w); }
+	shared<Mesh> Primitives::createCube(float w) { return createBox(w, w, w); }
 
-	shared<Mesh> Primitives::createCube(float x, float y, float z) {
+	shared<Mesh> Primitives::createBox(float x, float y, float z) {
 
 		float x_lo = -x / 2.0f;
 		float x_up = x / 2.0f;
@@ -336,14 +336,14 @@ namespace Merlin {
 		Vertices vertices;
 		vertices.reserve(res + 2);
 
-		Vertex v = { glm::vec3(0.0f, h, 0.0f), glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f)), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.5f, 1.0f) };
+		Vertex v = { glm::vec3(h, 0.0f, 0.0f), glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f)), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.5f, 1.0f) };
 		vertices.emplace_back(v);
-		v = { glm::vec3(0.0f, 0.0f, 0.0f), glm::normalize(glm::vec3(1.0f, -1.0f, 1.0f)), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.5f, 0.0f) };
+		v = { glm::vec3(0.0f, 0.0f, 0.0f), glm::normalize(glm::vec3(-1.0f, 1.0f, 1.0f)), glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(0.5f, 0.0f) };
 		vertices.emplace_back(v);
 		for (int i = 0; i < res; ++i) {
 			const float angle = i * angleStep;
-			const glm::vec3 position(r * sin(angle), 0.0f, r * cos(angle));
-			const glm::vec3 normal = glm::normalize(glm::vec3(sin(angle), r / sqrt(r * r + h * h), cos(angle)));
+			const glm::vec3 position(0.0f, r * sin(angle), r * cos(angle));
+			const glm::vec3 normal = glm::normalize(glm::vec3(r / sqrt(r * r + h * h), sin(angle), cos(angle)));
 			const glm::vec2 texCoord(angle / glm::two_pi<float>(), 0.0f);
 
 			v = { position, normal, glm::vec3(1.0f, 1.0f, 1.0f), texCoord };

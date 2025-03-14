@@ -1,6 +1,6 @@
 #pragma once
 #include "merlin/core/core.h"
-#include "merlin/graphics/mesh.h"
+#include "merlin/scene/model.h"
 #include "merlin/graphics/material.h"
 #include "merlin/scene/camera.h"
 #include "merlin/graphics/renderableObject.h"
@@ -16,14 +16,14 @@ namespace Merlin {
         TransformObject(const std::string& name, float size = 1);
         static shared<TransformObject> create(std::string name, float size = 1);
 
-        inline const Mesh_Ptr& getXAxisMesh() const { return x_axis; }
-        inline const Mesh_Ptr& getYAxisMesh() const { return y_axis; }
-        inline const Mesh_Ptr& getZAxisMesh() const { return z_axis; }
+        inline const Model_Ptr& getXAxisModel() const { return x_axis; }
+        inline const Model_Ptr& getYAxisModel() const { return y_axis; }
+        inline const Model_Ptr& getZAxisModel() const { return z_axis; }
 
     private :
-        Mesh_Ptr x_axis;
-        Mesh_Ptr y_axis;
-        Mesh_Ptr z_axis;
+        Model_Ptr x_axis;
+        Model_Ptr y_axis;
+        Model_Ptr z_axis;
     };
 
     typedef shared<TransformObject> TransformObject_Ptr;

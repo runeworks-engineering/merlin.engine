@@ -15,4 +15,8 @@ namespace Merlin {
         return result;
 	}
 
+    bool BoundingBox::isEmpty() const{
+        return min == max;
+    }
+
 }

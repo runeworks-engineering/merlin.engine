@@ -2,6 +2,7 @@
 #include "merlin/core/core.h"
 #include "merlin/core/timestep.h"
 #include "merlin/Physics/physicsEntity.h"
+#include "merlin/Physics/samplers/voxelSampler.h"
 #include "merlin/Physics/nns.h"
 
 namespace Merlin {
