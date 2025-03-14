@@ -56,6 +56,17 @@ namespace Merlin {
 		}
 	}
 
+	RenderMode RenderableObject::renderMode(){	
+		return m_renderMode;
+	}
+
+	void RenderableObject::setRenderMode(RenderMode mode) {
+		m_renderMode = mode;
+		for (auto child : m_children) {
+			child->setRenderMode(mode);
+		}
+	}
+
 	void RenderableObject::disableWireFrameMode(){
 		m_wireframe = false;
 		for (auto child : m_children) {

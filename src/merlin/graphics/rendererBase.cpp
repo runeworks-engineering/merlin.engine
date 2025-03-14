@@ -179,6 +179,10 @@ namespace Merlin {
 		ShaderLibrary::instance().add(shader);
 	}
 
+	void RendererBase::setRenderModeOveride(RenderMode mode){
+		m_renderModeOverride = mode;
+	}
+
 	void RendererBase::setEnvironmentGradientColor(float r, float g, float b) {
 		setEnvironmentGradientColor(glm::vec3(r, g, b));
 	}

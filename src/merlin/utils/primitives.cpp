@@ -391,7 +391,6 @@ namespace Merlin {
 			indices.push_back(i2);
 			indices.push_back(i0);
 			indices.push_back(iTopCenter);
-			
 
 			// Indices for bottom face
 			const int iBottomCenter = (res + 1) * 2 + 1;
@@ -407,17 +406,18 @@ namespace Merlin {
 			const float angle = i * angleStep;
 			const glm::vec2 texCoordTop(angle / glm::two_pi<float>(), 1.0f);
 			const glm::vec2 texCoordBottom(angle / glm::two_pi<float>(), 0.0f);
-			vertices.emplace_back(glm::vec3(r * sin(angle), r * cos(angle), h), glm::normalize(glm::vec3(sin(angle), cos(angle), 0.0f)), glm::vec3(1.0f), texCoordTop);
-			vertices.emplace_back(glm::vec3(r * sin(angle), r * cos(angle), 0.0f), glm::normalize(glm::vec3(sin(angle), cos(angle), 0.0f)), glm::vec3(1.0f), texCoordBottom);
+			vertices.emplace_back(glm::vec3(h, r * sin(angle), r * cos(angle)), glm::normalize(glm::vec3(0.0f, sin(angle), cos(angle))), glm::vec3(1.0f), texCoordTop);
+			vertices.emplace_back(glm::vec3(0.0f, r * sin(angle), r * cos(angle)), glm::normalize(glm::vec3(0.0f, sin(angle), cos(angle))), glm::vec3(1.0f), texCoordBottom);
 		}
 		// Add the center vertices for the top and bottom faces
-		vertices.emplace_back(glm::vec3(0.0f, 0.0f, h), glm::normalize(glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(1.0f), glm::vec2(0.5f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		vertices.emplace_back(glm::vec3(0.0f, 0.0f, 0.0f), glm::normalize(glm::vec3(0.0f, 0.0f, -1.0f)), glm::vec3(1.0f), glm::vec2(0.5f, 0.0f), glm::vec3(-1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		vertices.emplace_back(glm::vec3(h, 0.0f, 0.0f), glm::normalize(glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(1.0f), glm::vec2(0.5f, 1.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		vertices.emplace_back(glm::vec3(0.0f, 0.0f, 0.0f), glm::normalize(glm::vec3(-1.0f, 0.0f, 0.0f)), glm::vec3(1.0f), glm::vec2(0.5f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		Mesh_Ptr mesh = createShared<Mesh>("Cylinder", vertices, indices, GL_TRIANGLES);
 
 		return mesh;
 	}
+
 
 
 	/*

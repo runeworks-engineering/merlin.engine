@@ -61,6 +61,12 @@ namespace Merlin {
 		defaultMaterial->setSpecular(glm::vec3(0.70, 0.70, 0.70));
 		defaultMaterial->setShininess(0.25);
 
+		shared<PhongMaterial> defaultWhite = createShared<PhongMaterial>("defaultWhite");
+		defaultWhite->setAmbient(glm::vec3(1.0, 1.0, 1.0));
+		defaultWhite->setDiffuse(glm::vec3(0.55, 0.55, 0.55));
+		defaultWhite->setSpecular(glm::vec3(0.70, 0.70, 0.70));
+		defaultWhite->setShininess(0.25);
+
 		shared<PBRMaterial> aluminum = createShared<PBRMaterial>("aluminum");
 		aluminum->setAlbedoColor(glm::vec3(0.912, 0.914, 0.920));
 		aluminum->setMetallic(1);
@@ -231,6 +237,7 @@ namespace Merlin {
 		//water->setAlphaBlending(0.4);
 		
 		add(defaultMaterial);
+		add(defaultWhite);
 		add(aluminum);
 		add(emerald);
 		add(water);

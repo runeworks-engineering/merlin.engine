@@ -10,11 +10,16 @@ namespace Merlin {
 
     Model::Model(const std::string& name, const shared<Mesh>& mesh) : RenderableObject(name) {
         m_meshes.push_back(mesh);
+        addChild(mesh);
+        
         m_transform = glm::mat4(1.0f);
     }
 
     Model::Model(const std::string& name, const std::vector<shared<Mesh>>& meshes) : RenderableObject(name) {
         m_meshes = meshes;
+		for (auto mesh : meshes) {
+			addChild(mesh);
+		}
         m_transform = glm::mat4(1.0f);
     }
 
@@ -33,6 +38,7 @@ namespace Merlin {
 
     void Model::addMesh(const shared<Mesh>& mesh) {
         m_meshes.push_back(mesh);
+        addChild(mesh);
     }
 
 	void Model::setShader(const shared<Shader>& shader) {
@@ -60,7 +66,7 @@ namespace Merlin {
 	}
 
 
-    void Model::draw(const Camera& camera) const {
+    void Model::draw(const Camera& camera) const {/*
         for (const auto& mesh : m_meshes) {
             if (mesh->hasMaterial() && mesh->hasShader()) {
 				shared<Shader> shader = mesh->getShader();
@@ -71,7 +77,7 @@ namespace Merlin {
 
 				mesh->draw();
             }
-        }
+        }*/
     }
 
     void Model::enableWireFrameMode(){

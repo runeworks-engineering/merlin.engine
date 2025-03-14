@@ -15,6 +15,17 @@ namespace Merlin {
 		PARTICLESYSTEM,
 	};
 
+	enum class RenderMode {
+		UNLIT,
+		LIT,
+		NORMALS,
+		DEPTH,
+		POSITION,
+		TEXCOORDS,
+		SHADOW,
+		DEFAULT
+	};
+
 	class RenderableObject {
 	public:
 		RenderableObject();
@@ -76,10 +87,16 @@ namespace Merlin {
 		shared<RenderableObject> getChild(std::string name);
 		RenderableObject* parent();
 
+
+		RenderMode renderMode();
+		void setRenderMode(RenderMode mode);
+
 	protected:
 		static int nextID;
 		bool m_castShadow = true;
 		int m_ID;
+
+		RenderMode m_renderMode = RenderMode::LIT;
 
 		bool use_vertex_color = false;
 		bool use_normal_map = true;

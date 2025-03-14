@@ -70,6 +70,7 @@ struct Light {
     samplerCube omniShadowMap;
 };
 
+uniform int renderMode = 1;
 uniform samplerCube skybox;
 uniform int hasSkybox = 0;
 uniform Material material;
@@ -82,7 +83,8 @@ uniform vec3 viewPos;
 uniform mat4 model;
 uniform bool use_vertex_color = false;
 uniform bool use_normal_map = true;
-uniform int debugMode = 0;
+uniform float camera_near = 0.1;
+uniform float camera_far = 100;
 
 // array of offset direction for sampling
 vec3 gridSamplingDisk[20] = vec3[]
@@ -244,6 +246,11 @@ vec3 calculateSpotLight(Light light, vec3 normal, vec3 fragPos, vec3 viewDir, ve
     return ambient + (intensity * attenuation * shadow_inv * (diffuse + specular));
 }
 
+float linearize_depth(float d,float zNear,float zFar)
+{
+    return zNear * zFar / (zFar + d * (zNear - zFar));
+}
+
 void main() {
 	vec2 uv = vin.texcoord * material.texture_repeat;
 
@@ -286,16 +293,32 @@ void main() {
     finalColor = mix(finalColor, skyColor,  max(min(material.shininess/128.0,1.0)-0.5, 0.0));
 
     float gamma = 0.7;
-
-    if(debugMode == 0)
+    FragColor.a = 1.0f;
+    if(renderMode == 0) //UNLIT
+        FragColor.rgb = (use_vertex_color ? vin.color.rgb : ambientColor);
+    else if(renderMode == 1){ //LIT
+        FragColor.a = material.alpha;   
         FragColor.rgb = pow(finalColor.rgb * (use_vertex_color ? vin.color.rgb : vec3(1.0)), vec3(1.0/gamma));
-    else if(debugMode == 1)
-        FragColor.rgb = skyColor;
-    else if(debugMode == 21)
-        FragColor.rgb = normalize(vin.normal);
-    else if(debugMode == 3) 
-        FragColor.rgb = normalize(vin.tangentBasis * (-lights[0].direction));
+    }else if(renderMode == 2) //NORMALS
+     FragColor.rgb = normalize(vin.normal);
+    else if(renderMode == 3) //DEPTH
+       FragColor.rgb = vec3(linearize_depth(gl_FragCoord.z, camera_near,  camera_far));
+    else if(renderMode == 4) //POSITION
+       FragColor.rgb = vec3(vin.position);
+    else if(renderMode == 5) 
+       FragColor.rgb = vec3(vin.texcoord, 0);
+    else if(renderMode == 6){
+        float shadow_inv = 1.0;
+        for (int i = 0; i < numLights; ++i) {
+            vec4 fragPosLightSpace = lights[i].lightSpaceMatrix * vec4(vin.position, 1.0);
+            shadow_inv = (1.0 - computeShadow(lights[i], fragPosLightSpace));
+        }
+        FragColor.rgb = vec3(shadow_inv);
+    }
+    
+    
+    //FragColor.rgb = normalize(vin.tangentBasis * (-lights[0].direction));
 
-    FragColor.a = material.alpha;
+    
 
 }

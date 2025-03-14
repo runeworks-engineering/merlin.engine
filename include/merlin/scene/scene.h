@@ -35,6 +35,8 @@ namespace Merlin {
 		const std::list<shared<RenderableObject>>& nodes() const;
 
 		inline static shared<Scene> create() { return createShared<Scene>(); };
+		inline static shared<Scene> create(std::string name) { return createShared<Scene>(name); };
 	};
 	
+	typedef shared<Scene> Scene_Ptr;
 }

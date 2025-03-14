@@ -76,7 +76,7 @@ namespace Merlin {
 		//Render the scene
 		if (debug)Console::info() << "Rendering scene objects" << Console::endl;
 		for (const auto& node : scene.nodes()) {
-			if(!node->isHidden()) render(node, camera);
+			render(node, camera);
 		}
 
 		if (scene.hasEnvironment()) {
@@ -182,6 +182,39 @@ namespace Merlin {
 
 		Texture2D::resetTextureUnits();
 		shader->use();
+
+		
+		Console::print() << int(m_renderMode) << Console::endl;
+
+		if (shader->name() == "default.phong" || shader->name() == "default.pbr") {
+			switch (m_renderMode) {
+			case RenderMode::UNLIT:
+				shader->setInt("renderMode", 0);
+				break;
+			case RenderMode::LIT:
+				shader->setInt("renderMode", 1);
+				break;
+			case RenderMode::NORMALS:
+				shader->setInt("renderMode", 2);
+				break;
+			case RenderMode::DEPTH:
+				shader->setInt("renderMode", 3);
+				shader->setFloat("camera_near", camera.nearPlane());
+				shader->setFloat("camera_far", camera.farPlane());
+				break;
+			case RenderMode::POSITION:
+				shader->setInt("renderMode", 4);
+				break;
+			case RenderMode::TEXCOORDS:
+				shader->setInt("renderMode", 5);
+				break;
+			case RenderMode::SHADOW:
+				shader->setInt("renderMode", 6);
+				break;
+			default:
+				break;
+			}
+		}
 
 		if (shader->supportLights()) {
 			for (int i = 0; i < m_activeLights.size(); i++) {
@@ -354,9 +387,17 @@ namespace Merlin {
 		render(obj.getXAxisModel(), camera);
 		render(obj.getYAxisModel(), camera);
 		render(obj.getZAxisModel(), camera);
+		render(obj.getSphereMesh(), camera);
 	}
 
 	void Renderer::render(const shared<RenderableObject>& object, const Camera& camera) {
+		if (object->isHidden()) return;
+
+		if(m_renderModeOverride == RenderMode::DEFAULT)
+			m_renderMode = object->renderMode();
+		else
+			m_renderMode = m_renderModeOverride;
+
 		pushMatrix();
 		m_currentTransform *= object->transform();
 

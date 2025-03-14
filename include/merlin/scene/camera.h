@@ -58,9 +58,14 @@ namespace Merlin {
 		glm::vec3 front() const { return _Front; }
 		glm::vec3 up() const { return _Up; }
 
+		inline float farPlane() const { return _farPlane; }
+		inline float nearPlane() const { return _nearPlane; }
+
 		const glm::mat4& getProjectionMatrix() const { return _ProjectionMatrix; }
 		const glm::mat4& getViewMatrix() const { return _ViewMatrix; }
 		const glm::mat4& getViewProjectionMatrix() const { return _ViewProjectionMatrix; }
+
+
 
 	private:
 		void recalculateViewMatrix();

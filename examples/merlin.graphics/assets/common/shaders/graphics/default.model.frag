@@ -262,7 +262,10 @@ void main() {
 	//R = vec3(R.x, R.z, -R.y);
 	vec3 skyColor;
 	if(environment.use_skybox_tex) skyColor = textureLod(environment.skybox_tex, R, 6.0).rgb;
-	else skyColor = vec3(-R.y*0.5+0.8);
+	else {
+        float r = length(R);
+        skyColor = vec3((cos(-R.y / r))) * environment.ambient;
+    }
     
     vec3 viewDir = normalize(vin.viewPos - vin.position);
 

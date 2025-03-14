@@ -17,7 +17,7 @@ public:
 	virtual void onImGuiRender() override;
 private:
 
-	Scene scene;
+	Scene_Ptr scene;
 	PhysicsSolver3D solver;
 
 	Mesh_Ptr fluid;

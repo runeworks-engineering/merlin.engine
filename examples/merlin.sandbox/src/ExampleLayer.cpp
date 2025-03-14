@@ -28,21 +28,24 @@ void ExampleLayer::createScene() {
 	renderer.disableFaceCulling();
 	//renderer.enableTransparency();
 
+	//renderer.setRenderMode(RenderMode::UNLIT);
+
 	domain = Primitives::createCube(100);
 	domain->enableWireFrameMode();
 
 	fluid = Primitives::createCube(20);
 	fluid->enableWireFrameMode();
 
-	scene.add(domain);
-	scene.add(fluid);
-	scene.add(TransformObject::create("origin", 10));
+	scene = Scene::create("scene");
+
+	scene->add(domain);
+	scene->add(fluid);
+	scene->add(TransformObject::create("origin", 10));
 }
 
 void ExampleLayer::createPhysics(){
 	//ParticleSamplerPtr sampler = createShared<VoxelSampler>()
 	//PhysicsEntity_Ptr fluid_entity = createShared<PhysicsEntity>("fluid", ParticleSampler_Ptr)
-
 
 	solver.setDomain(domain->getBoundingBox());
 	solver.init();
@@ -64,7 +67,7 @@ void ExampleLayer::onUpdate(Timestep ts){
 	Layer3D::onUpdate(ts);
 
 	renderer.clear();
-	renderer.renderScene(scene, camera());
+	renderer.render(scene, camera());
 	renderer.reset();
 
 }
@@ -90,7 +93,7 @@ void ExampleLayer::onImGuiRender()
 
 	// draw the scene graph starting from the root node
 	ImGui::Begin("Scene Graph");
-	traverseNodes(scene.nodes());
+	traverseNodes(scene->nodes());
 	ImGui::End();
 	
 

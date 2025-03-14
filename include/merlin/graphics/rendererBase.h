@@ -9,6 +9,7 @@
 
 namespace Merlin {
 
+
 	class RendererBase {
 	public:
 		RendererBase();
@@ -73,10 +74,12 @@ namespace Merlin {
 		void addMaterial(shared<MaterialBase> material);
 		void addShader(shared<Shader> shader);
 
+		void setRenderModeOveride(RenderMode mode);
+
 
 	protected:
 		bool debug = false;
-
+		
 		bool use_culling = true;
 		bool use_shadows = true;
 		bool use_environment = true;
@@ -92,6 +95,9 @@ namespace Merlin {
 		std::vector<shared<Light>> m_activeLights;
 
 		std::vector<glm::vec3> m_scenePoints;
+
+		RenderMode m_renderMode = RenderMode::LIT;
+		RenderMode m_renderModeOverride = RenderMode::DEFAULT;
 
 		//Matrix stack
 		glm::mat4 m_globalTransform = glm::mat4(1);
