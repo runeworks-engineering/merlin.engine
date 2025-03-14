@@ -11,7 +11,7 @@ const float radius = 3;
 ExampleLayer::ExampleLayer(){
 	camera().setNearPlane(0.1f);
 	camera().setFarPlane(1000.0f);
-	camera().setFOV(45); //Use 90.0f as we are using cubemaps
+	camera().setFOV(75); //Use 90.0f as we are using cubemaps
 	camera().setPosition(glm::vec3(0.7, -7, 2.4));
 	camera().setRotation(glm::vec3(0, 0, +90));
 }
@@ -21,7 +21,7 @@ ExampleLayer::~ExampleLayer(){}
 void ExampleLayer::createScene() {
 	renderer.initialize();
 	renderer.enableSampleShading();
-	renderer.setEnvironmentGradientColor(0.903, 0.903, 0.903);
+	renderer.setEnvironmentGradientColor(1.0, 1.0, 1.0);
 	renderer.enableEnvironment();
 	renderer.disableShadows();
 	renderer.showLights();
@@ -31,13 +31,11 @@ void ExampleLayer::createScene() {
 	//renderer.setRenderMode(RenderMode::UNLIT);
 
 	domain = Primitives::createHollowCube(100, 0.1);
-	//domain = Primitives::createHollowBox(100, 100, 100, 0.1);
-	domain->setMaterial("white");
+	domain->setMaterial("white rubber");
 	domain->setRenderMode(RenderMode::UNLIT);
-	//domain->enableWireFrameMode();
 
 	fluid = Primitives::createHollowCube(20, 0.1);
-	fluid->setMaterial("white");
+	fluid->setMaterial("white rubber");
 	fluid->setRenderMode(RenderMode::UNLIT);
 
 	scene = Scene::create("scene");
@@ -49,7 +47,7 @@ void ExampleLayer::createScene() {
 
 void ExampleLayer::createPhysics(){
 	//ParticleSamplerPtr sampler = createShared<VoxelSampler>()
-	//PhysicsEntity_Ptr fluid_entity = createShared<PhysicsEntity>("fluid", ParticleSampler_Ptr)
+	PhysicsEntity_Ptr fluid_entity = createShared<PhysicsEntity>("fluid", Samplers::VOXELIZER)
 
 	solver.setDomain(domain->getBoundingBox());
 	solver.init();

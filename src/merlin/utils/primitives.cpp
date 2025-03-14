@@ -529,6 +529,7 @@ namespace Merlin {
 
 		shared<PhongMaterial> xMaterial = createShared<PhongMaterial>("xMaterial");
 		xMaterial->setAmbient(color);
+		xMaterial->setDiffuse(color);
 
 		x_axis->setMaterial(xMaterial);
 		x_axis->setRenderMode(RenderMode::UNLIT);

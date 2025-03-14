@@ -295,7 +295,7 @@ void main() {
     float gamma = 0.7;
     FragColor.a = 1.0f;
     if(renderMode == 0) //UNLIT
-        FragColor.rgb = (use_vertex_color ? vin.color.rgb : ambientColor);
+        FragColor.rgb = (use_vertex_color ? vin.color.rgb : ambientColor + diffuseColor);
     else if(renderMode == 1){ //LIT
         FragColor.a = material.alpha;   
         FragColor.rgb = pow(finalColor.rgb * (use_vertex_color ? vin.color.rgb : vec3(1.0)), vec3(1.0/gamma));
