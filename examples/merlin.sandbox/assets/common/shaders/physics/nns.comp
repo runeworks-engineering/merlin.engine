@@ -1,8 +1,8 @@
 //? #version 430
 #ifndef INCLUDE_NNS_GLSL
 #define INCLUDE_NNS_GLSL
-//?#include "./buffers.comp"
-//?#include "./constants.comp"
+//?#include "buffers.comp"
+//?#include "constants.comp"
 
 uvec3 getBinCoord(vec3 position) {
 	position.xyz -= cst_boundaryMin;

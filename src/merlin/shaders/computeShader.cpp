@@ -121,10 +121,15 @@ namespace Merlin {
 			Console::error() << &ProgramErrorMessage[0] << Console::endl;
 			m_compiled = false;
 		}
+		if(m_compiled)
 		Console::success("ComputeShader") << "shader " << m_name << " compiled succesfully" << Console::endl;
+		else
+		Console::error("ComputeShader") << "shader " << m_name << " compilation failed" << Console::endl;
+
+		
 		glDetachShader(id(), m_shaderID);
 		glDeleteShader(m_shaderID);
-		use();
+		if (m_compiled) use();
 	}
 
 	void ComputeShader::compileFromFile(const std::string& file_path) {
@@ -142,7 +147,7 @@ namespace Merlin {
 		m_shaderSrc = "";
 
 		// Read vertexFile and fragmentFile and store the strings
-		LOG_INFO() << "Importing Compue shader source... : " << file_path << Console::endl;
+		LOG_INFO() << "Importing Compute shader source... : " << file_path << Console::endl;
 		m_shaderSrc = readSrc(file_path);
 	}
 

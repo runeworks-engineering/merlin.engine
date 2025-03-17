@@ -33,20 +33,23 @@ namespace Merlin {
         m_particles->addField<glm::mat3x4>("stress_buffer");
 	*/
 
-
-
-
 	struct PhysicsSettings3D {
 		// --- physics settings ---
-		float particle_radius = 1.0;
-		float smoothing_radius = 3 * particle_radius;
-		float cell_width = smoothing_radius;
+		ConstantUniform<float> particle_radius = 
+			ConstantUniform<float>("cst_particleRadius", 1.0);
 
-		Uniform<float> timestep = Uniform<float>("timestep", 1.0f / 60.0f);
-		Uniform<float> particlem_mass = Uniform<float>("particlem_mass", 1.0);
+		ConstantUniform<float> smoothing_radius = 
+			ConstantUniform<float>("cst_smoothingRadius", 3 * particle_radius.value());
 
-		GLuint particles_count = 1;
-		GLuint max_particles_count = 2000000; //Max Number of particles (10 milion)
+		ConstantUniform<float> cell_width = 
+			ConstantUniform<float>("cst_binSize", smoothing_radius.value());
+
+		Uniform<float> timestep = Uniform<float>("u_dt", 1.0f / 60.0f);
+		Uniform<float> particle_mass = Uniform<float>("u_mass", 1.0);
+
+		Uniform <GLuint> particles_count = Uniform<GLuint>("u_numParticles", 1);
+		Uniform <GLuint> max_particles_count = Uniform<GLuint>("u_maxParticles", 2000000);
+		Uniform <GLuint> emitter_count = Uniform<GLuint>("u_numEmitter", 0);
 
 		// --- solver settings ---
 		int solver_substep = 4;
@@ -76,6 +79,13 @@ namespace Merlin {
 		void add(PhysicsEntity_Ptr);
 		void spawnParticles(int count, int phase);
 
+		void attachGraphics();
+		void detachGraphics();
+
+		ParticleSystem_Ptr getParticles();
+		ParticleSystem_Ptr getBins();
+
+		std::vector<PhysicsEntity_Ptr> getEntities();
 
 		void setDomain(BoundingBox);
 		void setTimestep(float dt); //ms
@@ -102,6 +112,7 @@ namespace Merlin {
 		void computeThreadLayout();
 
 
+		void uploadFields();
 		void generateFields();
 		void generateCopyBuffer();
 		void add_PBD_Buffers();
@@ -117,10 +128,11 @@ namespace Merlin {
 			cpu_velocity_buffer,
 			cpu_emitter_position_buffer;
 
-		std::vector<float> 
+		std::vector<glm::vec2>
+			cpu_lambda_buffer;
+
+		std::vector<float>
 			cpu_density_buffer,
-			cpu_lambda_buffer,
-			cpu_dlambda_buffer,
 			cpu_temperature_buffer;
 
 		std::vector<float[8]> cpu_stress_buffer;
@@ -140,8 +152,10 @@ namespace Merlin {
 		std::vector<PhysicsEntity_Ptr> m_entity;
 		std::vector<PhysicsEntity_Ptr> m_active_entities;
 		std::vector<PhysicsEntity_Ptr> m_active_emitters;
-
 		std::set<PhysicsModifierType> m_active_physics;
+
+		Shader_Ptr pshader = nullptr;
+		Shader_Ptr bshader = nullptr;
 
 		ParticleSystem_Ptr m_particles = nullptr;
 		StagedComputeShader_Ptr m_solver;

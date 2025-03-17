@@ -25,6 +25,7 @@ namespace Merlin {
 		bool isActive() const;
 		PhysicsModifierType type();
 
+		virtual void onRenderMenu() {};
 		virtual void dummy() {};
 
 	private:

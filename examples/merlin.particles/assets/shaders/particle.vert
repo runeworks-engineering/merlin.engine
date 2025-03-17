@@ -14,7 +14,7 @@ uniform mat4 model;
 
 void main() {
 	uint i = gl_InstanceID;
-	vec3 offset = ssbo_position[i].xyz;
+	vec3 offset = vec3(0);//ssbo_position[i].xyz;
 	position = model * (vec4(_position + vec3(offset),1));
 	screen_position = projection * view * position;
 	color = colorMap(length(ssbo_velocity[i].xyz),parula);

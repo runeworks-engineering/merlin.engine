@@ -1,10 +1,10 @@
 #version 430
 
-#include "common/uniforms.comp"
-#include "common/constants.comp"
-#include "common/buffers.comp"
-#include "common/nns.comp"
-#include "common/colors.comp"
+#include "../uniforms.comp"
+#include "../constants.comp"
+#include "../buffers.comp"
+#include "../nns.comp"
+#include "../../graphics/colors.comp"
 
 layout(location = 0) in vec3 _position;
 layout(location = 1) in vec3 _normal;

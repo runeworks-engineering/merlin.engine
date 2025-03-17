@@ -1,9 +1,9 @@
 #version 430
-#include "common/uniforms.comp"
-#include "common/constants.comp"
-#include "common/buffers.comp"
-#include "common/nns.comp"
-#include "common/colors.comp"
+#include "../uniforms.comp"
+#include "../constants.comp"
+#include "../buffers.comp"
+#include "../nns.comp"
+#include "../../graphics/colors.comp"
 
 layout(location = 0) in vec3 _position;
 layout(location = 1) in vec3 _normal;
@@ -19,26 +19,28 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 model;
 
-uniform int colorCycle = 4;
+uniform int colorCycle = 0;
 uniform uint particleTest = 50;
 uniform int showBoundary = 0;
 uniform vec2 WindowSize;
 uniform float zoomLevel = 20;
 
+
 void main() {
 	uint i = gl_InstanceID;
-	vec3 offset = b_xi.xyz;
+	vec3 offset = ssbo_position[i].xyz;
 	position = model * (vec4(_position + vec3(offset),1));
+	color = vec4(1);
 
 	uint testsortedID = sorted_id(particleTest);
 	
 	bool binTest = true;
 	bool nnTest = false;
 	bool hTest = false;
-	uint binindex = bin_index(gl_InstanceID);//getBinIndex(particles[sortedID].position);
+	uint binindex = getBinIndex(b_xi.xyz);//getBinIndex(particles[sortedID].position);
 
-	bool test = phase(gl_InstanceID) == UNUSED || (phase(gl_InstanceID) == BOUNDARY && showBoundary == 0);
-	color = vec4(1);
+	bool test = false; //phase(gl_InstanceID) == MATERIAL_UNUSED || (phase(gl_InstanceID) >= MATERIAL_BOUNDARY && showBoundary == 0);
+	
 	if(colorCycle == 0){ 
 		color = vec4(vec3(0.8), 1.0);
 	}else if(colorCycle == 1){ 
@@ -83,7 +85,7 @@ void main() {
 		}
 		
 	}
-
+	
 	if( test || !binTest){
 		screen_position = projection * view * vec4(0,0,0,1);
 		gl_Position = screen_position;
@@ -93,9 +95,7 @@ void main() {
 		mv = projection * view;
 		
 		gl_Position = screen_position;
-		if(phase(i) == GRANULAR) gl_PointSize = 5.0*cst_particleRadius*400.0/(gl_Position.w);
-		else gl_PointSize = 5.0*cst_particleRadius*400.0/(gl_Position.w);
-		if(colorCycle == 5 && !hTest && !(gl_InstanceID == particleTest)) gl_PointSize = 400.0/(gl_Position.w);
-		
+		gl_PointSize = 5.0*cst_particleRadius*90.0/(gl_Position.w);
+		if(colorCycle == 5 && !hTest && !(gl_InstanceID == particleTest)) gl_PointSize = 90.0/(gl_Position.w);
 	}
 }

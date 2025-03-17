@@ -20,7 +20,8 @@ private:
 	Scene_Ptr scene;
 	PhysicsSolver3D solver;
 
-	Mesh_Ptr fluid;
+	Mesh_Ptr fluid; //vizualization
+	Mesh_Ptr fluid_boundingbox;
 	Mesh_Ptr domain;
 
 	Renderer renderer;

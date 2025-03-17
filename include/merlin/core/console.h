@@ -8,9 +8,6 @@
 #define GLDEBUG(x) Console::clearGLError(); x; Console::checkGLError(__FILENAME__, __LINE__);
 #define GL_(x) GLDEBUG(x)
 
-#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
-#define PBWIDTH 60
-
 namespace Merlin {
 
 	enum class ConsoleLevel {
@@ -72,7 +69,9 @@ namespace Merlin {
 		static std::string alignRight(const int n, const std::string& x = "");
 
 		static ConsoleStream print();
-		void printBufferLimits();
+		static void printSeparator();
+		static void printBoldSeparator();
+		static void printBufferLimits();
 
 		static void printProgress(double percentage);
 

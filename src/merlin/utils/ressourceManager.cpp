@@ -44,9 +44,9 @@ namespace Merlin {
 
 	void ComputeShaderLibrary::LoadDefaultShaders() {
 		add(StagedComputeShader::create("prefix.sum", "assets/common/shaders/physics/prefix.sum.comp", 4, false));
-		add(StagedComputeShader::create("solver", "assets/shaders/physics/solver.comp", 9, false));
-		add(ComputeShader::create("isoGen", "assets/shaders/physics/isoGen.comp", false));
-		add(ComputeShader::create("sectionGen", "assets/shaders/physics/texturePlot.comp", false));
+		add(StagedComputeShader::create("solver", "assets/common/shaders/physics/solver.comp", 9, false));
+		add(ComputeShader::create("isoGen", "assets/common/shaders/physics/isoGen.comp", false));
+		add(ComputeShader::create("sectionGen", "assets/common/shaders/physics/texturePlot.comp", false));
 	}
 
 	MaterialLibrary::MaterialLibrary() {

@@ -120,7 +120,6 @@ void AppLayer::onPhysicsUpdate(Timestep ts) {
 		solver->dispatch();
 		solver->barrier();
 	}
-
 }
 
 void AppLayer::onUpdate(Timestep ts){

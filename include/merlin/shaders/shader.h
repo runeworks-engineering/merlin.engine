@@ -5,6 +5,7 @@
 #include <memory>
 
 #include "merlin/shaders/shaderBase.h"
+#include "uniform.h"
 
 namespace Merlin {
 

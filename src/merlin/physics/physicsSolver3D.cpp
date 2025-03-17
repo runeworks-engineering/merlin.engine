@@ -3,6 +3,8 @@
 #include "merlin/physics/particleSampler.h"
 #include "merlin/utils/ressourceManager.h"
 #include "merlin/utils/util.h"
+#include "merlin/memory/bindingPointManager.h"
+#include "merlin/utils/primitives.h"
 
 #include <set>
 namespace Merlin {
@@ -21,12 +23,16 @@ namespace Merlin {
         glm::uvec4 meta;
     };
 
+
     PhysicsSolver3D::PhysicsSolver3D() {
         m_particles = ParticleSystem::create("particle_system");
+        m_particles->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE_SHADED);
     }
 
     void PhysicsSolver3D::init() {
+        Console::printBoldSeparator();
         Console::info("PhysicsSolver3D") << "Physics engine starting..." << Console::endl;
+        //Console::printSeparator();
         clean();
 
         if (m_domain.isEmpty()) {
@@ -34,100 +40,276 @@ namespace Merlin {
            return;
         }
 
+        Console::printSeparator();
         //-------------------------------- SCENE SCAN ---------------------------------
         Console::info("PhysicsSolver3D") << "Scanning physics scene" << Console::endl;
-        std::vector<glm::vec4> particle_positions;
-        std::vector<glm::uvec4> particle_metadata;
+        Console::printSeparator();
 
         int entity = 0;
         int particleID = 0;
         for (const auto& entity : m_entity) {
             if (entity->isActive()) {
                 std::vector<glm::vec4> samples = entity->sample();
-                m_active_entities.push_back(entity);
-                int entityID = m_active_entities.size(); //0 for unused particles
-
-                // Metas : entityID, binIndex, ID, SortedID
-                for (int i = 0; i < samples.size(); i++) {
-                    particle_metadata.push_back(glm::uvec4(entityID, particleID, particleID, particleID));
-                    particleID++;
-                }
-
                 //Register all active physics
                 for (auto& modifier : entity->getModifiers()) {
-                    if (modifier.second->type() == PhysicsModifierType::EMITTER) {
-                        use_dynamic_buffer = true;
-                        m_active_emitters.push_back(entity);
-                    }
-
                     addPhysics(modifier.second->type());
                 }
-
-                particle_positions.insert(particle_positions.end(), samples.begin(), samples.end());
+                if (!entity->hasModifier(PhysicsModifierType::EMITTER)) 
+                    m_active_entities.push_back(entity); 
+                else {
+                    use_dynamic_buffer = true;
+                    m_active_emitters.push_back(entity);
+                }
             }
         }
         
-        if(use_dynamic_buffer)
-        while (particle_positions.size() < m_settings.max_particles_count) {
-            particle_positions.push_back(glm::vec4(0, 0, 0, 0)); //spawn at origin
-            particle_metadata.push_back(glm::uvec4(0, 0, 0, 0)); //unused
+        for (int i = 0; i < m_active_entities.size(); i++) {
+            const auto& entity = m_active_entities[i];
+
+            BoundingBox union_check = BoundingBox::unionBox(m_domain, entity->getBoundingBox());
+            glm::vec3 bound_check = union_check.size;
+
+            if (bound_check.x > m_domain.size.x || bound_check.y > m_domain.size.y || bound_check.z > m_domain.size.z) {
+                Console::error("PhysicsSolver") << "Entity (" << entity->name() << ") is outside simulation domain" << Console::endl;
+                Console::error("PhysicsSolver") << "-> recomended BoundingBox : " << Console::endl <<
+                    "    - min(" << union_check.min << ")" << Console::endl <<
+                    "    - max(" << union_check.max << ")" << Console::endl <<
+                    "    - size(" << union_check.size << ")" << Console::endl;
+            }
+
+            std::vector<glm::vec4> samples = entity->sample();
+
+            int entityID = m_active_entities.size(); //0 for unused particles
+
+            for (int i = 0; i < samples.size(); i++) {
+                cpu_meta_buffer.push_back(glm::uvec4(entityID, entity->getPhase(), particleID, particleID));
+                cpu_correction_position_buffer.push_back(glm::vec4(0, 0, 0, 0));
+                cpu_velocity_buffer.push_back(entity->getInitialVelocity());
+
+                cpu_lambda_buffer.push_back(glm::vec2(0));
+                cpu_density_buffer.push_back(entity->getInitialDensity());
+                cpu_temperature_buffer.push_back(entity->getInitialTemperature()); //K
+
+                //const float stress[8] = { 0,0,0,0,0,0,0,0 };
+                //cpu_stress_buffer.push_back(stress);
+
+                particleID++;
+            }
+
+            cpu_position_buffer.insert(cpu_position_buffer.end(), samples.begin(), samples.end());
+            cpu_last_position_buffer.insert(cpu_last_position_buffer.end(), samples.begin(), samples.end());
+            cpu_predicted_position_buffer.insert(cpu_predicted_position_buffer.end(), samples.begin(), samples.end());
+        }
+
+        for (int i = 0; i < m_active_emitters.size(); i++) {
+            std::vector<glm::vec4> samples = m_active_emitters[i]->sample();
+            cpu_emitter_position_buffer.insert(cpu_emitter_position_buffer.end(), samples.begin(), samples.end());
         }
 
 
-        m_settings.particles_count = particle_positions.size();
+        if(use_dynamic_buffer)
+        while (cpu_position_buffer.size() < m_settings.max_particles_count.value()) {
+            cpu_position_buffer.push_back(glm::vec4(0, 0, 0, 0)); //spawn at origin
+            cpu_meta_buffer.push_back(glm::uvec4(0, 0, 0, 0)); //unused
+
+            cpu_correction_position_buffer.push_back(glm::vec4(0, 0, 0, 0));
+            cpu_velocity_buffer.push_back(glm::vec4(0, 0, 0, 0));
+
+            cpu_lambda_buffer.push_back(glm::vec2(0));
+            cpu_density_buffer.push_back(0);
+            cpu_temperature_buffer.push_back(0); //K
+            //const float stress[8] = { 0,0,0,0,0,0,0,0 };
+            //cpu_stress_buffer.push_back(stress);
+        }
+
+        m_settings.particles_count = cpu_position_buffer.size();
         //-----------------------------------------------------------------------------
 
 
 
+
+
         //------------------------------- GRID --------------------------------
+        Console::printSeparator();
+        Console::info("PhysycsSolver") << "Preparing NNS Grid" << Console::endl;
+        Console::printSeparator();
         m_grid = createShared<NNS>();
-        m_grid->init(m_domain, m_settings.cell_width);
+        m_grid->init(m_domain, m_settings.cell_width.value());
         //---------------------------------------------------------------------
 
 
 
         //------------------------------ SOLVER -------------------------------
-        Console::info("PhysicsSolver3D") << "Preparing solver." << Console::endl;
+        Console::printSeparator();
+        Console::info("PhysicsSolver3D") << "Preparing solver shaders." << Console::endl;
+        Console::printSeparator();
         m_solver = ComputeShaderLibrary::instance().getStagedComputeShader("solver");
+
+        pshader = Shader::create("particle",
+            "assets/common/shaders/physics/graphics/particle.vert",
+            "assets/common/shaders/physics/graphics/particle.frag", "", false);
+
+        bshader = Shader::create("bin",
+            "assets/common/shaders/physics/graphics/bin.vert",
+            "assets/common/shaders/physics/graphics/bin.frag", "", false);
+
         setConstants(*m_solver);
+        setConstants(*pshader);
+        setConstants(*bshader);
+
         m_solver->compile();
+        pshader->compile();
+        bshader->compile();
+
+        m_particles->setShader(pshader);
+        m_grid->setShader(bshader);
+
         computeThreadLayout();
         m_solver->SetWorkgroupLayout(m_pWkgCount);
         m_particles->addProgram(m_solver);
-        //--------------------------------------------------------------------
 
-
-
+        setUniforms(*m_solver);
+        setUniforms(*pshader);
+        setUniforms(*bshader);
 
         //------------------------------ BUFFERS -----------------------------
-        Console::info("PhysicsSolver3D") << "Generating Buffers." << Console::endl;
+        Console::printSeparator();
+        Console::info("PhysicsSolver3D") << "Generating Buffers..." << Console::endl;
+        Console::printSeparator();
 
         generateFields();
+
+        m_particles->addBuffer(m_grid->getBuffer());
         
         if(use_dynamic_buffer)
-            m_particles->setInstancesCount(m_settings.max_particles_count);
+            m_particles->setInstancesCount(m_settings.max_particles_count.value());
         else
-            m_particles->setInstancesCount(m_settings.particles_count);
-        m_particles->setActiveInstancesCount(m_settings.particles_count);
+            m_particles->setInstancesCount(m_settings.particles_count.value());
+        m_particles->setActiveInstancesCount(m_settings.particles_count.value());
 
-        for (int i = 0; i < m_settings.particles_count; i++) {
+        Console::info() << "Uploading buffer on device..." << Console::endl;
+     
 
-        }
-
-        // -------------------------------------------------------------------------
-        // 5. Final Setup
-        // -------------------------------------------------------------------------
-        // Additional dynamic shader setup can be performed here.
-        // For example, setting uniforms for the simulation domain:
-        // solverShader->setVec3("domainMin", domain.getMin());
-        // solverShader->setVec3("domainMax", domain.getMax());
-
+        uploadFields();
+        
         // Mark the physics engine as ready.
+        Console::printSeparator();
         Console::success("PhysicsSolver3D") << "Physics engine ready." << Console::endl;
+        Console::printBoldSeparator();
         m_ready = true;
         m_active = true;
     }
     
+
+    void PhysicsSolver3D::uploadFields() {
+        Console::printProgress(0);
+        m_particles->writeField("position_buffer", cpu_position_buffer); Console::printProgress(0.5);
+        m_particles->writeField("velocity_buffer", cpu_velocity_buffer); Console::printProgress(0.10);
+        m_particles->writeField("meta_buffer", cpu_meta_buffer);         Console::printProgress(0.15);
+        m_particles->writeField("density_buffer", cpu_density_buffer);   Console::printProgress(0.20);
+
+      
+
+        //-------------------------- FLUID -------------------------
+        bool PDB_uploaded = false;
+        bool MMC_uploaded = false;
+        bool rest_pos_uploaded = false;
+
+
+        if (hasPhysics(PhysicsModifierType::FLUID)) {
+            if (m_settings.fluid_solver == PressureSolver::PBF) {
+                m_particles->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
+                m_particles->writeField("predicted_position_buffer", cpu_position_buffer);
+                m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
+                PDB_uploaded = true;
+            }
+            else if (m_settings.fluid_solver == PressureSolver::WCSPH) {
+                m_particles->clearField("pressure_buffer");
+            }
+        }Console::printProgress(0.30);
+
+        //-------------------------- RIGID_BODY -------------------------
+
+        if (hasPhysics(PhysicsModifierType::RIGID_BODY)) {
+            if (!rest_pos_uploaded) {
+                m_particles->writeField("rest_position_buffer", cpu_position_buffer);
+                rest_pos_uploaded = true;
+            }
+
+            if (m_settings.rigid_solver == RigidBodySolver::SHAPE_MATCHING && !PDB_uploaded) {
+                m_particles->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
+                m_particles->writeField("predicted_position_buffer", cpu_position_buffer);
+                m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
+                PDB_uploaded = true;
+            }
+        }Console::printProgress(0.40);
+
+        //-------------------------- SOFT_BODY -------------------------
+
+        if (hasPhysics(PhysicsModifierType::SOFT_BODY)) {
+
+            if (!rest_pos_uploaded) {
+                m_particles->writeField("rest_position_buffer", cpu_position_buffer);
+                rest_pos_uploaded = true;
+            }
+
+            if (m_settings.soft_solver == SoftBodySolver::PBD_WDC && !PDB_uploaded) {
+                m_particles->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
+                m_particles->writeField("predicted_position_buffer", cpu_position_buffer);
+                m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
+                PDB_uploaded = true;
+            }
+            else if (m_settings.soft_solver == SoftBodySolver::MMC_PBD) {
+                if (!PDB_uploaded) {
+                    m_particles->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
+                    m_particles->writeField("predicted_position_buffer", cpu_position_buffer);
+                    m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
+                    PDB_uploaded = true;
+                }
+                if (!MMC_uploaded) {
+                    m_particles->clearField("F_buffer");
+                    m_particles->clearField("L_buffer");
+                    m_particles->clearField("stress_buffer");
+                    //m_particles->writeField("stress_buffer", cpu_stress_buffer);
+                    MMC_uploaded = true;
+                }
+            }
+            else if (m_settings.soft_solver == SoftBodySolver::MMC_PBD) {
+                if (!MMC_uploaded) {
+                    m_particles->clearField("F_buffer");
+                    m_particles->clearField("L_buffer");
+                    m_particles->clearField("stress_buffer");
+                    //m_particles->writeField("stress_buffer", cpu_stress_buffer);
+                    MMC_uploaded = true;
+                }
+            }Console::printProgress(0.70);
+
+            if (hasPhysics(PhysicsModifierType::PLASTICITY)) {
+                m_particles->clearField("plasticity_buffer");
+            }
+
+        }
+
+        //-------------------------- GRANULAR_BODY -------------------------
+
+        if (hasPhysics(PhysicsModifierType::GRANULAR_BODY)) {
+            if (m_settings.granular_solver == GranularBodySolver::PBD_DC) {
+                if (!PDB_uploaded) {
+                    m_particles->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
+                    m_particles->writeField("predicted_position_buffer", cpu_position_buffer);
+                    m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
+                    PDB_uploaded = true;
+                }
+            }
+        }Console::printProgress(0.9);
+
+        //-------------------------- HEAT_TRANSFER -------------------------
+
+        if (hasPhysics(PhysicsModifierType::HEAT_TRANSFER)) {
+            m_particles->writeField("temperature_buffer", cpu_temperature_buffer);
+        }Console::printProgress(1.0);
+        Console::print() << Console::endl;
+    }
 
 
     void PhysicsSolver3D::generateFields() {
@@ -135,6 +317,11 @@ namespace Merlin {
         m_particles->addField<glm::vec4>("velocity_buffer", true);
         m_particles->addField<glm::uvec4>("meta_buffer", true);
         m_particles->addField<float>("density_buffer", true);
+
+        m_particles->link(pshader->name(), "position_buffer");
+        m_particles->link(pshader->name(), "velocity_buffer");
+        m_particles->link(pshader->name(), "meta_buffer");
+        m_particles->link(pshader->name(), "density_buffer");
 
         //-------------------------- FLUID -------------------------
 
@@ -145,6 +332,7 @@ namespace Merlin {
             else if (m_settings.fluid_solver == PressureSolver::WCSPH) {
                 if (!m_particles->hasField("pressure_buffer"))
                     m_particles->addField<float>("pressure_buffer", false);
+                m_particles->link(pshader->name(), "pressure_buffer");
             }
         }
 
@@ -158,7 +346,6 @@ namespace Merlin {
                 add_PBD_Buffers();
             }
         }
-
 
         //-------------------------- SOFT_BODY -------------------------
 
@@ -181,10 +368,10 @@ namespace Merlin {
             if (hasPhysics(PhysicsModifierType::PLASTICITY)) {
                 if (!m_particles->hasField("plasticity_buffer"))
                     m_particles->addField<glm::mat4>("plasticity_buffer", true);
+                m_particles->link(pshader->name(), "plasticity_buffer");
             }
 
         }
-
 
         //-------------------------- GRANULAR_BODY -------------------------
 
@@ -193,7 +380,6 @@ namespace Merlin {
                 add_PBD_Buffers();
             }
         }
-
 
         //-------------------------- HEAT_TRANSFER -------------------------
 
@@ -209,6 +395,8 @@ namespace Merlin {
             m_particles->addField<glm::vec4>("predicted_position_buffer", true);
         if (!m_particles->hasField("position_correction_buffer"))
             m_particles->addField<glm::vec4>("position_correction_buffer", true);
+
+        m_particles->link(pshader->name(), "lambda_buffer");
     }
 
     void PhysicsSolver3D::add_MMC_Buffers() {
@@ -218,6 +406,8 @@ namespace Merlin {
             m_particles->addField<glm::mat4>("L_buffer", true);
         if (!m_particles->hasField("stress_buffer"))
             m_particles->addField<glm::mat3x4>("stress_buffer", true);
+
+        m_particles->link(pshader->name(), "stress_buffer");
     }
 
     void PhysicsSolver3D::generateCopyBuffer() {
@@ -285,10 +475,13 @@ namespace Merlin {
         m_active_emitters.clear();
         m_particles->removeAllBuffer();
         m_particles->removeAllField();
+        BindingPointManager::instance().resetBindings();
     }
 
     void PhysicsSolver3D::reset(){
         m_elapsed_time = 0;
+        BindingPointManager::instance().resetBindings();
+        //Todo, reset fields to init values
     }
 
     void PhysicsSolver3D::update(Timestep ts) {
@@ -339,28 +532,51 @@ namespace Merlin {
 
 
     void PhysicsSolver3D::spawnParticles(int count, int phase) {
-        int old_particles_count = m_settings.particles_count;
-        m_settings.particles_count += count;
+        int old_particles_count = m_settings.particles_count.value();
+        m_settings.particles_count.value() += count;
         computeThreadLayout();
         m_solver->SetWorkgroupLayout(m_pWkgCount);
-        m_particles->setActiveInstancesCount(m_settings.particles_count);
+        m_particles->setActiveInstancesCount(m_settings.particles_count.value());
 
         m_solver->use();
-        m_solver->setUInt("numEmitter", count);
-        m_solver->setUInt("numParticles", old_particles_count);
-        m_solver->setUInt("emitterPhase", phase);
+        m_solver->setUInt("u_numEmitter", count);
+        m_solver->setUInt("u_numParticles", old_particles_count);
+        m_solver->setUInt("u_emitterPhase", phase);
 
         m_solver->execute(SPAWN);
 
-        m_solver->setUInt("numEmitter", 0);
-        m_solver->setUInt("numParticles", m_settings.particles_count);
+        m_solver->setUInt("u_numEmitter", 0);
+        m_settings.particles_count.sync(*m_solver);
 
         Shader_Ptr shader = m_particles->getShader();
         if (shader) {
             shader->use();
-            shader->setUInt("numParticles", m_settings.particles_count);
+            shader->setUInt("u_numParticles", m_settings.particles_count.value());
         }
         //TODO update ISoSurface count as well
+    }
+
+    void PhysicsSolver3D::attachGraphics(){
+        m_particles->solveLink(pshader);
+        m_grid->solveLink(bshader);
+    }
+
+    void PhysicsSolver3D::detachGraphics(){
+        m_particles->detach(pshader);
+        m_grid->detach(bshader);
+    }
+
+    ParticleSystem_Ptr PhysicsSolver3D::getParticles(){
+        return m_particles;
+    }
+
+    ParticleSystem_Ptr PhysicsSolver3D::getBins(){
+        return m_grid->getParticleSystem();
+    }
+
+    std::vector<PhysicsEntity_Ptr> PhysicsSolver3D::getEntities()
+    {
+		return m_entity;
     }
 
     /* Setters */
@@ -457,7 +673,7 @@ namespace Merlin {
 
     void PhysicsSolver3D::computeThreadLayout() {
         //GPU Threading settings
-        m_pWkgCount = (m_settings.particles_count + m_settings.pWkgSize - 1) / m_settings.pWkgSize; //Total number of workgroup needed
+        m_pWkgCount = (m_settings.particles_count.value() + m_settings.pWkgSize - 1) / m_settings.pWkgSize; //Total number of workgroup needed
 
     }
 
@@ -467,8 +683,8 @@ namespace Merlin {
         shader.setConstVec3("cst_boundaryMin", m_domain.min);
         shader.setConstVec3("cst_boundaryMax", m_domain.max);
 
-        shader.setConstFloat("cst_particleRadius", m_settings.particle_radius);
-        shader.setConstFloat("cst_smoothingRadius", m_settings.smoothing_radius);
+        m_settings.particle_radius.set(shader);
+        m_settings.smoothing_radius.set(shader);
 
         shader.setConstFloat("cst_binSize", m_grid->getCellSize());
         shader.setConstUVec3("cst_binMax", m_grid->getBound());
@@ -478,6 +694,46 @@ namespace Merlin {
     }
 
     void PhysicsSolver3D::setUniforms(ShaderBase& shader) {
+        shader.use();
+
+        //settings.timestep.sync(*solver);
+        m_settings.particle_mass.sync(shader);
+        m_settings.timestep.sync(shader);
         
+        m_settings.particles_count.sync(shader);
+        m_settings.max_particles_count.sync(shader);
+        //shader.setInt("u_numEmitter", m_settings.emitter_count);
+
+        /*
+        //shader.setFloat("u_rho0", m_settings.);
+        uniform float u_rho0 = 1.0;//g/mm3
+        uniform float u_mass = 1.0;//g
+
+        uniform float u_dt = 0.005;//s
+        uniform float u_g = 9.81f * 1000.0;//mm/s^-2
+
+        uniform float u_artificialPressureMultiplier = 0.0001;
+        uniform float u_artificialViscosityMultiplier = 0.0001;
+        uniform float u_viscosity = 0.0001;
+        */
+
+        /*
+        particleShader->use();
+        settings.numParticles.sync(*particleShader);
+        settings.restDensity.sync(*particleShader);
+
+        prefixSum->use();
+        prefixSum->setUInt("dataSize", settings.bThread); //data size
+        prefixSum->setUInt("blockSize", settings.blockSize); //block size
+
+        isoGen->use();
+        settings.numParticles.sync(*isoGen);
+        settings.particleMass.sync(*isoGen);
+
+        texPlot->use();
+        settings.numParticles.sync(*texPlot);
+        settings.particleMass.sync(*texPlot);
+        */
+
     }
 }

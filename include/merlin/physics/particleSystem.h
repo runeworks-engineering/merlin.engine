@@ -28,12 +28,15 @@ namespace Merlin {
 		void setInstancesCount(size_t count);
 		void setActiveInstancesCount(size_t count);
 
+		inline GLuint count() { return m_instancesCount; }
+		inline GLuint activeParticles() { return m_active_instancesCount; }
+
 		AbstractBufferObject_Ptr getField(const std::string& name) const;
 		AbstractBufferObject_Ptr getBuffer(const std::string& name) const;
 		const std::map<std::string, GLuint>& getCopyBufferStructure() const;
 		
 
-		void addField(AbstractBufferObject_Ptr buf, bool sortable);
+		void addField(AbstractBufferObject_Ptr buf, bool sortable = false);
 		void addBuffer(AbstractBufferObject_Ptr buf);
 		bool hasField(const std::string& name) const;
 		bool hasBuffer(const std::string& name) const;

@@ -21,10 +21,11 @@ ExampleLayer::~ExampleLayer(){}
 void ExampleLayer::createScene() {
 	renderer.initialize();
 	renderer.enableSampleShading();
-	renderer.setEnvironmentGradientColor(1.0, 1.0, 1.0);
+	//renderer.setEnvironmentGradientColor(1.0, 1.0, 1.0);
+	renderer.setEnvironmentGradientColor(0.5, 0.5, 0.5);
 	renderer.enableEnvironment();
 	renderer.disableShadows();
-	renderer.showLights();
+	//renderer.showLights();
 	renderer.disableFaceCulling();
 	//renderer.enableTransparency();
 
@@ -34,49 +35,67 @@ void ExampleLayer::createScene() {
 	domain->setMaterial("white rubber");
 	domain->setRenderMode(RenderMode::UNLIT);
 
-	fluid = Primitives::createHollowCube(20, 0.1);
-	fluid->setMaterial("white rubber");
-	fluid->setRenderMode(RenderMode::UNLIT);
+	//fluid = Primitives::createCube(20);
+	fluid = ModelLoader::loadMesh("./assets/common/models/bunny.stl");
+	fluid->centerMeshOrigin();
+	fluid->scale(5);
+	fluid->computeBoundingBox();
+
+	fluid_boundingbox = Primitives::createBoundingBox(fluid->getBoundingBox());
+	fluid_boundingbox->setMaterial("white rubber");
+	fluid_boundingbox->setRenderMode(RenderMode::UNLIT);
 
 	scene = Scene::create("scene");
 
 	scene->add(domain);
-	scene->add(fluid);
-	scene->add(TransformObject::create("origin", 10));
+	//scene->add(fluid);
+	scene->add(fluid_boundingbox);
+	//scene->add(TransformObject::create("origin", 10));
 }
 
 void ExampleLayer::createPhysics(){
-	//ParticleSamplerPtr sampler = createShared<VoxelSampler>()
-	PhysicsEntity_Ptr fluid_entity = createShared<PhysicsEntity>("fluid", Samplers::VOXELIZER)
+	ParticleSampler_Ptr sampler = createShared<VoxelSampler>(1);
+	PhysicsEntity_Ptr fluid_entity = createShared<PhysicsEntity>("fluid", sampler);
+	fluid_entity->setMesh(fluid);
 
+	PhysicsModifier_Ptr fluid_modifer = createShared<FluidModifier>();
+	fluid_entity->addModifier(fluid_modifer);
+
+	solver.add(fluid_entity);
 	solver.setDomain(domain->getBoundingBox());
 	solver.init();
+
+	Console::info("ExampleLayer") << "Particles: " << solver.getParticles()->count() << Console::endl;
+
+	scene->add(solver.getParticles());
+	//scene->add(solver.getBins());
 }
 
 void ExampleLayer::onAttach(){
 	Layer3D::onAttach();
 
-	Console::setLevel(ConsoleLevel::_TRACE);
+	Console::setLevel(ConsoleLevel::_INFO);
 
 	createScene();
 	createPhysics();
 
 }
 
-
-
 void ExampleLayer::onUpdate(Timestep ts){
 	Layer3D::onUpdate(ts);
 
+	solver.attachGraphics();
 	renderer.clear();
 	renderer.render(scene, camera());
 	renderer.reset();
+	solver.detachGraphics();
 
 }
 
+
 void ExampleLayer::onImGuiRender()
 {
-
+	ImGui::DockSpaceOverViewport((ImGuiViewport*)0, ImGuiDockNodeFlags_PassthruCentralNode);
 	// Define a recursive lambda function to traverse the scene graph
 	std::function<void(const std::list<shared<RenderableObject>>&)> traverseNodes = [&](const std::list<shared<RenderableObject>>& nodes){
 		for (auto& node : nodes){
@@ -92,6 +111,12 @@ void ExampleLayer::onImGuiRender()
 		}
 	};
 
+	std::vector<PhysicsEntity_Ptr> entities = solver.getEntities();
+	for (const auto& entity : entities) {
+		ImGui::Begin(entity->name().c_str());
+		entity->onRenderMenu();
+		ImGui::End();
+	}
 
 	// draw the scene graph starting from the root node
 	ImGui::Begin("Scene Graph");

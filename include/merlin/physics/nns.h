@@ -20,6 +20,10 @@ namespace Merlin {
 		void clean();
 		void sort(StagedComputeShader_Ptr solver);
 		
+		void solveLink(shared<ShaderBase> shader);
+		void detach(shared<ShaderBase> shader);
+
+		void setShader(Shader_Ptr);
 
 		void setWkgSize(GLuint size);
 

@@ -134,8 +134,8 @@ namespace Merlin {
 			m_compiled = false;
 		}
 
-		if (Result == GL_FALSE) Console::error("Shader") << "Shader " << id() << " not linked" << Console::endl;
-		else LOG_OK("Shader") << "Shader program : " << name() << "  successfully created." << Console::endl;
+		if (!m_compiled) Console::error("Shader") << "Shader " << id() << " not linked" << Console::endl;
+		else Console::success("Shader") << "Shader program : " << name() << "  successfully created." << Console::endl;
 
 
 		glDetachShader(id(), vertexShaderID);
@@ -149,6 +149,7 @@ namespace Merlin {
 		if (GeomShaderSrc != "")
 			glDeleteShader(geometryShaderID);
 
+		if(m_compiled)
 		use();
 	}
 

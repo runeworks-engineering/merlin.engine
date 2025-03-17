@@ -1,7 +1,31 @@
 #include "pch.h"
 #include "merlin/core/console.h"
 
+#if defined(_WIN32)
+#define WIN32_LEAN_AND_MEAN
+#define VC_EXTRALEAN
+#include <Windows.h>
+#elif defined(__linux__)
+#include <sys/ioctl.h>
+#endif // Windows/Linux
+
 #include <iostream>
+
+void get_terminal_size(int& width, int& height) {
+#if defined(_WIN32)
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+	width = (int)(csbi.srWindow.Right - csbi.srWindow.Left + 1);
+	height = (int)(csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
+#elif defined(__linux__)
+	struct winsize w;
+	ioctl(fileno(stdout), TIOCGWINSZ, &w);
+	width = (int)(w.ws_col);
+	height = (int)(w.ws_row);
+#endif // Windows/Linux
+}
+
+
 
 namespace Merlin {
 	std::string Console::endl = "\n";
@@ -74,6 +98,20 @@ namespace Merlin {
 		return ConsoleStream(ConsoleLevel::_NO_HEADER, "");
 	}
 
+	void Console::printSeparator(){
+		int width = 0, height = 0;
+		get_terminal_size(width, height);
+
+		print() << std::string(width, '-') << Console::endl;
+	}
+
+	void Console::printBoldSeparator() {
+		int width = 0, height = 0;
+		get_terminal_size(width, height);
+
+		print() << std::string(width, '=') << Console::endl;
+	}
+
 	void Console::printBufferLimits() {
 		// query limitations
 		// -----------------
@@ -89,19 +127,25 @@ namespace Merlin {
 		glGetIntegerv(GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, &max_ssbo);
 		glGetIntegerv(GL_MAX_SHADER_STORAGE_BLOCK_SIZE, &max_ssbo_size);
 
+		Console::printSeparator();
 		Console::info("Memory") << "OpenGL Limitations: " << Console::endl;
 		Console::info("Memory") << "Max Uniform buffer object bindings : " << max_ubo << Console::endl;
 		Console::info("Memory") << "Max Uniform buffer object block size : " << max_ubo << Console::endl;
 		Console::info("Memory") << "Max Uniform buffer object per shader " << max_ubo_per_shader << Console::endl;
 		Console::info("Memory") << "Max Shader Storage buffer object bindings : " << max_ssbo << Console::endl;
 		Console::info("Memory") << "Max Shader Storage buffer object block size " << max_ssbo_size << Console::endl;
+		Console::printSeparator();
 	}
 
 	void Console::printProgress(double percentage){
+		int width = 0, height = 0;
+		get_terminal_size(width, height);
+		width = float(width) * 0.8;
+
 		int val = (int)(percentage * 100);
-		int lpad = (int)(percentage * PBWIDTH);
-		int rpad = PBWIDTH - lpad;
-		printf("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+		int lpad = (int)(percentage * width);
+		int rpad = width - lpad;
+		printf("\r%3d%% [%.*s%*s]", val, lpad, std::string(width, '|').c_str(), rpad, "");
 
 		fflush(stdout);
 	}

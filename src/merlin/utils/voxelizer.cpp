@@ -95,7 +95,7 @@ namespace Merlin {
 		SSBO_Ptr<GLint> voxBuffer = SSBO<GLint>::create("voxel_buffer", voxThread); //full grid
 		SSBO_Ptr<Facet> facetBuffer = SSBO<Facet>::create("vertex_buffer", facets.size(), facets.data()); //full grid
 
-		if (!m_voxelize) m_voxelize = ComputeShader::create("voxelize", "./assets/common/shaders/voxelize.comp");
+		if (!m_voxelize) m_voxelize = ComputeShader::create("voxelize", "./assets/common/shaders/utils/voxelize.comp");
 
 		m_voxelize->use();
 		m_voxelize->attach(*voxBuffer);

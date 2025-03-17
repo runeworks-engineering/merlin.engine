@@ -28,11 +28,12 @@ namespace Merlin {
         m_bins->setDisplayMode(ParticleSystemDisplayMode::MESH);
         m_bins->setMesh(binInstance);
         m_bins->enableWireFrameMode();
+        m_bins->addProgram(m_prefixSum);
 
         m_bin_buffer = SSBO<Bin>::create("bin_buffer", m_thread);
         Console::info() << "Bin struct size :" << sizeof(Bin) << Console::endl;
         Console::info() << "Bin buffer size :" << int(m_bin_buffer->size()) << Console::endl;
-        m_bins->addBuffer<Bin>("bin_buffer", m_thread);
+        m_bins->addField(m_bin_buffer);
 
         m_prefixSum->SetWorkgroupLayout(m_bWkgCount);
         m_prefixSum->use();
@@ -83,6 +84,18 @@ namespace Merlin {
         solver->use();
         solver->execute(SolverStages::SORT); //Sort
 	}
+
+    void NNS::solveLink(shared<ShaderBase> shader){
+        m_bins->solveLink(shader);
+    }
+
+    void NNS::detach(shared<ShaderBase> shader) {
+        m_bins->detach(shader);
+    }
+
+    void NNS::setShader(Shader_Ptr shader){
+        m_bins->setShader(shader);
+    }
 
 	void NNS::clean() {
         m_ready = false;

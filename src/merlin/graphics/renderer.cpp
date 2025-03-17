@@ -331,8 +331,7 @@ namespace Merlin {
 			
 			ps.draw();
 
-		}
-		else if (ps.getDisplayMode() == ParticleSystemDisplayMode::MESH) {
+		} else {
 			Mesh& mesh = *ps.getMesh();
 			Material_Ptr mat = mesh.getMaterial();
 			Shader_Ptr shader;

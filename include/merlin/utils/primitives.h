@@ -25,6 +25,7 @@ namespace Merlin {
 		static shared<Mesh> createCone(float r, float h, int res);
 		static shared<Mesh> createCylinder(float r, float h, int res);
 		static shared<Model> createArrow(float size, glm::vec3 color, int res = 25);
+		static shared<Mesh> createBoundingBox(BoundingBox aabb);
 
 	};
 

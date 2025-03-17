@@ -1,6 +1,7 @@
 #pragma once
 #include "merlin/core/core.h"
 #include "merlin/shaders/shaderBase.h"
+#include "uniform.h"
 
 namespace Merlin{
 

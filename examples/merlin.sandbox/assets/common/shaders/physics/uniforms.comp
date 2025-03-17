@@ -18,7 +18,8 @@ uniform uint u_numEmitter = 0;
 
 
 
-uniform float u_laser_power;
-uniform mat4 u_laser_transform;
+uniform float u_laser_power = 0;
+uniform mat4 u_laser_transform = mat4(1.0);
+uniform mat4 u_emitterTransform = mat4(1.0);
 
 #endif

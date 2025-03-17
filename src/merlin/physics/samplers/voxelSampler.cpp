@@ -9,7 +9,7 @@ namespace Merlin {
     std::vector<glm::vec4> VoxelSampler::sample(Mesh_Ptr mesh) {
         // Ensure the mesh is ready for voxelization.
         if(!mesh->hasBoundingBox());
-        mesh->computeBoundingBox();
+            mesh->computeBoundingBox();
 
         if (m_thickness == 0) mesh->voxelize(m_spacing);
         else mesh->voxelizeSurface(m_spacing, m_thickness);

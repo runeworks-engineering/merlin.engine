@@ -3,8 +3,8 @@
 #define INCLUDE_BUFFERS_GLSL
 
 //Macro to access buffer elements
-#define phase(index)		ssbo_meta[index].x		//phase
-#define bin_index(index)	ssbo_meta[index].y		//bin index
+#define entity(index)		ssbo_meta[index].x		//phase
+#define phase(index)		ssbo_meta[index].y		//phase
 #define id(index)			ssbo_meta[index].z		//particle ID
 #define sorted_id(index)	ssbo_meta[index].w		//particle destination ID (sort)
 
@@ -121,6 +121,18 @@ layout(std430) buffer copy_buffer {
 layout(std430) buffer emitter_position_buffer {
 	vec4 ssbo_emitter_positions[];
 };
+
+struct Bin {
+	uint count;
+	uint sum;
+	uint csum;
+	uint index;
+};
+
+layout(std430) buffer BinBuffer {
+	Bin ssbo_bins[];
+};
+
 
 
 #endif// INCLUDE_BUFFERS_HLSL
