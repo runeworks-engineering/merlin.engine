@@ -60,7 +60,7 @@ namespace Merlin {
         m_prefixSum->execute(NNS_Stages::CLEAR);// clear bins
 
         solver->use();
-        solver->execute(SolverStages::BIN); //Place particles in bins
+        solver->execute(SolverStages::COPY); //Place particles in bins
 
         m_prefixSum->use();
         m_prefixSum->execute(NNS_Stages::NNS_STEP_0);// local prefix sum

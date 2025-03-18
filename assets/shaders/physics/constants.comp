@@ -34,6 +34,18 @@
 #define COLORMAP_JET 6
 #define COLORMAP_BLUE 7
 
+#define STAGE_INIT 0
+#define STAGE_COPY 1
+#define STAGE_BIN 2
+#define STAGE_SORT 3
+#define STAGE_SPAWN 4
+#define STAGE_SOLVER_STEP_1 5
+#define STAGE_SOLVER_STEP_2 6
+#define STAGE_SOLVER_STEP_3 7
+#define STAGE_SOLVER_STEP_4 8
+#define STAGE_SOLVER_STEP_5 9
+#define STAGE_SOLVER_STEP_6 10
+
 #define MAXNN 64
 #define EPSILON 1e-6
 #define MAX_DELTA_PI 0.1

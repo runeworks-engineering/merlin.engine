@@ -123,6 +123,7 @@ namespace Merlin {
         }
 
         m_settings.particles_count = cpu_position_buffer.size();
+        m_settings.initial_particles_count = cpu_position_buffer.size();
         //-----------------------------------------------------------------------------
 
 
@@ -181,16 +182,7 @@ namespace Merlin {
 
         m_particles->addBuffer(m_grid->getBuffer());
         
-        if(use_dynamic_buffer)
-            m_particles->setInstancesCount(m_settings.max_particles_count.value());
-        else
-            m_particles->setInstancesCount(m_settings.particles_count.value());
-        m_particles->setActiveInstancesCount(m_settings.particles_count.value());
-
-        Console::info() << "Uploading buffer on device..." << Console::endl;
-     
-
-        uploadFields();
+        reset();
         
         // Mark the physics engine as ready.
         Console::printSeparator();
@@ -202,6 +194,8 @@ namespace Merlin {
     
 
     void PhysicsSolver3D::uploadFields() {
+        Console::info() << "Uploading buffer on device..." << Console::endl;
+
         Console::printProgress(0);
         m_particles->writeField("position_buffer", cpu_position_buffer); Console::printProgress(0.5);
         m_particles->writeField("velocity_buffer", cpu_velocity_buffer); Console::printProgress(0.10);
@@ -480,15 +474,31 @@ namespace Merlin {
 
     void PhysicsSolver3D::reset(){
         m_elapsed_time = 0;
+        
         BindingPointManager::instance().resetBindings();
-        //Todo, reset fields to init values
+
+        m_settings.particles_count.value() = m_settings.initial_particles_count;
+
+        if (use_dynamic_buffer)
+            m_particles->setInstancesCount(m_settings.max_particles_count.value());
+        else
+            m_particles->setInstancesCount(m_settings.particles_count.value());
+        m_particles->setActiveInstancesCount(m_settings.particles_count.value());
+
+        uploadFields();
+
+        m_solver->use();
+        m_solver->execute(SolverStages::INIT);
     }
 
     void PhysicsSolver3D::update(Timestep ts) {
 		if (!m_active) return;
         errorSolverNotReady();
 
-        m_elapsed_time += m_settings.timestep.value();
+        if(use_fixed_timestep)
+            m_elapsed_time += m_settings.timestep.value();
+        else
+            m_elapsed_time += ts.getSeconds();
 
         for (auto emitter : m_active_emitters) {
             shared<Emitter> e = emitter->getModifier<Emitter>();
@@ -500,34 +510,15 @@ namespace Merlin {
         }
 
         // Update emmiters & spawn particles
-
         m_grid->sort(m_solver);
-
-
-        /*
-        GPU_PROFILE(solver_substep_time,
-            for (int i = 0; i < settings.solver_substep; i++) {
-                if (integrate) {
-                    solver->execute(2);
-
-
-                }
-                if (integrate) {
-                    GPU_PROFILE(jacobi_time,
-                        for (int j = 0; j < settings.solver_iteration; j++) {
-                            solver->execute(3);
-                            solver->execute(4);
-                        }
-                            )
-                        solver->execute(5);
-
-                }
+        for (int i = 0; i < m_settings.solver_substep; i++) {
+            m_solver->execute(SolverStages::SOLVER_STEP_1);
+            for (int j = 0; j < m_settings.solver_iteration; j++) {
+                m_solver->execute(SolverStages::SOLVER_STEP_2);
+                m_solver->execute(SolverStages::SOLVER_STEP_3);
             }
-         )
-        */
-
-
-
+            m_solver->execute(SolverStages::SOLVER_STEP_4);
+        }
 	}
 
 
@@ -629,15 +620,15 @@ namespace Merlin {
 
     /* Algorithm settings*/
 
-	bool PhysicsSolver3D::useIndexSorting() {
+	bool PhysicsSolver3D::useIndexSorting() const {
 		return use_index_sorting;
 	}
 
-	bool PhysicsSolver3D::useSparseBuffer() {
+	bool PhysicsSolver3D::useSparseBuffer() const {
 		return use_sparse_buffer;
 	}
 
-    bool PhysicsSolver3D::useDynamicBuffer() {
+    bool PhysicsSolver3D::useDynamicBuffer() const {
         return use_dynamic_buffer;
     }
 
@@ -649,6 +640,14 @@ namespace Merlin {
 		use_sparse_buffer = state;
 		if(state) use_index_sorting = true;
 	}
+
+    void PhysicsSolver3D::useFixedTimeStep(bool state){
+        use_fixed_timestep = state;
+    }
+
+    float PhysicsSolver3D::getTime() const {
+        return m_elapsed_time;
+    }
 
 
     /* Logging */

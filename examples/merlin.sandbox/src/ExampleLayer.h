@@ -3,8 +3,7 @@
 #include <Merlin.h>
 using namespace Merlin;
 
-class ExampleLayer : public Layer3D
-{
+class ExampleLayer : public Layer3D {
 public:
 	ExampleLayer();
 	virtual ~ExampleLayer();
@@ -16,6 +15,8 @@ public:
 	virtual void onUpdate(Timestep ts) override;
 	virtual void onImGuiRender() override;
 private:
+
+	bool paused = true;
 
 	Scene_Ptr scene;
 	PhysicsSolver3D solver;

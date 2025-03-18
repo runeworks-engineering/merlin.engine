@@ -102,38 +102,38 @@ namespace Merlin {
 	}
 
 	void PhysicsEntity::onRenderMenu()	{
-		if (ImGui::TreeNode(m_name.c_str())) {
-			ImGui::Text("ID: %s", m_id.c_str());
-			ImGui::Text("Active: %s", m_active ? "true" : "false");
-			ImGui::Text("Dynamic: %s", m_dynamic ? "true" : "false");
-			ImGui::Text("Emitter: %s", m_emitter ? "true" : "false");
-			if (hasMesh()) {
-				if (ImGui::TreeNode("Mesh")) {
-					
-					ImGui::Text(m_mesh->name().c_str());
-					//bounding box, etc
-					ImGui::Text("Bounding Box");
-					BoundingBox bb = m_mesh->getBoundingBox();
-					ImGui::Text("Min: (%f, %f, %f)", bb.min.x, bb.min.y, bb.min.z);
-					ImGui::Text("Max: (%f, %f, %f)", bb.max.x, bb.max.y, bb.max.z);
-					ImGui::Text("Size: (%f, %f, %f)", bb.size.x, bb.size.y, bb.size.z);
+		ImGui::Text((m_name + std::string(" properties")).c_str());
 
-					//particle count
-					ImGui::Text("Particle Count: %d", m_samples.size());
-					ImGui::TreePop();
-				}
-			}
-			else {
-				ImGui::Text("No mesh");
-			}
-			if (ImGui::TreeNode("Modifiers")) {
-				for (const auto& mod : m_modifiers) {
-					mod.second->onRenderMenu();
-				}
+		ImGui::Text("ID: %s", m_id.c_str());
+		ImGui::Text("Active: %s", m_active ? "true" : "false");
+		ImGui::Text("Dynamic: %s", m_dynamic ? "true" : "false");
+		ImGui::Text("Emitter: %s", m_emitter ? "true" : "false");
+		if (hasMesh()) {
+			if (ImGui::TreeNode("Mesh")) {
+					
+				ImGui::Text(m_mesh->name().c_str());
+				//bounding box, etc
+				ImGui::Text("Bounding Box");
+				BoundingBox bb = m_mesh->getBoundingBox();
+				ImGui::Text("Min: (%f, %f, %f)", bb.min.x, bb.min.y, bb.min.z);
+				ImGui::Text("Max: (%f, %f, %f)", bb.max.x, bb.max.y, bb.max.z);
+				ImGui::Text("Size: (%f, %f, %f)", bb.size.x, bb.size.y, bb.size.z);
+
+				//particle count
+				ImGui::Text("Particle Count: %d", m_samples.size());
 				ImGui::TreePop();
+			}
+		}
+		else {
+			ImGui::Text("No mesh");
+		}
+		if (ImGui::TreeNode("Modifiers")) {
+			for (const auto& mod : m_modifiers) {
+				mod.second->onRenderMenu();
 			}
 			ImGui::TreePop();
 		}
+
 	}
 
 	void PhysicsEntity::setSampler(ParticleSampler_Ptr smpl) {

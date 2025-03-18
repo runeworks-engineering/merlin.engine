@@ -38,8 +38,9 @@ namespace Merlin {
 		m_name = typeToString(m_type) + std::to_string(m_ID);
 	}
 
-	RenderableObject::RenderableObject(std::string name, ObjectType type) : m_type(type), m_parent(nullptr), m_name(name), m_transform(glm::mat4(1)) {
+	RenderableObject::RenderableObject(std::string name, ObjectType type) : m_type(type), m_parent(nullptr), m_transform(glm::mat4(1)) {
 		m_ID = nextID++;
+		m_name = name + "_" + std::to_string(m_ID);
 	}
 
 	shared<RenderableObject> RenderableObject::getChild(std::string name) {
@@ -104,6 +105,35 @@ namespace Merlin {
 
 	RenderableObject* RenderableObject::parent() {
 		return m_parent;
+	}
+
+	void RenderableObject::onRenderMenu(){
+		ImGui::Text((m_name + std::string(" properties")).c_str());
+		ImGui::Text("ID: %s", std::to_string(m_ID).c_str());
+		
+		ImGui::Checkbox("Hidden", &m_hidden);
+		ImGui::Checkbox("Wireframe", &m_wireframe);
+		ImGui::Checkbox("Cast shadows", &m_castShadow);
+		ImGui::Checkbox("Use Vertex Color", &use_vertex_color);
+		ImGui::Checkbox("Use Normal Map", &use_normal_map);
+		ImGui::Checkbox("Use Flat shading", &use_flat_shading);
+
+		enum class RenderMode {
+			UNLIT,
+			LIT,
+			NORMALS,
+			DEPTH,
+			POSITION,
+			TEXCOORDS,
+			SHADOW,
+			DEFAULT
+		};
+
+		int renderMode = int(m_renderMode);
+		static const char* options[] = { "Unlit", "Lit", "Normals", "Depth", "Position", "Texture Coordinate", "Shadows"};
+		if (ImGui::ListBox("Colored field", &renderMode, options, 7)) {
+			m_renderMode = Merlin::RenderMode(renderMode);
+		}
 	}
 
 

@@ -75,13 +75,16 @@ void exec(uint index, uint kernel){
 	
 	if(index < u_numParticles)
 		switch(kernel){
-		case 0: 
+		case STAGE_INIT: 
+			
+			break;
+		case STAGE_COPY: 
 			copyBuffers(index);
 			break;
-		case 1: 
+		case STAGE_SORT: 
 			sortBuffers(index);
 			break;
-		case 2:
+		case STAGE_SOLVER_STEP_1:
 			if(phase(index) == MATERIAL_FLUID)
 				pbf_step(index, 0);
 			else if(phase(index) == MATERIAL_SOFT){
@@ -93,29 +96,29 @@ void exec(uint index, uint kernel){
 			if(phase(index) < MATERIAL_BOUNDARY) ssbo_temperature[index] += computeTemperatureDelta(index);
 
 			break;
-		case 3: 
+		case STAGE_SOLVER_STEP_2: 
 			if(phase(index) == MATERIAL_FLUID)
 				pbf_step(index, 1);
 			else if(phase(index) == MATERIAL_SOFT)
 				pbs_step(index, 1);
 			break;
-		case 4:
+		case STAGE_SOLVER_STEP_3:
 			if(phase(index) == MATERIAL_FLUID)
 				pbf_step(index, 2);
 			else if(phase(index) == MATERIAL_SOFT)
 				pbs_step(index, 2);
 
 			break;
-		case 5: 
+		case STAGE_SOLVER_STEP_4: 
 			if(phase(index) == MATERIAL_FLUID)
 				pbf_step(index, 3);
 			else if(phase(index) == MATERIAL_SOFT)
 				pbs_step(index, 3);
-		case 6: 
+		case STAGE_SOLVER_STEP_5: 
 			if(phase(index) == MATERIAL_FLUID)
 				pbf_step(index, 4);
 			break;
-		case 7: 
+		case STAGE_SOLVER_STEP_6: 
 			if(phase(index) == MATERIAL_FLUID)
 				pbf_step(index, 5);
 			//else if(phase(index) == SOLID)
@@ -129,7 +132,7 @@ void exec(uint index, uint kernel){
 
 			break;
 		}
-	else if(kernel == 8)
+	else if(kernel == STAGE_SPAWN)
 		spawnParticle(index);
 
 }

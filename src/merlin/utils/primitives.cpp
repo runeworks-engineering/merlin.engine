@@ -541,7 +541,7 @@ namespace Merlin {
 	shared<Mesh> Primitives::createBoundingBox(BoundingBox aabb) {
 		std::vector<Vertex> vertices;
 		std::vector<GLuint> indices;
-		float thickness = aabb.size.length()*0.01;
+		float thickness = aabb.size.length()*0.1;
 
 		// Helper function to create a beam (box) between two points
 		auto createBeam = [&](glm::vec3 start, glm::vec3 end, float thickness) {

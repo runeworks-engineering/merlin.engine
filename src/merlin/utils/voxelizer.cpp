@@ -24,8 +24,6 @@ namespace Merlin {
 		int gridSizeY = ceil(bb_size.y / spacing);
 		int gridSizeZ = ceil(bb_size.z / spacing);
 
-
-
 		for (int i = 0; i < gridSizeX * gridSizeY * gridSizeZ; i++) {
 			if (voxels[i] != 0) {
 
@@ -47,6 +45,9 @@ namespace Merlin {
 	}
 
 	std::vector<int> Voxelizer::voxelize(Mesh& mesh, float vox_size, float thickness) {
+		Console::printSeparator();
+		Console::print() << "Voxelizing : " << mesh.name() << Console::endl;
+		
 
 		Vertices vertices = mesh.getVertices();
 		Indices indices = mesh.getIndices();
@@ -91,12 +92,11 @@ namespace Merlin {
 		if(bb_size.y == 0) bb_size.y += vox_size;
 		if(bb_size.z == 0) bb_size.z += vox_size;
 
+
 		GLuint voxThread = ceil(bb_size.x / vox_size) * ceil(bb_size.y / vox_size) * ceil(bb_size.z / vox_size); //Total number of bin (thread)
 		SSBO_Ptr<GLint> voxBuffer = SSBO<GLint>::create("voxel_buffer", voxThread); //full grid
 		SSBO_Ptr<Facet> facetBuffer = SSBO<Facet>::create("vertex_buffer", facets.size(), facets.data()); //full grid
-
 		if (!m_voxelize) m_voxelize = ComputeShader::create("voxelize", "./assets/common/shaders/utils/voxelize.comp");
-
 		m_voxelize->use();
 		m_voxelize->attach(*voxBuffer);
 		m_voxelize->attach(*facetBuffer);
@@ -117,7 +117,7 @@ namespace Merlin {
 
 		facetBuffer->releaseBindingPoint();
 		voxBuffer->releaseBindingPoint();
-
+		Console::printSeparator();
 		return voxBuffer->read();
 	}
 

@@ -87,6 +87,7 @@ namespace Merlin {
 		shared<RenderableObject> getChild(std::string name);
 		RenderableObject* parent();
 
+		void onRenderMenu();
 
 		RenderMode renderMode();
 		void setRenderMode(RenderMode mode);

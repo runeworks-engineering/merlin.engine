@@ -47,6 +47,7 @@ namespace Merlin {
 		Uniform<float> timestep = Uniform<float>("u_dt", 1.0f / 60.0f);
 		Uniform<float> particle_mass = Uniform<float>("u_mass", 1.0);
 
+		GLuint initial_particles_count = 1;
 		Uniform <GLuint> particles_count = Uniform<GLuint>("u_numParticles", 1);
 		Uniform <GLuint> max_particles_count = Uniform<GLuint>("u_maxParticles", 2000000);
 		Uniform <GLuint> emitter_count = Uniform<GLuint>("u_numEmitter", 0);
@@ -98,12 +99,15 @@ namespace Merlin {
 		void addPhysics(PhysicsModifierType);
 		bool hasPhysics(PhysicsModifierType);
 
-		bool useIndexSorting();
-		bool useSparseBuffer();
-		bool useDynamicBuffer();
+		bool useIndexSorting() const;
+		bool useSparseBuffer() const;
+		bool useDynamicBuffer() const;
 		void useIndexSorting(bool);
 		void useSparseBuffer(bool);
+		void useFixedTimeStep(bool);
 		
+		float getTime() const;
+
 	private:
 		void warmUnstagedChanges();
 		void errorSolverNotReady();
@@ -147,6 +151,7 @@ namespace Merlin {
 		bool use_index_sorting = false; //sort the particle instead
 		bool use_sparse_buffer = false; //smaller footprint, but index_sorting becomes mandatory.
 		bool use_dynamic_buffer = false; //Used by particle emitters (disabled otherwise)
+		bool use_fixed_timestep = true; //Used by particle emitters (disabled otherwise)
 
 	private:
 		std::vector<PhysicsEntity_Ptr> m_entity;
