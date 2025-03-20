@@ -17,28 +17,41 @@ namespace Merlin {
         Model(const std::string& name, const std::vector<shared<Mesh>>& mesh);
 
         void addMesh(const shared<Mesh>& mesh);
-        void draw(const Camera& camera) const;
 
-        void enableWireFrameMode() override;
-        void disableWireFrameMode() override;
+		//void voxelize(float size);
+		//void voxelizeSurface(float size, float thickness);
 
-
-        void setShader(const shared<Shader>& shader);
+        void setShader(shared<Shader> shader);
         void setMaterial(shared<MaterialBase> material);
-        void setShader(const std::string& shader);
-        void setMaterial(const std::string& material);
+        void setShader(std::string shaderName);
+        void setMaterial(std::string materialName);
 
-        inline const std::vector<shared<Mesh>>& meshes() const { return m_meshes; }
+		inline bool hasShader() const { return m_shader != nullptr; }
+		inline bool hasMaterial() const { return m_material != nullptr; }
+
+        void computeBoundingBox();
+
+		inline const shared<Shader> getShader() const { return m_shader; }
+		inline const std::string& getShaderName() const { return m_shaderName; }
+		inline const shared<MaterialBase> getMaterial() const { return m_material; }
+		inline const std::string& getMaterialName() const { return m_materialName; }
+
+		inline bool hasBoundingBox() const { return m_hasBoundingBox; }
+		inline BoundingBox getBoundingBox() const { return m_bbox; }
 
         static shared<Model> create(std::string name);
         static shared<Model> create(const std::string& name, const shared<Mesh>& mesh);
         static shared<Model> create(const std::string& name, const std::vector<shared<Mesh>>& mesh);
 
+    private:
+        std::string m_materialName = "default";
+        std::string m_shaderName = "default";
 
+        shared<MaterialBase> m_material = nullptr;
+        shared<Shader> m_shader = nullptr;
 
-    protected:
-        std::vector<shared<Mesh>> m_meshes;
-        //TODO : Group Meshes by Shaders and Material to optimize draw call
+        bool m_hasBoundingBox = false;
+        BoundingBox m_bbox = { glm::vec3(), glm::vec3() };
     };
 
     typedef shared<Model> Model_Ptr;

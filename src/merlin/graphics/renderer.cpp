@@ -33,11 +33,6 @@ namespace Merlin {
 			}
 
 		}
-		if (const auto model = std::dynamic_pointer_cast<Model>(object)) {
-			for (const auto& mesh : model->meshes()) {
-				if (!model->isHidden()) gatherLights(mesh);
-			}
-		}
 
 		for (const auto& child : object->children()) {
 			if (!child->isHidden()) gatherLights(child);
@@ -133,12 +128,7 @@ namespace Merlin {
 				shader->setMat4("model", m_currentTransform); //sync model matrix with GPU
 				mesh->draw();
 			}
-		}else if (const auto model = std::dynamic_pointer_cast<Model>(object)) {
-			for (const auto& mesh : model->meshes()) {
-				renderDepth(mesh, shader);
-			}
-		}
-		for (auto node : object->children()) {
+		}for (auto node : object->children()) {
 			renderDepth(node, shader);//Propagate to childrens
 		}
 
@@ -421,11 +411,6 @@ namespace Merlin {
 		else if (const auto li = std::dynamic_pointer_cast<Light>(object)) {
 			if(display_lights) renderLight(*li, camera);
 		}
-		else if (const auto model = std::dynamic_pointer_cast<Model>(object)) {
-			for (const auto& mesh : model->meshes()) {
-				render(mesh, camera);
-			}
-		}//The object is a scene
 		else if (const auto scene = std::dynamic_pointer_cast<Scene>(object)) {
 			renderScene(*scene, camera); //Propagate to childrens
 		}//The object is a scene node

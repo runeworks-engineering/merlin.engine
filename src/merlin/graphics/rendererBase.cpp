@@ -220,11 +220,6 @@ namespace Merlin {
 			BoundingBox bb = mesh->getBoundingBox();
 			glm::vec3 size = bb.max - bb.min;
 		}
-		if (const auto model = std::dynamic_pointer_cast<Model>(object)) {
-			for (const auto& mesh : model->meshes()) {
-				if (!model->isHidden()) gatherLights(mesh);
-			}
-		}
 
 		for (const auto& child : object->children()) {
 			if (!child->isHidden()) gatherLights(child);

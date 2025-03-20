@@ -24,7 +24,7 @@ void computeStress(uint i) {
 
         if(distance(xi0, xj0) > H || distance(xi, xj) > 2*H) continue;
 
-        if(phase(j) == SOLID){
+        if(phase(j) == MATERIAL_SOFT){
             vec3 xj_xi = xj - xi;
             vec3 xi_xj_0 = xi0 - xj0;
             vec3 correctedRotatedKernel = poly6_grad(xi_xj_0);
@@ -83,7 +83,7 @@ vec3 computeForces(uint i) {
         
         if(distance(xi0, xj0) > H || distance(xi, xj) > 2*H) continue;
 
-        if(phase(j) == SOLID){
+        if(phase(j) == MATERIAL_SOFT){
             vec3 xj_xi = xj - xi;
             vec3 xi_xj_0 = xi0 - xj0;
         
@@ -114,7 +114,7 @@ float computeDensity(uint i){
 		if(dist < 1e-6 || dist > H) continue;
 		float Wij = poly6(dist);
 
-		if(phase(j) == SOLID)
+		if(phase(j) == MATERIAL_SOFT)
 			density += mj * Wij;
 	OVERNNS_END
 
@@ -132,12 +132,10 @@ vec3 pbs_computeXPSH(uint i){
 		if(dist < 1e-6 || dist > H) continue;
 		float Wij = poly6(dist);
 
-		if(phase(j) == FLUID)
+		if(phase(j) == MATERIAL_FLUID)
 			xsphSum += 0.01*(mj/b_rho_j) * c_Vji * Wij;
-		else if(phase(j) == SOLID || phase(j) >= BOUNDARY)
+		else if(phase(j) == MATERIAL_SOFT || phase(j) >= MATERIAL_BOUNDARY)
 			xsphSum += (mj/b_rho_j) * c_Vji * Wij;
-       else if(phase(j) == BOUNDARY)
-			xsphSum += 6.0*(1.0/b_rho_j) * c_Vji * Wij;
 
 	OVERNNS_END
 
@@ -154,7 +152,7 @@ vec3 pbs_computeContactDelta(uint i) {
 	OVERNNS
         if(i == j) continue;
 
-        if(phase(j) == SOLID){
+        if(phase(j) == MATERIAL_SOFT){
 
 		    float l0 = 2.0*cst_particleRadius;
 		
@@ -180,7 +178,7 @@ vec3 pbs_computeContactDelta(uint i) {
 		    deltaPosition += gradC * deltaLambda * mi;
 		    n++;
 		    //particles[i].lambda += deltaLambda;
-        }else if(phase(j) == BOUNDARY){
+        }else if(phase(j) == MATERIAL_BOUNDARY){
 			vec3 xi0 = b_last_xi.xyz;
 			vec3 xj0 = b_last_xj.xyz;
 		    float l0 = distance(xi0, xj0);

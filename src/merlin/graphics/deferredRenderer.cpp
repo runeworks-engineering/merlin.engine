@@ -164,11 +164,6 @@ namespace Merlin {
 		else if (const auto li = std::dynamic_pointer_cast<Light>(object)) {
 			if(display_lights) renderLight(*li, camera);
 		}
-		else if (const auto model = std::dynamic_pointer_cast<Model>(object)) {
-			for (const auto& mesh : model->meshes()) {
-				render(mesh, camera);
-			}
-		}//The object is a scene
 		else if (const auto scene = std::dynamic_pointer_cast<Scene>(object)) {
 			renderScene(*scene, camera); //Propagate to childrens
 		}//The object is a scene node

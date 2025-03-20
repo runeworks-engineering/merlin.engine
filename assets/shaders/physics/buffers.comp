@@ -129,7 +129,7 @@ struct Bin {
 	uint index;
 };
 
-layout(std430) buffer BinBuffer {
+layout(std430) buffer bin_buffer {
 	Bin ssbo_bins[];
 };
 

@@ -184,27 +184,45 @@ void ExampleLayer::onUpdate(Timestep ts){
 void ExampleLayer::onImGuiRender()
 {
 
-	// Define a recursive lambda function to traverse the scene graph
-	std::function<void(const std::list<shared<RenderableObject>>&)> traverseNodes = [&](const std::list<shared<RenderableObject>>& nodes){
-		for (auto& node : nodes){
-			bool node_open = ImGui::TreeNode(node->name().c_str());
-			if (node_open){
-				if (node != nullptr){
-					ImGui::Text(node->name().c_str());
-				}
-				// draw the node's children
+	ImGui::DockSpaceOverViewport((ImGuiViewport*)0, ImGuiDockNodeFlags_PassthruCentralNode);
+
+	static int node_clicked = -1;
+	static shared<RenderableObject> selected_renderable = nullptr;  // Track selected 3D scene object
+
+
+
+	// 3D Scene Graph selection logic
+	std::function<void(const std::list<shared<RenderableObject>>&)> traverseNodes = [&](const std::list<shared<RenderableObject>>& nodes) {
+		for (auto& node : nodes) {
+			ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+			if (!node) continue;
+			if (selected_renderable == node) {
+				node_flags |= ImGuiTreeNodeFlags_Selected;
+			}
+
+			bool node_open = ImGui::TreeNodeEx(node->name().c_str(), node_flags);
+
+			if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
+				selected_renderable = node;
+			}
+
+			if (node_open) {
 				traverseNodes(node->children());
 				ImGui::TreePop();
 			}
 		}
-	};
+		};
 
-
-	// draw the scene graph starting from the root node
-	ImGui::Begin("Scene Graph");
+	// Draw the scene graph starting from the root node
+	ImGui::Begin("3D Scene Graph");
 	traverseNodes(scene.nodes());
 	ImGui::End();
-	
 
+	// Properties panel (shows either physics or graphics properties)
+	ImGui::Begin("Properties");
+	if (selected_renderable) {
+		selected_renderable->onRenderMenu();  // Assume `drawProperties()` exists for graphics properties
+	}
+	ImGui::End();
 
 }

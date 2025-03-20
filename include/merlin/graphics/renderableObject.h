@@ -56,15 +56,15 @@ namespace Merlin {
 		inline void rename(std::string n) { m_name = n; };
 
 		inline bool castShadow() const { return m_castShadow; }
-		inline void castShadow(bool state) { m_castShadow = state; }
+		void castShadow(bool state);
 
 		//Hierachy
 		void addChild(const shared<RenderableObject>& child);
 		void removeChild(shared<RenderableObject> child);
 		void setParent(RenderableObject* parent);
 
-		inline void show() { m_hidden = false; }
-		inline void hide() { m_hidden = true; }
+		void show();
+		void hide();
 		inline bool isHidden() const { return m_hidden; }
 
 		bool hasParent() const;
@@ -75,13 +75,14 @@ namespace Merlin {
 		virtual void disableWireFrameMode();
 
 		inline const bool useVertexColors() const { return use_vertex_color; }
-		inline void useVertexColors(bool value) { use_vertex_color = value; }
 		inline const bool useFlatShading() const { return use_flat_shading; }
-		inline void useFlatShading(bool value) { use_flat_shading = value; }
 		inline const bool useSmoothShading() const { return !use_flat_shading; }
-		inline void useSmoothShading(bool value) { use_flat_shading = !value; }
 		inline const bool useNormalMap() const { return use_normal_map; }
-		inline void useNormalMap(bool value) { use_normal_map = value; }
+
+		void useVertexColors(bool value);
+		void useFlatShading(bool value);
+		void useSmoothShading(bool value);
+		void useNormalMap(bool value);
 
 		std::list<shared<RenderableObject>>& children();
 		shared<RenderableObject> getChild(std::string name);

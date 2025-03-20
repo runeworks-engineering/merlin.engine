@@ -75,6 +75,13 @@ namespace Merlin {
 		}
 	}
 
+	void RenderableObject::castShadow(bool state){
+		m_castShadow = state;
+		for (auto child : m_children) {
+			child->castShadow(state);
+		}
+	}
+
 	void RenderableObject::addChild(const shared<RenderableObject>& child) {
 		if (child != nullptr) {
 			m_children.push_back(child);
@@ -90,6 +97,20 @@ namespace Merlin {
 		m_parent = parent;
 	}
 
+	void RenderableObject::show()	{
+		m_hidden = false;
+		for (auto child : m_children) {
+			child->show();
+		}
+	}
+
+	void RenderableObject::hide()	{
+		m_hidden = true;
+		for (auto child : m_children) {
+			child->hide();
+		}
+	}
+
 	bool RenderableObject::hasParent() const {
 		return m_parent != nullptr;
 	}
@@ -98,6 +119,34 @@ namespace Merlin {
 		return m_children.size();
 	}
 
+
+	void RenderableObject::useVertexColors(bool value){
+		use_vertex_color = value;
+		for (auto child : m_children) {
+			child->useVertexColors(value);
+		}
+	}
+
+	void RenderableObject::useFlatShading(bool value){
+		use_flat_shading = value;
+		for (auto child : m_children) {
+			child->useFlatShading(value);
+		}
+	}
+
+	void RenderableObject::useSmoothShading(bool value)	{
+		use_flat_shading = !value;
+		for (auto child : m_children) {
+			child->useSmoothShading(!value);
+		}
+	}
+
+	void RenderableObject::useNormalMap(bool value)	{
+		use_normal_map = value;
+		for (auto child : m_children) {
+			child->useNormalMap(value);
+		}
+	}
 
 	std::list<shared<RenderableObject>>& RenderableObject::children() {
 		return m_children;
@@ -111,12 +160,27 @@ namespace Merlin {
 		ImGui::Text((m_name + std::string(" properties")).c_str());
 		ImGui::Text("ID: %s", std::to_string(m_ID).c_str());
 		
-		ImGui::Checkbox("Hidden", &m_hidden);
-		ImGui::Checkbox("Wireframe", &m_wireframe);
-		ImGui::Checkbox("Cast shadows", &m_castShadow);
-		ImGui::Checkbox("Use Vertex Color", &use_vertex_color);
-		ImGui::Checkbox("Use Normal Map", &use_normal_map);
-		ImGui::Checkbox("Use Flat shading", &use_flat_shading);
+		if (ImGui::Checkbox("Hidden", &m_hidden)){
+			if (m_hidden) hide();
+			else show();
+		}
+
+		if (ImGui::Checkbox("Wireframe", &m_wireframe)) {
+			if (m_wireframe) enableWireFrameMode();
+			else disableWireFrameMode();
+		}
+		if (ImGui::Checkbox("Cast shadows", &m_castShadow)) {
+			castShadow(m_castShadow);
+		}
+		if (ImGui::Checkbox("Use Vertex Color", &use_vertex_color)) {
+			useVertexColors(use_vertex_color);
+		}
+		if (ImGui::Checkbox("Use Normal Map", &use_normal_map)) {
+			useNormalMap(use_normal_map);
+		}
+		if (ImGui::Checkbox("Use Flat shading", &use_flat_shading)) {
+			useFlatShading(use_flat_shading);
+		}
 
 		enum class RenderMode {
 			UNLIT,
@@ -132,7 +196,7 @@ namespace Merlin {
 		int renderMode = int(m_renderMode);
 		static const char* options[] = { "Unlit", "Lit", "Normals", "Depth", "Position", "Texture Coordinate", "Shadows"};
 		if (ImGui::ListBox("Colored field", &renderMode, options, 7)) {
-			m_renderMode = Merlin::RenderMode(renderMode);
+			setRenderMode(Merlin::RenderMode(renderMode));
 		}
 	}
 
