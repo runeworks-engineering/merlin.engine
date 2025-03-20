@@ -87,7 +87,7 @@ namespace Merlin{
 		m_fields[field->name()] = field;
 
 		if (sortable) {
-			m_sortableFields[field->name()] = field->type();
+			m_sortableFields[field->name()] = field->type(); //store the field data type size in fields list
 		}
 
 		if (hasLink(m_currentProgram)) {
@@ -128,10 +128,18 @@ namespace Merlin{
 	}
 
 	void ParticleSystem::removeAllField() {
+
+		for (const auto& f : m_fields) {
+			m_links.erase(f.first);
+		}
 		m_fields.clear();
+		m_sortableFields.clear();
 	}
 
 	void ParticleSystem::removeAllBuffer() {
+		for (const auto& f : m_buffers) {
+			m_links.erase(f.first);
+		}
 		m_buffers.clear();
 	}
 
@@ -154,23 +162,6 @@ namespace Merlin{
 			}
 			else m_buffers[name]->writeBuffer(elements * typesize, data);
 		}else Console::error("ParticleSystem") << name << " is not registered in the particle system." << Console::endl;
-	}
-
-	void ParticleSystem::addProgram(ComputeShader_Ptr program) {
-		if (hasProgram(program->name())) {
-			Console::warn("ParticleSystem") << program->name() << "has been overwritten" << Console::endl;
-		}
-		m_links[program->name()] = std::set<std::string>();
-		m_programs[program->name()] = program;
-		m_currentProgram = program->name();
-
-		GLuint pWkgSize = 64; //Number of thread per workgroup
-		GLuint pWkgCount = (m_instancesCount + pWkgSize - 1) / pWkgSize; //Total number of workgroup needed
-		program->SetWorkgroupLayout(pWkgCount);
-	}
-
-	bool ParticleSystem::hasProgram(const std::string& name) const {
-		return m_programs.find(name) != m_programs.end();
 	}
 
 	void ParticleSystem::setShader(Shader_Ptr shader) {

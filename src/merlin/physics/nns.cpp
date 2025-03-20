@@ -28,12 +28,13 @@ namespace Merlin {
         m_bins->setDisplayMode(ParticleSystemDisplayMode::MESH);
         m_bins->setMesh(binInstance);
         m_bins->enableWireFrameMode();
-        m_bins->addProgram(m_prefixSum);
+        //m_bins->addProgram(m_prefixSum);
 
         m_bin_buffer = SSBO<Bin>::create("bin_buffer", m_thread);
         Console::info() << "Bin struct size :" << sizeof(Bin) << Console::endl;
         Console::info() << "Bin buffer size :" << int(m_bin_buffer->size()) << Console::endl;
         m_bins->addField(m_bin_buffer);
+        m_bins->link(m_prefixSum->name(), m_bin_buffer->name());
 
         m_prefixSum->SetWorkgroupLayout(m_bWkgCount);
         m_prefixSum->use();

@@ -115,6 +115,7 @@ namespace Merlin {
 		void setUniforms(ShaderBase& shader);
 		void computeThreadLayout();
 
+		void gatherParticleGroup();
 
 		void uploadFields();
 		void generateFields();
@@ -163,7 +164,15 @@ namespace Merlin {
 		Shader_Ptr bshader = nullptr;
 
 		ParticleSystem_Ptr m_particles = nullptr;
+
+
 		StagedComputeShader_Ptr m_solver;
+		StagedComputeShader_Ptr m_wpsh_solver;
+		StagedComputeShader_Ptr m_pbf_solver;
+
+
+
+		ComputeShader_Ptr m_filter;
 		
 		NNS_Ptr m_grid;
 		NNS_Ptr m_static_grid;

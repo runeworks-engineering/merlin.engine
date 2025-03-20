@@ -5,6 +5,7 @@
 #include "merlin/utils/util.h"
 #include "merlin/memory/bindingPointManager.h"
 #include "merlin/utils/primitives.h"
+#include "merlin/memory/acb.h"
 
 #include <set>
 namespace Merlin {
@@ -145,6 +146,7 @@ namespace Merlin {
         Console::info("PhysicsSolver3D") << "Preparing solver shaders." << Console::endl;
         Console::printSeparator();
         m_solver = ComputeShaderLibrary::instance().getStagedComputeShader("solver");
+        m_filter = ComputeShader::create("filter", "assets/common/shaders/physics/filter.comp", false);
 
         pshader = Shader::create("particle",
             "assets/common/shaders/physics/graphics/particle.vert",
@@ -155,10 +157,12 @@ namespace Merlin {
             "assets/common/shaders/physics/graphics/bin.frag", "", false);
 
         setConstants(*m_solver);
+        setConstants(*m_filter);
         setConstants(*pshader);
         setConstants(*bshader);
 
         m_solver->compile();
+        m_filter->compile();
         pshader->compile();
         bshader->compile();
 
@@ -167,9 +171,10 @@ namespace Merlin {
 
         computeThreadLayout();
         m_solver->SetWorkgroupLayout(m_pWkgCount);
-        m_particles->addProgram(m_solver);
+        m_filter->SetWorkgroupLayout(m_pWkgCount);
 
         setUniforms(*m_solver);
+        setUniforms(*m_filter);
         setUniforms(*pshader);
         setUniforms(*bshader);
 
@@ -179,8 +184,8 @@ namespace Merlin {
         Console::printSeparator();
 
         generateFields();
-
         m_particles->addBuffer(m_grid->getBuffer());
+        m_particles->link(m_solver->name(), m_grid->getBuffer()->name());
         
         reset();
         
@@ -197,10 +202,11 @@ namespace Merlin {
         Console::info() << "Uploading buffer on device..." << Console::endl;
 
         Console::printProgress(0);
-        m_particles->writeField("position_buffer", cpu_position_buffer); Console::printProgress(0.5);
-        m_particles->writeField("velocity_buffer", cpu_velocity_buffer); Console::printProgress(0.10);
-        m_particles->writeField("meta_buffer", cpu_meta_buffer);         Console::printProgress(0.15);
-        m_particles->writeField("density_buffer", cpu_density_buffer);   Console::printProgress(0.20);
+        m_particles->writeField("meta_buffer", cpu_meta_buffer);         Console::printProgress(0.05);
+        m_particles->clearField("filter_buffer");                        Console::printProgress(0.1);
+        m_particles->writeField("position_buffer", cpu_position_buffer); Console::printProgress(0.15);
+        m_particles->writeField("velocity_buffer", cpu_velocity_buffer); Console::printProgress(0.20);
+        m_particles->writeField("density_buffer", cpu_density_buffer);   Console::printProgress(0.25);
 
       
 
@@ -220,7 +226,7 @@ namespace Merlin {
             else if (m_settings.fluid_solver == PressureSolver::WCSPH) {
                 m_particles->clearField("pressure_buffer");
             }
-        }Console::printProgress(0.30);
+        }Console::printProgress(0.40);
 
         //-------------------------- RIGID_BODY -------------------------
 
@@ -236,7 +242,7 @@ namespace Merlin {
                 m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
                 PDB_uploaded = true;
             }
-        }Console::printProgress(0.40);
+        }Console::printProgress(0.50);
 
         //-------------------------- SOFT_BODY -------------------------
 
@@ -305,16 +311,27 @@ namespace Merlin {
         Console::print() << Console::endl;
     }
 
-
     void PhysicsSolver3D::generateFields() {
+
+        // Meta-data layout : 
+        // meta[i].x = entityID
+        // meta[i].y = phase/flags (bit-packed)
+        // meta[i].z = particleID
+        // meta[i].w = sortedID
+
+        m_particles->addField<glm::uvec4>("meta_buffer", true);
+        m_particles->addField<GLuint>("filter_buffer", false); //To select particle sub-group
+        
         m_particles->addField<glm::vec4>("position_buffer", true);
         m_particles->addField<glm::vec4>("velocity_buffer", true);
-        m_particles->addField<glm::uvec4>("meta_buffer", true);
         m_particles->addField<float>("density_buffer", true);
+       
+        //TODO Link m_solver as well
 
+        m_particles->link(pshader->name(), "meta_buffer");
+        //m_particles->link(pshader->name(), "filter_buffer");
         m_particles->link(pshader->name(), "position_buffer");
         m_particles->link(pshader->name(), "velocity_buffer");
-        m_particles->link(pshader->name(), "meta_buffer");
         m_particles->link(pshader->name(), "density_buffer");
 
         //-------------------------- FLUID -------------------------
@@ -673,6 +690,28 @@ namespace Merlin {
     void PhysicsSolver3D::computeThreadLayout() {
         //GPU Threading settings
         m_pWkgCount = (m_settings.particles_count.value() + m_settings.pWkgSize - 1) / m_settings.pWkgSize; //Total number of workgroup needed
+
+    }
+
+    void PhysicsSolver3D::gatherParticleGroup(){
+        AtomicCounterBuffer atomicCounterBuffer;
+        atomicCounterBuffer.allocate(sizeof(GLuint), Merlin::BufferUsage::DynamicDraw);
+        GLuint bufferID = atomicCounterBuffer.id();
+        GLuint bindingPoint = Merlin::BindingPointManager::instance().allocateBindingPoint(Merlin::BufferTarget::Atomic_Counter_Buffer, bufferID);
+        atomicCounterBuffer.bindBase(bindingPoint);
+
+        GLuint initialValue = 0;
+        atomicCounterBuffer.writeBuffer(sizeof(GLuint), &initialValue);
+        
+        m_filter->attach(atomicCounterBuffer);
+        m_filter->use();
+        //m_filter->dispatch(m_settings.particles_count);
+
+        // Lire la valeur du tampon
+        GLuint counterValue;
+        atomicCounterBuffer.readBuffer(sizeof(GLuint), &counterValue);
+        std::cout << "Counter Value: " << counterValue << std::endl;
+
 
     }
 

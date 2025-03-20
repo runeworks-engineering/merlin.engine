@@ -21,7 +21,6 @@ void exec(uint index, uint kernel);
 void main() {
 	uint index = gl_GlobalInvocationID.x;
 	if (index >= u_numParticles + u_numEmitter || (stage != 8 && index >= u_numParticles)) return;
-
 	exec(index, stage);
 }
 
@@ -39,37 +38,7 @@ void spawnParticle(uint i){
 	}
 }
 
-void copyBuffers(uint i){
-		uint bin = getBinIndex(b_pi.xyz);
-		atomicAdd(ssbo_bins[bin].count, 1);
-		ssbo_copy[i].last_position = ssbo_last_position[i];
-		ssbo_copy[i].position = ssbo_position[i];
-		ssbo_copy[i].predicted_position = ssbo_predicted_position[i];
-		ssbo_copy[i].position_correction = ssbo_position_correction[i];
-		ssbo_copy[i].velocity = ssbo_velocity[i];
-		ssbo_copy[i].density = ssbo_density[i];
-		ssbo_copy[i].lambda = ssbo_lambda[i];
-		ssbo_copy[i].temperature = ssbo_temperature[i];
-		ssbo_copy[i].sigma = ssbo_sigma[i];
-		ssbo_copy[i].meta = ssbo_meta[i];
-}
 
-void sortBuffers(uint i){
-	uint newID = atomicAdd(ssbo_bins[ssbo_copy[i].meta.y].index, -1) -1;
-
-	ssbo_last_position[newID]		= ssbo_copy[i].last_position;
-	ssbo_position[newID]			= ssbo_copy[i].position;
-	ssbo_predicted_position[newID]	= ssbo_copy[i].predicted_position;
-	ssbo_position_correction[newID] = ssbo_copy[i].position_correction;
-	ssbo_velocity[newID]			= ssbo_copy[i].velocity;
-	ssbo_density[newID]				= ssbo_copy[i].density;
-	ssbo_lambda[newID]				= ssbo_copy[i].lambda;
-	ssbo_temperature[newID]			= ssbo_copy[i].temperature;
-	ssbo_sigma[newID]				= ssbo_copy[i].sigma;
-	ssbo_meta[newID]				= ssbo_copy[i].meta;
-
-	ssbo_meta[ssbo_meta[newID].z].z = newID;
-}
 
 void exec(uint index, uint kernel){
 	
@@ -77,12 +46,6 @@ void exec(uint index, uint kernel){
 		switch(kernel){
 		case STAGE_INIT: 
 			
-			break;
-		case STAGE_COPY: 
-			copyBuffers(index);
-			break;
-		case STAGE_SORT: 
-			sortBuffers(index);
 			break;
 		case STAGE_SOLVER_STEP_1:
 			if(phase(index) == MATERIAL_FLUID)

@@ -5,7 +5,6 @@
 #define BTHREAD 1
 #define PTHREAD 1
 
-
 #define MATERIAL_UNUSED 0
 #define MATERIAL_FLUID 1
 #define MATERIAL_GRANULAR 2

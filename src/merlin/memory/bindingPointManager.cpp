@@ -57,11 +57,32 @@ namespace Merlin {
         bufferToBindingPoint.clear();
     }
 
+    void BindingPointManager::printLimits(){
+        GLint maxSSBOBindings;
+        GLint maxUBOBindings;
+        GLint maxACBBindings;
+
+        glGetIntegerv(GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, &maxSSBOBindings);
+        glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxUBOBindings);
+        glGetIntegerv(GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS, &maxACBBindings);
+
+        Console::info("BindingPointManager") << "OpenGL Binding Point Limits: " << Console::endl;
+        Console::info("BindingPointManager") << "Max SSBO bindings: " << maxSSBOBindings << Console::endl;
+        Console::info("BindingPointManager") << "Max UBO bindings: " << maxUBOBindings << Console::endl;
+        Console::info("BindingPointManager") << "Max Atomic Counter Buffer bindings: " << maxACBBindings << Console::endl;
+        
+    }
+
     void BindingPointManager::initializeAvailableBindingPoints() {
-        const int maxSSBOBindings = 16; // Typically 16
-        const int maxUBOBindings = 16; // Typically 16
-        const int maxVBOBindings = 16; // Arbitrary limit for VBOs
-        const int maxEBOBindings = 16; // Arbitrary limit for EBOs
+        GLint maxSSBOBindings;
+        GLint maxUBOBindings;
+        GLint maxVBOBindings = 16; // Limite arbitraire pour les VBOs
+        GLint maxEBOBindings = 16; // Limite arbitraire pour les EBOs
+        GLint maxACBBindings;
+
+        glGetIntegerv(GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, &maxSSBOBindings);
+        glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxUBOBindings);
+        glGetIntegerv(GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS, &maxACBBindings);
 
         for (int i = 0; i < maxSSBOBindings; ++i) {
             availableBindingPoints[BufferTarget::Shader_Storage_Buffer].push(i);
@@ -74,6 +95,9 @@ namespace Merlin {
         }
         for (int i = 0; i < maxEBOBindings; ++i) {
             availableBindingPoints[BufferTarget::Element_Array_Buffer].push(i);
+        }
+        for (int i = 0; i < maxACBBindings; ++i) {
+            availableBindingPoints[BufferTarget::Atomic_Counter_Buffer].push(i);
         }
         // Add other buffer types if needed
     }

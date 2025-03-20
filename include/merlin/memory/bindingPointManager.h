@@ -21,6 +21,8 @@ namespace Merlin {
         const std::vector<GLuint>& getUsedBindingPoints(BufferTarget bufferTarget) const;
         void resetBindings();
 
+        void printLimits();
+
     private:
         void initializeAvailableBindingPoints();
 

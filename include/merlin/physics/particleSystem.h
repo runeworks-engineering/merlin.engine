@@ -55,8 +55,8 @@ namespace Merlin {
 		template<typename T>
 		void writeBuffer(const std::string& name, std::vector<T> data);
 
-		void addProgram(ComputeShader_Ptr program);
-		bool hasProgram(const std::string& name) const;
+		//void addProgram(ComputeShader_Ptr program);
+		//bool hasProgram(const std::string& name) const;
 		
 		void setShader(Shader_Ptr shader);
 		inline void setShader(std::string shaderName) { m_shaderName = shaderName; }
@@ -108,7 +108,7 @@ namespace Merlin {
 
 
 		//Simulation
-		std::map<std::string, ComputeShader_Ptr> m_programs; //Shader to compute the particle position
+		//std::map<std::string, ComputeShader_Ptr> m_programs; //Shader to compute the particle position
 		std::map<std::string, AbstractBufferObject_Ptr> m_fields; //Buffer to store particles fields
 		std::map<std::string, GLuint> m_sortableFields; //Buffer to store particles fields that needs to be sorted
 		std::map<std::string, AbstractBufferObject_Ptr> m_buffers; //Buffer to store particles fields
@@ -130,10 +130,11 @@ namespace Merlin {
 		if (sortable) {
 			m_sortableFields[name] = sizeof(T);
 		}
-
-		if (hasLink(m_currentProgram)) {
-			link(m_currentProgram, f->name());
-		}
+		/*
+		for(const auto& prgm : m_programs)
+			if (hasLink(prgm.first)) {
+				link(prgm.first, f->name());
+			}*/
 	}
 
 	template<typename T>
@@ -143,10 +144,11 @@ namespace Merlin {
 		}
 		SSBO_Ptr<T> f = SSBO<T>::create(name, size);
 		m_buffers[name] = f;
-
-		if (hasLink(m_currentProgram)) {
-			link(m_currentProgram, f->name());
-		}
+		/*
+		for (const auto& prgm : m_programs)
+			if (hasLink(prgm.first)) {
+				link(prgm.first, f->name());
+			}*/
 	}
 
 	template<typename T>
