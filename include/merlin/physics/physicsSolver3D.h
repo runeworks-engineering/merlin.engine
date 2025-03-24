@@ -1,9 +1,12 @@
 #pragma once
 #include "merlin/core/core.h"
 #include "merlin/core/timestep.h"
-#include "merlin/Physics/physicsEntity.h"
-#include "merlin/Physics/samplers/voxelSampler.h"
-#include "merlin/Physics/nns.h"
+#include "merlin/physics/physicsEntity.h"
+#include "merlin/physics/samplers/voxelSampler.h"
+#include "merlin/physics/nns.h"
+#include "merlin/physics/physicsPipeline.h"
+
+#include <unordered_map>
 
 namespace Merlin {
 
@@ -165,11 +168,7 @@ namespace Merlin {
 
 		ParticleSystem_Ptr m_particles = nullptr;
 
-
-		StagedComputeShader_Ptr m_solver;
-		StagedComputeShader_Ptr m_wpsh_solver;
-		StagedComputeShader_Ptr m_pbf_solver;
-
+		Pipeline_Ptr m_pipeline = nullptr;
 
 
 		ComputeShader_Ptr m_filter;

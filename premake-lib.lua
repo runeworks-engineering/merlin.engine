@@ -58,8 +58,7 @@ group "Library"
 	}
 
 	vpaths {
-	   ["Headers/*"] = "**.h",
-	   ["Sources/*"] = {"**.c", "**.cpp"},
+	   ["Sources/*"] = {"**.c", "**.cpp", "**.h"},
 	   ["Docs"] = "**.md",
 	   ["Assets/*"] = "assets/**.*"
 	}

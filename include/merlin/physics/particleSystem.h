@@ -31,33 +31,9 @@ namespace Merlin {
 		inline GLuint count() { return m_instancesCount; }
 		inline GLuint activeParticles() { return m_active_instancesCount; }
 
-		AbstractBufferObject_Ptr getField(const std::string& name) const;
-		AbstractBufferObject_Ptr getBuffer(const std::string& name) const;
-		const std::map<std::string, GLuint>& getCopyBufferStructure() const;
-		
-
-		void addField(AbstractBufferObject_Ptr buf, bool sortable = false);
-		void addBuffer(AbstractBufferObject_Ptr buf);
-		bool hasField(const std::string& name) const;
-		bool hasBuffer(const std::string& name) const;
-
-		void clearField(const std::string& name);
-		void clearBuffer(const std::string& name);
-		void removeAllField();
-		void removeAllBuffer();
-
-		void writeField(const std::string& name, GLsizei typesize, void* data);
-		void writeBuffer(const std::string& name, GLsizei typesize, GLsizei elements, void* data);
-
-		template<typename T>
-		void writeField(const std::string& name, std::vector<T> data);
-
-		template<typename T>
-		void writeBuffer(const std::string& name, std::vector<T> data);
-
 		//void addProgram(ComputeShader_Ptr program);
 		//bool hasProgram(const std::string& name) const;
-		
+
 		void setShader(Shader_Ptr shader);
 		inline void setShader(std::string shaderName) { m_shaderName = shaderName; }
 		Shader_Ptr getShader() const;
@@ -71,10 +47,6 @@ namespace Merlin {
 		inline const shared<MaterialBase> getMaterial() const { return m_material; }
 		inline const std::string& getMaterialName() const { return m_materialName; }
 
-		void link(const std::string& shader, const std::string& field);
-		void detach(shared<ShaderBase>);
-		void solveLink(shared<ShaderBase>);
-		bool hasLink(const std::string& name) const;
 
 		inline void setMesh(shared<Mesh> geometry) { m_geometry = geometry; }
 		inline shared<Mesh> getMesh() const { return m_geometry; }
@@ -82,15 +54,10 @@ namespace Merlin {
 		inline void setDisplayMode(ParticleSystemDisplayMode mode) { m_displayMode = mode; }
 		inline ParticleSystemDisplayMode getDisplayMode() const { return m_displayMode; }
 
-		//templates
-		template<typename T>
-		void addField(const std::string& name, bool sortable);
-
-		template<typename T>
-		void addBuffer(const std::string& name, GLsizei size = 0);
 
 		static shared<ParticleSystem> create(const std::string&, size_t count = 1);
 
+		//inline void setPositionBuffer(AbstractBufferObject_Ptr buffer) { if(buffer) m_position_buffer = buffer; }
 
 
 	protected:
@@ -101,77 +68,14 @@ namespace Merlin {
 		Shader_Ptr m_shader = nullptr;
 		std::string m_shaderName = "default";
 
+		//AbstractBufferObject_Ptr m_position_buffer = nullptr;
+
 		Mesh_Ptr m_geometry = nullptr;
 		size_t m_instancesCount = 1;
 		size_t m_active_instancesCount = 1; //for rendering
 		ParticleSystemDisplayMode m_displayMode = ParticleSystemDisplayMode::POINT_SPRITE;
-
-
-		//Simulation
-		//std::map<std::string, ComputeShader_Ptr> m_programs; //Shader to compute the particle position
-		std::map<std::string, AbstractBufferObject_Ptr> m_fields; //Buffer to store particles fields
-		std::map<std::string, GLuint> m_sortableFields; //Buffer to store particles fields that needs to be sorted
-		std::map<std::string, AbstractBufferObject_Ptr> m_buffers; //Buffer to store particles fields
-		std::map<std::string, std::set<std::string>> m_links;
-
-		std::string m_currentProgram = "";
 	};
 
 	typedef shared<ParticleSystem> ParticleSystem_Ptr;
 
-	template<typename T>
-	void ParticleSystem::addField(const std::string& name, bool sortable) {
-		if(hasField(name)) {
-			Console::warn("ParticleSystem") << name << "has been overwritten" << Console::endl;
-		}
-		SSBO_Ptr<T> f = SSBO<T>::create(name, m_instancesCount);
-		m_fields[name] = f;
-		 
-		if (sortable) {
-			m_sortableFields[name] = sizeof(T);
-		}
-		/*
-		for(const auto& prgm : m_programs)
-			if (hasLink(prgm.first)) {
-				link(prgm.first, f->name());
-			}*/
-	}
-
-	template<typename T>
-	void ParticleSystem::addBuffer(const std::string& name, GLsizei size) {
-		if (hasBuffer(name)) {
-			Console::warn("ParticleSystem") << name << "has been overwritten" << Console::endl;
-		}
-		SSBO_Ptr<T> f = SSBO<T>::create(name, size);
-		m_buffers[name] = f;
-		/*
-		for (const auto& prgm : m_programs)
-			if (hasLink(prgm.first)) {
-				link(prgm.first, f->name());
-			}*/
-	}
-
-	template<typename T>
-	void ParticleSystem::writeField(const std::string& name, std::vector<T> data) {
-		if (hasField(name)) {
-			if (m_fields[name]->elements() < data.size()) {
-				//Console::error("ParticleSystem") << "Field hasn't been allocated" << Console::endl;
-				m_fields[name]->allocateBuffer(data.size() * sizeof(T), data.data(), BufferUsage::StaticDraw);
-			}
-			else m_fields[name]->writeBuffer(data.size() * sizeof(T), data.data());
-		}
-		else Console::error("ParticleSystem") << name << " is not registered in the particle system." << Console::endl;
-	}
-
-	template<typename T>
-	void ParticleSystem::writeBuffer(const std::string& name, std::vector<T> data) {
-		if (hasBuffer(name)) {
-			if (m_buffers[name]->elements() < data.size()) {
-				//Console::error("ParticleSystem") << "Field hasn't been allocated" << Console::endl;
-				m_buffers[name]->allocateBuffer(data.size() * sizeof(T), data.data(), BufferUsage::StaticDraw);
-			}
-			else m_buffers[name]->writeBuffer(data.size() * sizeof(T), data.data());
-		}
-		else Console::error("ParticleSystem") << name << " is not registered in the particle system." << Console::endl;
-	}
 }
