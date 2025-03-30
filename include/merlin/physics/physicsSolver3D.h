@@ -120,36 +120,23 @@ namespace Merlin {
 
 		void gatherParticleGroup();
 
+		void generateBuffer();
 		void uploadFields();
 		void generateFields();
-		void generateCopyBuffer();
+
 		void add_PBD_Buffers();
 		void add_MMC_Buffers();
 
 	private:
-		
-		std::vector<glm::vec4> 
-			cpu_position_buffer,
-			cpu_last_position_buffer,
-			cpu_predicted_position_buffer,
-			cpu_correction_position_buffer,
-			cpu_velocity_buffer,
-			cpu_emitter_position_buffer;
-
-		std::vector<glm::vec2>
-			cpu_lambda_buffer;
-
-		std::vector<float>
-			cpu_density_buffer,
-			cpu_temperature_buffer;
-
-		std::vector<float[8]> cpu_stress_buffer;
-		std::vector<glm::uvec4> cpu_meta_buffer;
-		
-
-	private:
 		bool m_active = true;
 		bool m_ready = false;
+
+
+		// --- default buffers ---
+		std::vector<glm::vec4> cpu_position_buffer;
+		std::vector<glm::vec4> cpu_emitter_position_buffer;
+		std::vector<glm::uvec4> cpu_meta_buffer;
+
 
 		// --- algorithm settings ---
 		bool use_index_sorting = false; //sort the particle instead
@@ -167,8 +154,7 @@ namespace Merlin {
 		Shader_Ptr bshader = nullptr;
 
 		ParticleSystem_Ptr m_particles = nullptr;
-
-		Pipeline_Ptr m_pipeline = nullptr;
+		PhysicsPipeline_Ptr m_pipeline = nullptr;
 
 
 		ComputeShader_Ptr m_filter;

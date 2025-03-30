@@ -84,22 +84,10 @@ namespace Merlin {
 
             for (int i = 0; i < samples.size(); i++) {
                 cpu_meta_buffer.push_back(glm::uvec4(entityID, entity->getPhase(), particleID, particleID));
-                cpu_correction_position_buffer.push_back(glm::vec4(0, 0, 0, 0));
-                cpu_velocity_buffer.push_back(entity->getInitialVelocity());
-
-                cpu_lambda_buffer.push_back(glm::vec2(0));
-                cpu_density_buffer.push_back(entity->getInitialDensity());
-                cpu_temperature_buffer.push_back(entity->getInitialTemperature()); //K
-
-                //const float stress[8] = { 0,0,0,0,0,0,0,0 };
-                //cpu_stress_buffer.push_back(stress);
-
                 particleID++;
             }
 
             cpu_position_buffer.insert(cpu_position_buffer.end(), samples.begin(), samples.end());
-            cpu_last_position_buffer.insert(cpu_last_position_buffer.end(), samples.begin(), samples.end());
-            cpu_predicted_position_buffer.insert(cpu_predicted_position_buffer.end(), samples.begin(), samples.end());
         }
 
         for (int i = 0; i < m_active_emitters.size(); i++) {
@@ -112,22 +100,11 @@ namespace Merlin {
         while (cpu_position_buffer.size() < m_settings.max_particles_count.value()) {
             cpu_position_buffer.push_back(glm::vec4(0, 0, 0, 0)); //spawn at origin
             cpu_meta_buffer.push_back(glm::uvec4(0, 0, 0, 0)); //unused
-
-            cpu_correction_position_buffer.push_back(glm::vec4(0, 0, 0, 0));
-            cpu_velocity_buffer.push_back(glm::vec4(0, 0, 0, 0));
-
-            cpu_lambda_buffer.push_back(glm::vec2(0));
-            cpu_density_buffer.push_back(0);
-            cpu_temperature_buffer.push_back(0); //K
-            //const float stress[8] = { 0,0,0,0,0,0,0,0 };
-            //cpu_stress_buffer.push_back(stress);
         }
-
+        
         m_settings.particles_count = cpu_position_buffer.size();
         m_settings.initial_particles_count = cpu_position_buffer.size();
         //-----------------------------------------------------------------------------
-
-
 
 
 
@@ -145,8 +122,8 @@ namespace Merlin {
         Console::printSeparator();
         Console::info("PhysicsSolver3D") << "Preparing solver shaders." << Console::endl;
         Console::printSeparator();
-        m_solver = ComputeShaderLibrary::instance().getStagedComputeShader("solver");
-        m_filter = ComputeShader::create("filter", "assets/common/shaders/physics/filter.comp", false);
+        //m_solver = ComputeShaderLibrary::instance().getStagedComputeShader("solver");
+        //m_filter = ComputeShader::create("filter", "assets/common/shaders/physics/filter.comp", false);
 
         pshader = Shader::create("particle",
             "assets/common/shaders/physics/graphics/particle.vert",
@@ -156,13 +133,13 @@ namespace Merlin {
             "assets/common/shaders/physics/graphics/bin.vert",
             "assets/common/shaders/physics/graphics/bin.frag", "", false);
 
-        setConstants(*m_solver);
-        setConstants(*m_filter);
+        //setConstants(*m_solver);
+       // setConstants(*m_filter);
         setConstants(*pshader);
         setConstants(*bshader);
 
-        m_solver->compile();
-        m_filter->compile();
+        //m_solver->compile();
+        //m_filter->compile();
         pshader->compile();
         bshader->compile();
 
@@ -170,11 +147,11 @@ namespace Merlin {
         m_grid->setShader(bshader);
 
         computeThreadLayout();
-        m_solver->SetWorkgroupLayout(m_pWkgCount);
-        m_filter->SetWorkgroupLayout(m_pWkgCount);
+        // m_solver->SetWorkgroupLayout(m_pWkgCount);
+        // m_filter->SetWorkgroupLayout(m_pWkgCount);
 
-        setUniforms(*m_solver);
-        setUniforms(*m_filter);
+        //setUniforms(*m_solver);
+        //setUniforms(*m_filter);
         setUniforms(*pshader);
         setUniforms(*bshader);
 
@@ -184,8 +161,8 @@ namespace Merlin {
         Console::printSeparator();
 
         generateFields();
-        m_particles->addBuffer(m_grid->getBuffer());
-        m_particles->link(m_solver->name(), m_grid->getBuffer()->name());
+        m_pipeline->addBuffer(m_grid->getBuffer());
+       // m_pipeline->link(m_solver->name(), m_grid->getBuffer()->name());
         
         reset();
         
@@ -197,16 +174,21 @@ namespace Merlin {
         m_active = true;
     }
     
-
+    
     void PhysicsSolver3D::uploadFields() {
         Console::info() << "Uploading buffer on device..." << Console::endl;
 
         Console::printProgress(0);
-        m_particles->writeField("meta_buffer", cpu_meta_buffer);         Console::printProgress(0.05);
-        m_particles->clearField("filter_buffer");                        Console::printProgress(0.1);
-        m_particles->writeField("position_buffer", cpu_position_buffer); Console::printProgress(0.15);
-        m_particles->writeField("velocity_buffer", cpu_velocity_buffer); Console::printProgress(0.20);
-        m_particles->writeField("density_buffer", cpu_density_buffer);   Console::printProgress(0.25);
+        m_pipeline->writeField("meta_buffer", cpu_meta_buffer);         Console::printProgress(0.05);
+        m_pipeline->clearField("filter_buffer");                        Console::printProgress(0.1);
+        m_pipeline->writeField("position_buffer", cpu_position_buffer); Console::printProgress(0.15);
+
+
+
+        /*
+
+        m_pipeline->writeField("velocity_buffer", cpu_velocity_buffer); Console::printProgress(0.20);
+        m_pipeline->writeField("density_buffer", cpu_density_buffer);   Console::printProgress(0.25);
 
       
 
@@ -218,13 +200,13 @@ namespace Merlin {
 
         if (hasPhysics(PhysicsModifierType::FLUID)) {
             if (m_settings.fluid_solver == PressureSolver::PBF) {
-                m_particles->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
-                m_particles->writeField("predicted_position_buffer", cpu_position_buffer);
-                m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
+                m_pipeline->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
+                m_pipeline->writeField("predicted_position_buffer", cpu_position_buffer);
+                m_pipeline->writeField("position_correction_buffer", cpu_correction_position_buffer);
                 PDB_uploaded = true;
             }
             else if (m_settings.fluid_solver == PressureSolver::WCSPH) {
-                m_particles->clearField("pressure_buffer");
+                m_pipeline->clearField("pressure_buffer");
             }
         }Console::printProgress(0.40);
 
@@ -232,14 +214,14 @@ namespace Merlin {
 
         if (hasPhysics(PhysicsModifierType::RIGID_BODY)) {
             if (!rest_pos_uploaded) {
-                m_particles->writeField("rest_position_buffer", cpu_position_buffer);
+                m_pipeline->writeField("rest_position_buffer", cpu_position_buffer);
                 rest_pos_uploaded = true;
             }
 
             if (m_settings.rigid_solver == RigidBodySolver::SHAPE_MATCHING && !PDB_uploaded) {
-                m_particles->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
-                m_particles->writeField("predicted_position_buffer", cpu_position_buffer);
-                m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
+                m_pipeline->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
+                m_pipeline->writeField("predicted_position_buffer", cpu_position_buffer);
+                m_pipeline->writeField("position_correction_buffer", cpu_correction_position_buffer);
                 PDB_uploaded = true;
             }
         }Console::printProgress(0.50);
@@ -249,43 +231,43 @@ namespace Merlin {
         if (hasPhysics(PhysicsModifierType::SOFT_BODY)) {
 
             if (!rest_pos_uploaded) {
-                m_particles->writeField("rest_position_buffer", cpu_position_buffer);
+                m_pipeline->writeField("rest_position_buffer", cpu_position_buffer);
                 rest_pos_uploaded = true;
             }
 
             if (m_settings.soft_solver == SoftBodySolver::PBD_WDC && !PDB_uploaded) {
-                m_particles->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
-                m_particles->writeField("predicted_position_buffer", cpu_position_buffer);
-                m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
+                m_pipeline->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
+                m_pipeline->writeField("predicted_position_buffer", cpu_position_buffer);
+                m_pipeline->writeField("position_correction_buffer", cpu_correction_position_buffer);
                 PDB_uploaded = true;
             }
             else if (m_settings.soft_solver == SoftBodySolver::MMC_PBD) {
                 if (!PDB_uploaded) {
-                    m_particles->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
-                    m_particles->writeField("predicted_position_buffer", cpu_position_buffer);
-                    m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
+                    m_pipeline->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
+                    m_pipeline->writeField("predicted_position_buffer", cpu_position_buffer);
+                    m_pipeline->writeField("position_correction_buffer", cpu_correction_position_buffer);
                     PDB_uploaded = true;
                 }
                 if (!MMC_uploaded) {
-                    m_particles->clearField("F_buffer");
-                    m_particles->clearField("L_buffer");
-                    m_particles->clearField("stress_buffer");
+                    m_pipeline->clearField("F_buffer");
+                    m_pipeline->clearField("L_buffer");
+                    m_pipeline->clearField("stress_buffer");
                     //m_particles->writeField("stress_buffer", cpu_stress_buffer);
                     MMC_uploaded = true;
                 }
             }
             else if (m_settings.soft_solver == SoftBodySolver::MMC_PBD) {
                 if (!MMC_uploaded) {
-                    m_particles->clearField("F_buffer");
-                    m_particles->clearField("L_buffer");
-                    m_particles->clearField("stress_buffer");
+                    m_pipeline->clearField("F_buffer");
+                    m_pipeline->clearField("L_buffer");
+                    m_pipeline->clearField("stress_buffer");
                     //m_particles->writeField("stress_buffer", cpu_stress_buffer);
                     MMC_uploaded = true;
                 }
             }Console::printProgress(0.70);
 
             if (hasPhysics(PhysicsModifierType::PLASTICITY)) {
-                m_particles->clearField("plasticity_buffer");
+                m_pipeline->clearField("plasticity_buffer");
             }
 
         }
@@ -295,9 +277,9 @@ namespace Merlin {
         if (hasPhysics(PhysicsModifierType::GRANULAR_BODY)) {
             if (m_settings.granular_solver == GranularBodySolver::PBD_DC) {
                 if (!PDB_uploaded) {
-                    m_particles->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
-                    m_particles->writeField("predicted_position_buffer", cpu_position_buffer);
-                    m_particles->writeField("position_correction_buffer", cpu_correction_position_buffer);
+                    m_pipeline->writeField("lambda_buffer", cpu_lambda_buffer); //dlambda
+                    m_pipeline->writeField("predicted_position_buffer", cpu_position_buffer);
+                    m_pipeline->writeField("position_correction_buffer", cpu_correction_position_buffer);
                     PDB_uploaded = true;
                 }
             }
@@ -306,9 +288,10 @@ namespace Merlin {
         //-------------------------- HEAT_TRANSFER -------------------------
 
         if (hasPhysics(PhysicsModifierType::HEAT_TRANSFER)) {
-            m_particles->writeField("temperature_buffer", cpu_temperature_buffer);
+            m_pipeline->writeField("temperature_buffer", cpu_temperature_buffer);
         }Console::printProgress(1.0);
         Console::print() << Console::endl;
+        */
     }
 
     void PhysicsSolver3D::generateFields() {
@@ -319,20 +302,20 @@ namespace Merlin {
         // meta[i].z = particleID
         // meta[i].w = sortedID
 
-        m_particles->addField<glm::uvec4>("meta_buffer", true);
-        m_particles->addField<GLuint>("filter_buffer", false); //To select particle sub-group
+        m_pipeline->addField<glm::uvec4>("meta_buffer", true);
+        m_pipeline->addField<GLuint>("filter_buffer", false); //To select particle sub-group
         
-        m_particles->addField<glm::vec4>("position_buffer", true);
-        m_particles->addField<glm::vec4>("velocity_buffer", true);
-        m_particles->addField<float>("density_buffer", true);
+        m_pipeline->addField<glm::vec4>("position_buffer", true);
+        m_pipeline->addField<glm::vec4>("velocity_buffer", true);
+        m_pipeline->addField<float>("density_buffer", true);
        
         //TODO Link m_solver as well
 
-        m_particles->link(pshader->name(), "meta_buffer");
+        m_pipeline->link(pshader->name(), "meta_buffer");
         //m_particles->link(pshader->name(), "filter_buffer");
-        m_particles->link(pshader->name(), "position_buffer");
-        m_particles->link(pshader->name(), "velocity_buffer");
-        m_particles->link(pshader->name(), "density_buffer");
+        m_pipeline->link(pshader->name(), "position_buffer");
+        m_pipeline->link(pshader->name(), "velocity_buffer");
+        m_pipeline->link(pshader->name(), "density_buffer");
 
         //-------------------------- FLUID -------------------------
 
@@ -341,17 +324,17 @@ namespace Merlin {
                 add_PBD_Buffers();
             }
             else if (m_settings.fluid_solver == PressureSolver::WCSPH) {
-                if (!m_particles->hasField("pressure_buffer"))
-                    m_particles->addField<float>("pressure_buffer", false);
-                m_particles->link(pshader->name(), "pressure_buffer");
+                if (!m_pipeline->hasField("pressure_buffer"))
+                    m_pipeline->addField<float>("pressure_buffer", false);
+                m_pipeline->link(pshader->name(), "pressure_buffer");
             }
         }
 
         //-------------------------- RIGID_BODY -------------------------
 
         if (hasPhysics(PhysicsModifierType::RIGID_BODY)) {
-            if (!m_particles->hasField("rest_position_buffer"))
-                m_particles->addField<glm::vec4>("rest_position_buffer", false);
+            if (!m_pipeline->hasField("rest_position_buffer"))
+                m_pipeline->addField<glm::vec4>("rest_position_buffer", false);
 
             if (m_settings.rigid_solver == RigidBodySolver::SHAPE_MATCHING) {
                 add_PBD_Buffers();
@@ -362,8 +345,8 @@ namespace Merlin {
 
         if (hasPhysics(PhysicsModifierType::SOFT_BODY)) {
 
-            if (!m_particles->hasField("rest_position_buffer"))
-                m_particles->addField<glm::vec4>("rest_position_buffer", true);
+            if (!m_pipeline->hasField("rest_position_buffer"))
+                m_pipeline->addField<glm::vec4>("rest_position_buffer", true);
 
             if (m_settings.soft_solver == SoftBodySolver::PBD_WDC) {
                 add_PBD_Buffers();
@@ -377,9 +360,9 @@ namespace Merlin {
             }
 
             if (hasPhysics(PhysicsModifierType::PLASTICITY)) {
-                if (!m_particles->hasField("plasticity_buffer"))
-                    m_particles->addField<glm::mat4>("plasticity_buffer", true);
-                m_particles->link(pshader->name(), "plasticity_buffer");
+                if (!m_pipeline->hasField("plasticity_buffer"))
+                    m_pipeline->addField<glm::mat4>("plasticity_buffer", true);
+                m_pipeline->link(pshader->name(), "plasticity_buffer");
             }
 
         }
@@ -395,32 +378,34 @@ namespace Merlin {
         //-------------------------- HEAT_TRANSFER -------------------------
 
         if (hasPhysics(PhysicsModifierType::HEAT_TRANSFER)) {
-            m_particles->addField<float[2]>("temperature_buffer", true); // T, dT
+            m_pipeline->addField<float[2]>("temperature_buffer", true); // T, dT
         }
     }
     
     void PhysicsSolver3D::add_PBD_Buffers() {
-        if (!m_particles->hasField("lambda_buffer"))
-            m_particles->addField<float[2]>("lambda_buffer", true); //dlambda
-        if (!m_particles->hasField("predicted_position_buffer"))
-            m_particles->addField<glm::vec4>("predicted_position_buffer", true);
-        if (!m_particles->hasField("position_correction_buffer"))
-            m_particles->addField<glm::vec4>("position_correction_buffer", true);
+        if (!m_pipeline->hasField("lambda_buffer"))
+            m_pipeline->addField<float[2]>("lambda_buffer", true); //dlambda
+        if (!m_pipeline->hasField("predicted_position_buffer"))
+            m_pipeline->addField<glm::vec4>("predicted_position_buffer", true);
+        if (!m_pipeline->hasField("position_correction_buffer"))
+            m_pipeline->addField<glm::vec4>("position_correction_buffer", true);
 
-        m_particles->link(pshader->name(), "lambda_buffer");
+        m_pipeline->link(pshader->name(), "lambda_buffer");
     }
 
     void PhysicsSolver3D::add_MMC_Buffers() {
-        if (!m_particles->hasField("F_buffer"))
-            m_particles->addField<glm::mat4>("F_buffer", true);
-        if (!m_particles->hasField("L_buffer"))
-            m_particles->addField<glm::mat4>("L_buffer", true);
-        if (!m_particles->hasField("stress_buffer"))
-            m_particles->addField<glm::mat3x4>("stress_buffer", true);
+        if (!m_pipeline->hasField("F_buffer"))
+            m_pipeline->addField<glm::mat4>("F_buffer", true);
+        if (!m_pipeline->hasField("L_buffer"))
+            m_pipeline->addField<glm::mat4>("L_buffer", true);
+        if (!m_pipeline->hasField("stress_buffer"))
+            m_pipeline->addField<glm::mat3x4>("stress_buffer", true);
 
-        m_particles->link(pshader->name(), "stress_buffer");
+        m_pipeline->link(pshader->name(), "stress_buffer");
     }
 
+
+    /*
     void PhysicsSolver3D::generateCopyBuffer() {
         const std::map<std::string, GLuint>& structure = m_particles->getCopyBufferStructure();
         const std::map<std::string, GLuint>& glTypes = Utils::getGLTypes();
@@ -476,7 +461,7 @@ namespace Merlin {
         // Ajouter la structure du buffer au shader
         m_solver->define("COPY_BUFFER_STRUCTURE", bufferStructure);
     }
-
+    */
 
     void PhysicsSolver3D::clean() {
         m_ready = false;
@@ -484,8 +469,8 @@ namespace Merlin {
         m_active_physics.clear();
         m_active_entities.clear();
         m_active_emitters.clear();
-        m_particles->removeAllBuffer();
-        m_particles->removeAllField();
+        m_pipeline->removeAllBuffer();
+        m_pipeline->removeAllField();
         BindingPointManager::instance().resetBindings();
     }
 
@@ -504,8 +489,8 @@ namespace Merlin {
 
         uploadFields();
 
-        m_solver->use();
-        m_solver->execute(SolverStages::INIT);
+        //m_solver->use();
+        //m_solver->execute(SolverStages::INIT);
     }
 
     void PhysicsSolver3D::update(Timestep ts) {
@@ -565,12 +550,12 @@ namespace Merlin {
     }
 
     void PhysicsSolver3D::attachGraphics(){
-        m_particles->solveLink(pshader);
+        m_pipeline->solveLink(pshader);
         m_grid->solveLink(bshader);
     }
 
     void PhysicsSolver3D::detachGraphics(){
-        m_particles->detach(pshader);
+        m_pipeline->detach(pshader);
         m_grid->detach(bshader);
     }
 

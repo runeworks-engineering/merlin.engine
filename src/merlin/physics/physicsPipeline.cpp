@@ -1,9 +1,7 @@
 #include "pch.h"
-#include "physicsPipeline.h"
+#include "merlin/physics/physicsPipeline.h"
 
 namespace Merlin {
-
-
 
 	AbstractBufferObject_Ptr PhysicsPipeline::getField(const std::string& name) const {
 		if (hasField(name)) {
@@ -25,6 +23,28 @@ namespace Merlin {
 		}
 	}
 
+
+	PhysicsPipeline::PhysicsPipeline(const std::string& name) : m_name(name)	{
+
+	}
+
+
+	void PhysicsPipeline::addStep(std::shared_ptr<PhysicsPipelineStep> step){
+		m_steps.push_back(step);
+	}
+
+	void PhysicsPipeline::initialize(){
+
+	}
+
+	void PhysicsPipeline::execute()	{
+
+	}
+
+	shared<PhysicsPipelineStep> PhysicsPipeline::getStep(int step) const{
+		if (step < 0 || step > m_steps.size()) return nullptr;
+		return m_steps.at(step);
+	}
 
 	void PhysicsPipeline::addField(AbstractBufferObject_Ptr field) {
 		if (hasField(field->name())) {
@@ -143,6 +163,76 @@ namespace Merlin {
 		}
 		else Console::error("PhysicsPipeline") << name << " is not registered in the pipeline." << Console::endl;
 	}
+
+
+
+
+	/******************************************/
+	/*****       PhysicsPipelineStep      *****/
+	/******************************************/
+
+
+
+	PhysicsPipelineStep::PhysicsPipelineStep(const std::string& name){
+
+	}
+
+	void PhysicsPipelineStep::setProgram(ComputeShader_Ptr shader)	{
+		m_computeShader = shader;
+		m_stagedComputeShader.reset();
+	}
+
+	void PhysicsPipelineStep::setProgram(StagedComputeShader_Ptr shader, int stage) {
+		m_stagedComputeShader = shader;
+		m_stage = stage;
+		m_computeShader.reset();
+	}
+
+	// Attach a required buffer (by name) to this step.
+	void PhysicsPipelineStep::attachBuffer(const std::string& bufferName) {
+		m_requiredBuffers.push_back(bufferName);
+	}
+
+	// Retrieve the list of required buffer names.
+	const std::vector<std::string>& PhysicsPipelineStep::requiredBuffers() const {
+		return m_requiredBuffers;
+	}
+
+	void PhysicsPipelineStep::setIteration(int i){
+		m_iteration = i;
+	}
+
+	void PhysicsPipelineStep::execute() {
+		for (int i = 0; i < m_iteration; i++) {
+			if (m_computeShader) {
+				m_computeShader->dispatch();
+			}
+			else if (m_stagedComputeShader) {
+				m_stagedComputeShader->execute(m_stage);
+			}
+
+			for (const auto& child : m_children) {
+				child->execute();
+			}
+		}
+	}
+
+	void PhysicsPipelineStep::onExecution() {
+		if (m_computeShader) {
+			m_computeShader->dispatch();
+		}
+		else if (m_stagedComputeShader) {
+			m_stagedComputeShader->execute(m_stage);
+		}
+	}
+
+	/*
+	void PhysicsPipelineStep::setDispatchCount(int count) {
+		m_dispatchCount = count;
+	}
+
+	int PhysicsPipelineStep::dispatchCount() const { return m_dispatchCount; }
+	*/
 
 
 }

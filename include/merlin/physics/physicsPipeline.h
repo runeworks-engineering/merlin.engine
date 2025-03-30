@@ -15,7 +15,7 @@ namespace Merlin{
 
     class PhysicsPipelineStep {
     public:
-		PhysicsPipelineStep();
+		PhysicsPipelineStep(const std::string& name);
 
         void setProgram(ComputeShader_Ptr shader);
         void setProgram(StagedComputeShader_Ptr shader, int stage);
@@ -24,6 +24,7 @@ namespace Merlin{
 
         void setIteration(int i);
         void execute();
+		virtual void onExecution();
 
 		inline bool enabled() const { return m_enabled; }
 
@@ -40,16 +41,16 @@ namespace Merlin{
         std::vector<std::string> m_requiredBuffers;
         std::vector<PhysicsPipelineStep_Ptr> m_children;
     };
+
 	typedef shared<PhysicsPipelineStep> PhysicsPipelineStep_Ptr;
 
 
 	class PhysicsPipeline {
 	public:
-		PhysicsPipeline();
-		~PhysicsPipeline();
+		PhysicsPipeline(const std::string& name);
 
         void addStep(std::shared_ptr<PhysicsPipelineStep> step);
-        std::shared_ptr<PhysicsPipelineStep> getStep(int i) const;
+        shared<PhysicsPipelineStep> getStep(int i) const;
 
         void initialize();
 		void execute();
@@ -59,7 +60,9 @@ namespace Merlin{
         std::unordered_map<std::string, AbstractBufferObject_Ptr>& fields() { return m_fields; }
         std::unordered_map<std::string, ComputeShader_Ptr>& programs() { return m_programs; }
 
+		
 
+		//Memory 
 		void addField(AbstractBufferObject_Ptr buf);
 		void addBuffer(AbstractBufferObject_Ptr buf);
 		bool hasField(const std::string& name) const;
@@ -95,8 +98,9 @@ namespace Merlin{
 		template<typename T>
 		void addBuffer(const std::string& name, GLsizei size = 0);
 
-
     protected:
+		std::string m_name;
+
         // Pipeline steps stored by name.
         std::vector<PhysicsPipelineStep_Ptr> m_steps;
 
@@ -109,6 +113,7 @@ namespace Merlin{
         std::unordered_map<std::string, ComputeShader_Ptr> m_programs;
 
 		GLsizeiptr m_default_fields_size = 0;
+		GLuint m_default_workgroup_size = 1024; //Number of thread per workgroup (particles)
 
     };
 
