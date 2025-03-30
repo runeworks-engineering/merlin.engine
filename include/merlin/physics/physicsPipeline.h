@@ -39,7 +39,7 @@ namespace Merlin{
 
         int m_iteration = 1;
         std::vector<std::string> m_requiredBuffers;
-        std::vector<PhysicsPipelineStep_Ptr> m_children;
+        std::vector<shared<PhysicsPipelineStep>> m_children;
     };
 
 	typedef shared<PhysicsPipelineStep> PhysicsPipelineStep_Ptr;

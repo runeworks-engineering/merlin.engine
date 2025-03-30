@@ -10,14 +10,12 @@ namespace Merlin {
 
         void onRenderMenu() override;
 
+        friend class PhysicsSolver3D;
+
     private:
         Uniform<float> restDensity;
         Uniform<float> particleMass;
         Uniform<float> artificialViscosityMultiplier;//XSPH
         Uniform<float> artificialPressureMultiplier;
-
-        bool usePositivePressureOnly = false;
-        PressureSolver pressureSolver;
-        ViscositySolver viscositySolver;
     };
 }

@@ -60,11 +60,12 @@ namespace Merlin {
 		int solver_iteration = 3;
 		float overRelaxation = 1.0; 
 
-		PressureSolver fluid_solver = PressureSolver::PBF;
-		ViscositySolver visco_solver = ViscositySolver::XSPH;
-		SoftBodySolver soft_solver = SoftBodySolver::PBD_WDC;
-		RigidBodySolver rigid_solver = RigidBodySolver::SHAPE_MATCHING;
-		GranularBodySolver granular_solver = GranularBodySolver::PBD_DC;
+		bool usePositivePressureOnly = false;
+		PressureSolver pressureSolver = PressureSolver::PBF;
+		ViscositySolver viscositySolver = ViscositySolver::XSPH;
+		SoftBodySolver softBodySolver = SoftBodySolver::PBD_WDC;
+		RigidBodySolver rigidBodySolver = RigidBodySolver::SHAPE_MATCHING;
+		GranularBodySolver granularBodySolver = GranularBodySolver::PBD_DC;
 
 		// --- threading settings ---
 		GLuint pWkgSize = 1024; //Number of thread per workgroup (particles)
@@ -109,7 +110,11 @@ namespace Merlin {
 		void useSparseBuffer(bool);
 		void useFixedTimeStep(bool);
 		
+		void scanScene();
+
 		float getTime() const;
+
+		void onRenderMenu();
 
 	private:
 		void warmUnstagedChanges();
@@ -146,10 +151,10 @@ namespace Merlin {
 
 	private:
 		std::vector<PhysicsEntity_Ptr> m_entity;
-		std::vector<PhysicsEntity_Ptr> m_active_entities;
-		std::vector<PhysicsEntity_Ptr> m_active_emitters;
+		std::unordered_map<std::string, PhysicsEntity_Ptr> m_active_entities;
+		std::unordered_map<std::string, PhysicsEntity_Ptr> m_active_emitters;
 		std::set<PhysicsModifierType> m_active_physics;
-
+		
 		Shader_Ptr pshader = nullptr;
 		Shader_Ptr bshader = nullptr;
 

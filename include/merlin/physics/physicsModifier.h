@@ -28,6 +28,8 @@ namespace Merlin {
 		virtual void onRenderMenu() {};
 		virtual void dummy() {};
 
+		static std::string toString(PhysicsModifierType);
+
 	private:
 		bool m_active = true;
 		PhysicsModifierType m_type;

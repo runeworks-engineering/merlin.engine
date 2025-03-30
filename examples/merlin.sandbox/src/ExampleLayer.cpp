@@ -388,10 +388,13 @@ void ExampleLayer::onImGuiRender(){
 	ImGui::Begin("Properties");
 	if (selected_entity) {
 		selected_entity->onRenderMenu();  // Render physics properties
-	}
-	else if (selected_renderable) {
+	}else if (selected_renderable) {
 		selected_renderable->onRenderMenu();  // Assume `drawProperties()` exists for graphics properties
 	}
+	ImGui::End();
+	
+	ImGui::Begin("Solver Properties");
+	solver.onRenderMenu();
 	ImGui::End();
 
 }
