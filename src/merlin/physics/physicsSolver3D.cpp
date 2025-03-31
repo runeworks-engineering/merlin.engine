@@ -141,7 +141,13 @@ namespace Merlin {
 
 
         //----------------------------- PIPELINE -----------------------------
-        m_pipeline = createShared<PhysicsPipeline>("solver");
+        if (!m_pipeline) {
+            Console::info("PhysicsSolver") << "No pipeline set, generating default Pipeline" << Console::endl;
+            m_pipeline = createShared<PhysicsPipeline>("solver");
+            
+        }
+        
+        //m_pipeline
         //m_pipeline->
 
         //--------------------------------------------------------------------
@@ -154,8 +160,9 @@ namespace Merlin {
         Console::info("PhysicsSolver3D") << "Generating Buffers..." << Console::endl;
         Console::printSeparator();
 
-        generateFields();
+        //generateFields();
         if (m_pipeline) {
+            m_pipeline->initialize();
             m_pipeline->addBuffer(m_grid->getBuffer());
             m_particles->setPositionBuffer(m_pipeline->getField("position_buffer"));
         }
@@ -168,7 +175,9 @@ namespace Merlin {
         m_ready = true;
         m_active = true;
     }
-    
+
+    //Old Implementation
+    /*
     
     void PhysicsSolver3D::uploadFields() {
         Console::info() << "Uploading buffer on device..." << Console::endl;
@@ -287,9 +296,11 @@ namespace Merlin {
             m_pipeline->writeField("temperature_buffer", cpu_temperature_buffer);
         }Console::printProgress(1.0);
         Console::print() << Console::endl;
-        */
+        
     }
-
+    */
+    
+    /*
     void PhysicsSolver3D::generateFields() {
 
         // Meta-data layout : 
@@ -375,7 +386,11 @@ namespace Merlin {
             m_pipeline->addField<float[2]>("temperature_buffer", true); // T, dT
         }
     }
-    
+
+    */
+
+    /*
+
     void PhysicsSolver3D::add_PBD_Buffers() {
         if (!m_pipeline->hasField("lambda_buffer"))
             m_pipeline->addField<float[2]>("lambda_buffer", true); //dlambda
@@ -398,6 +413,7 @@ namespace Merlin {
         m_pipeline->link(pshader->name(), "stress_buffer");
     }
 
+    */
 
     /*
     void PhysicsSolver3D::generateCopyBuffer() {
@@ -456,6 +472,69 @@ namespace Merlin {
         m_solver->define("COPY_BUFFER_STRUCTURE", bufferStructure);
     }
     */
+
+
+    void PhysicsSolver3D::generateDefaultPipeline(){
+        if (!m_pipeline) return;
+        //-------------------------- FLUID -------------------------
+
+        if (hasPhysics(PhysicsModifierType::FLUID)) {
+            if (m_settings.pressureSolver == PressureSolver::PBF) {
+
+                //StagedComputeShader_Ptr pbf_kernels
+
+                //PhysicsPipelineStep_Ptr step;
+                //step = PhysicsPipelineStep::create("PBF_predict");
+                //step->setIteration(1);
+                //step->setProgram();
+                //m_pipeline->addStep();
+            }
+            else if (m_settings.pressureSolver == PressureSolver::WCSPH) {
+
+            }
+        }
+
+        //-------------------------- RIGID_BODY -------------------------
+
+        if (hasPhysics(PhysicsModifierType::RIGID_BODY)) {
+            if (m_settings.rigidBodySolver == RigidBodySolver::SHAPE_MATCHING) {
+
+            }
+        }
+
+        //-------------------------- SOFT_BODY -------------------------
+
+        if (hasPhysics(PhysicsModifierType::SOFT_BODY)) {
+            if (m_settings.softBodySolver == SoftBodySolver::PBD_WDC) {
+
+            }
+            else if (m_settings.softBodySolver == SoftBodySolver::MMC_PBD) {
+
+            }
+            else if (m_settings.softBodySolver == SoftBodySolver::MMC_PBD) {
+
+            }
+
+            if (hasPhysics(PhysicsModifierType::PLASTICITY)) {
+
+            }
+
+        }
+
+        //-------------------------- GRANULAR_BODY -------------------------
+
+        if (hasPhysics(PhysicsModifierType::GRANULAR_BODY)) {
+            if (m_settings.granularBodySolver == GranularBodySolver::PBD_DC) {
+                        
+            }
+        }
+
+        //-------------------------- HEAT_TRANSFER -------------------------
+
+        if (hasPhysics(PhysicsModifierType::HEAT_TRANSFER)) {
+
+        }
+    }
 
     void PhysicsSolver3D::clean() {
         m_ready = false;

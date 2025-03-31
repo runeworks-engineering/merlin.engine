@@ -13,6 +13,11 @@ namespace Merlin {
 		m_sampler(sampler)
 	{}
 
+	bool PhysicsEntity::hasInitialValue(const std::string& name)
+	{
+		return m_init_values.find(name) != m_init_values.end();
+	}
+
 	const std::vector<glm::vec4>& PhysicsEntity::sample(bool forceReSample) {
 		if (!hasSampler()) {
 			Console::error("PhysicsEntity(" + m_name + ")") << " Entity has no sampler" << Console::endl;

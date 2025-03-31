@@ -1,6 +1,47 @@
 #pragma once
 
 namespace Merlin {
+
+	enum class MaterialPhase : uint32_t {
+		MATERIAL_UNUSED = 0,
+		MATERIAL_FLUID = 1 << 0,
+		MATERIAL_GRANULAR = 1 << 1,
+		MATERIAL_RIGID = 1 << 2,
+		MATERIAL_SOFT = 1 << 3,
+		MATERIAL_BOUNDARY = 1 << 5
+	};
+
+	inline MaterialPhase operator|(MaterialPhase a, MaterialPhase b) {
+		return static_cast<MaterialPhase>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+	}
+
+	inline bool hasTag(uint32_t flags, MaterialPhase tag) {
+		return (flags & static_cast<uint32_t>(tag)) != 0;
+	}
+
+
+	enum class PhysicsField {
+		FIELD_POSITION = 0,
+		FIELD_VELOCITY = 1,
+		FIELD_DENSITY = 2,
+		FIELD_PRESSURE = 3,
+		FIELD_TEMPERATURE = 4,
+		FIELD_STRESS = 5,
+		FIELD_PLASTICITY = 6
+	};
+
+	enum class ColorMap {
+		COLORMAP_INFERNO = 0,
+		COLORMAP_BLACKBODY = 1,
+		COLORMAP_PLASMA = 2,
+		COLORMAP_VIRIDIS = 3,
+		COLORMAP_WARMCOOL = 4,
+		COLORMAP_PARULA = 5,
+		COLORMAP_JET = 6,
+		COLORMAP_BLUE = 7
+	};
+
+
 	enum NNS_Stages {
 		NNS_STEP_0 = 0, //local prefix sum
 		NNS_STEP_1 = 1, //parallel redux

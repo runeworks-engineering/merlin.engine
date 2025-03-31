@@ -31,6 +31,9 @@ namespace Merlin{
 
         virtual const std::string& name() const = 0;
 
+		static PhysicsPipelineStep_Ptr create(const std::string& name);
+
+
     protected:
 		bool m_enabled = false;
         // One of these should be set.

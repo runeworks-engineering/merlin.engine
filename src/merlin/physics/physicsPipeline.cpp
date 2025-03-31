@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "merlin/physics/physicsPipeline.h"
 #include "merlin/utils/util.h"
+#include "merlin/memory/bufferObject.h"
 
 namespace Merlin {
 
@@ -34,18 +35,15 @@ namespace Merlin {
 	}
 
 	void PhysicsPipeline::initialize(){
-
 		//Generate buffers
 		for (auto& step : m_steps) {
 			const auto& reqbuffers = step->requiredBuffers();
 			for (auto& buf : reqbuffers) {
 				if (!hasField(buf.first)) {
-					
+					addField(generateBuffer(buf.first, BufferTarget::Shader_Storage_Buffer, buf.second));
 				}
 			}
 		}
-
-
 	}
 
 	void PhysicsPipeline::execute()	{
@@ -235,6 +233,11 @@ namespace Merlin {
 		else if (m_stagedComputeShader) {
 			m_stagedComputeShader->execute(m_stage);
 		}
+	}
+
+	PhysicsPipelineStep_Ptr PhysicsPipelineStep::create(const std::string& name)
+	{
+		return createShared<PhysicsPipelineStep>(name);
 	}
 
 	/*

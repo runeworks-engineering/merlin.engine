@@ -127,11 +127,12 @@ namespace Merlin {
 		void gatherParticleGroup();
 
 		//void generateBuffer();
-		void uploadFields();
-		void generateFields();
+		//void uploadFields();
+		//void generateFields();
+		void generateDefaultPipeline();
 
-		void add_PBD_Buffers();
-		void add_MMC_Buffers();
+		//void add_PBD_Buffers();
+		//void add_MMC_Buffers();
 
 	private:
 		bool m_active = true;

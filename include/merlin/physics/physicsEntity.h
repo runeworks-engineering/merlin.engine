@@ -1,4 +1,5 @@
 #pragma once
+#include "merlin/physics/physicsEnum.h"
 #include "merlin/physics/particleSampler.h"
 
 #include "merlin/physics/modifiers/fluid.h"
@@ -14,42 +15,6 @@
 
 namespace Merlin{
 
-	enum MaterialPhase {
-		MATERIAL_UNUSED = 0,
-
-		MATERIAL_FLUID = 1,
-		MATERIAL_GRANULAR = 2,
-		MATERIAL_RIGID = 3,
-		MATERIAL_SOFT = 4,
-
-		MATERIAL_FLUID_EMITTER = 5,
-		MATERIAL_GRANULAR_EMITTER = 6,
-		MATERIAL_RIGID_EMITTER = 7,
-		MATERIAL_SOFT_EMITTER = 8,
-		MATERIAL_BOUNDARY = 9
-	};
-
-	enum class PhysicsField {
-		FIELD_POSITION = 0,
-		FIELD_VELOCITY = 1,
-		FIELD_DENSITY = 2,
-		FIELD_PRESSURE = 3,
-		FIELD_TEMPERATURE = 4,
-		FIELD_STRESS = 5,
-		FIELD_PLASTICITY = 6
-	};
-
-	enum class ColorMap {
-		COLORMAP_INFERNO = 0,
-		COLORMAP_BLACKBODY = 1,
-		COLORMAP_PLASMA = 2,
-		COLORMAP_VIRIDIS = 3,
-		COLORMAP_WARMCOOL = 4,
-		COLORMAP_PARULA = 5,
-		COLORMAP_JET = 6,
-		COLORMAP_BLUE = 7
-	};
-
 	class PhysicsEntity{
 	public:
 		PhysicsEntity(const std::string& name, ParticleSampler_Ptr sampler);
@@ -57,6 +22,10 @@ namespace Merlin{
 		void addModifier(PhysicsModifier_Ptr);
 		void setSampler(ParticleSampler_Ptr);
 		void setMesh(Mesh_Ptr mesh);
+
+		template<typename T>
+		void addInitialValue(const std::string& name, BufferType, T* value);
+		bool hasInitialValue(const std::string& name);
 
 		const std::vector<glm::vec4>& sample(bool = false);
 
@@ -93,6 +62,7 @@ namespace Merlin{
 		bool m_emitter = false; //only for fluid, solid, rigid
 
 		std::vector<glm::vec4> m_samples;
+		std::unordered_map<std::string, std::pair<BufferType, void*>> m_init_values;
 
 		ColorMap m_currentMap;
 		PhysicsField m_displayField;
@@ -105,9 +75,13 @@ namespace Merlin{
 	};
 
 	typedef shared<PhysicsEntity> PhysicsEntity_Ptr;
-
 }
-/**/
+
+template<typename T>
+inline void Merlin::PhysicsEntity::addInitialValue(const std::string& name, BufferType, T* value){
+	m_init_values[name] = std::make_pair(BufferType, (void*)value);
+}
+
 template<>
 inline shared<FluidModifier> PhysicsEntity::getModifier<FluidModifier>() {
 	if (hasModifier(PhysicsModifierType::FLUID))
