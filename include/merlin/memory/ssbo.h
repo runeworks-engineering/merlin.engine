@@ -28,6 +28,7 @@ namespace Merlin {
         static std::shared_ptr<ShaderStorageBuffer<T>> create(const std::string& name, GLsizeiptr count, BufferUsage usage = BufferUsage::StaticDraw);
         static std::shared_ptr<ShaderStorageBuffer<T>> create(const std::string& name, GLsizeiptr count, T* data, BufferUsage usage = BufferUsage::StaticDraw);
         static std::shared_ptr<ShaderStorageBuffer<T>> create(const std::string& name, std::vector<T>data, BufferUsage usage = BufferUsage::StaticDraw);
+    
     };
 
     template<class T>

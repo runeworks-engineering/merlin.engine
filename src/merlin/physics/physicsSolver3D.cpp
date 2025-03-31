@@ -28,7 +28,15 @@ namespace Merlin {
 
 
         int particleID = 0;
+
+        //-------------------------------- SCENE SCAN ---------------------------------
+        Console::info("PhysicsSolver3D") << "Scanning physics scene" << Console::endl;
+        Console::printSeparator();
         scanScene();
+        Console::printSeparator();
+        //-----------------------------------------------------------------------------
+
+
         //-------------------------- DEFAULT BUFFER SAMPLING---------------------------
         //Sampling entities
         for (const auto& entity : m_active_entities) {
@@ -71,31 +79,13 @@ namespace Merlin {
         //Active partile count
         m_settings.particles_count = cpu_position_buffer.size();
         m_settings.initial_particles_count = cpu_position_buffer.size();
+
+        if (use_dynamic_buffer)
+            m_particles->setInstancesCount(m_settings.max_particles_count.value());
+        else
+            m_particles->setInstancesCount(m_settings.particles_count.value());
+        m_particles->setActiveInstancesCount(m_settings.particles_count.value());
         //-----------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -112,7 +102,7 @@ namespace Merlin {
 
 
 
-        //------------------------------ SOLVER -------------------------------
+        //----------------------------- SHADERS -------------------------------
         Console::printSeparator();
         Console::info("PhysicsSolver3D") << "Preparing solver shaders." << Console::endl;
         Console::printSeparator();
@@ -149,15 +139,26 @@ namespace Merlin {
         setUniforms(*pshader);
         setUniforms(*bshader);
 
+
+        //----------------------------- PIPELINE -----------------------------
+        m_pipeline = createShared<PhysicsPipeline>("solver");
+        //m_pipeline->
+
+        //--------------------------------------------------------------------
+
+
+
+
         //------------------------------ BUFFERS -----------------------------
         Console::printSeparator();
         Console::info("PhysicsSolver3D") << "Generating Buffers..." << Console::endl;
         Console::printSeparator();
 
         generateFields();
-        m_pipeline->addBuffer(m_grid->getBuffer());
-       // m_pipeline->link(m_solver->name(), m_grid->getBuffer()->name());
-        
+        if (m_pipeline) {
+            m_pipeline->addBuffer(m_grid->getBuffer());
+            m_particles->setPositionBuffer(m_pipeline->getField("position_buffer"));
+        }
         reset();
         
         // Mark the physics engine as ready.
@@ -172,11 +173,12 @@ namespace Merlin {
     void PhysicsSolver3D::uploadFields() {
         Console::info() << "Uploading buffer on device..." << Console::endl;
 
-        Console::printProgress(0);
-        m_pipeline->writeField("meta_buffer", cpu_meta_buffer);         Console::printProgress(0.05);
-        m_pipeline->clearField("filter_buffer");                        Console::printProgress(0.1);
-        m_pipeline->writeField("position_buffer", cpu_position_buffer); Console::printProgress(0.15);
+        if (!m_pipeline) return;
 
+        //Console::printProgress(0);
+        m_pipeline->writeField("meta_buffer", cpu_meta_buffer);         //Console::printProgress(0.05);
+        m_pipeline->clearField("filter_buffer");                        //Console::printProgress(0.1);
+        m_pipeline->writeField("position_buffer", cpu_position_buffer); //Console::printProgress(0.15);
 
 
         /*
@@ -295,18 +297,16 @@ namespace Merlin {
         // meta[i].y = phase/flags (bit-packed)
         // meta[i].z = particleID
         // meta[i].w = sortedID
+        if (!m_pipeline) return;
 
         m_pipeline->addField<glm::uvec4>("meta_buffer", true);
         m_pipeline->addField<GLuint>("filter_buffer", false); //To select particle sub-group
-        
         m_pipeline->addField<glm::vec4>("position_buffer", true);
         m_pipeline->addField<glm::vec4>("velocity_buffer", true);
         m_pipeline->addField<float>("density_buffer", true);
        
-        //TODO Link m_solver as well
-
         m_pipeline->link(pshader->name(), "meta_buffer");
-        //m_particles->link(pshader->name(), "filter_buffer");
+        m_pipeline->link(pshader->name(), "filter_buffer");
         m_pipeline->link(pshader->name(), "position_buffer");
         m_pipeline->link(pshader->name(), "velocity_buffer");
         m_pipeline->link(pshader->name(), "density_buffer");
@@ -463,8 +463,10 @@ namespace Merlin {
         m_active_physics.clear();
         m_active_entities.clear();
         m_active_emitters.clear();
-        m_pipeline->removeAllBuffer();
-        m_pipeline->removeAllField();
+        if (m_pipeline) {
+            m_pipeline->removeAllBuffer();
+            m_pipeline->removeAllField();
+        }
         BindingPointManager::instance().resetBindings();
     }
 
@@ -549,13 +551,18 @@ namespace Merlin {
     }
 
     void PhysicsSolver3D::attachGraphics(){
-        m_pipeline->solveLink(pshader);
-        m_grid->solveLink(bshader);
+        if(m_pipeline)
+            m_pipeline->solveLink(pshader);
+
+        if(m_grid)
+            m_grid->solveLink(bshader);
     }
 
     void PhysicsSolver3D::detachGraphics(){
-        m_pipeline->detach(pshader);
-        m_grid->detach(bshader);
+        if(m_pipeline)
+            m_pipeline->detach(pshader);
+        if (m_grid)
+            m_grid->detach(bshader);
     }
 
     ParticleSystem_Ptr PhysicsSolver3D::getParticles(){
@@ -612,7 +619,6 @@ namespace Merlin {
 
     void PhysicsSolver3D::addPhysics(PhysicsModifierType type) {
         m_active_physics.insert(type);
-        scanScene();
     }
 
     bool PhysicsSolver3D::hasPhysics(PhysicsModifierType type) {
@@ -651,30 +657,29 @@ namespace Merlin {
     }
 
     void PhysicsSolver3D::scanScene() {
-        Console::printSeparator();
+        
         warmUnstagedChanges();
-        //-------------------------------- SCENE SCAN ---------------------------------
-        Console::info("PhysicsSolver3D") << "Scanning physics scene" << Console::endl;
-        Console::printSeparator();
+
 
         for (const auto& entity : m_entity) {
             if (entity->isActive()) {
-                std::vector<glm::vec4> samples = entity->sample();
+                const std::vector<glm::vec4>& samples = entity->sample();
                 //Register all active physics
                 for (auto& modifier : entity->getModifiers()) {
                     addPhysics(modifier.second->type()); //Gather physics
                 }
                 if (!entity->hasModifier(PhysicsModifierType::EMITTER)) {
-                    if(m_active_entities.find(entity->id()) != m_active_entities.end())
-                    m_active_entities[entity->id()] = entity; //Gather entities
+                    if(m_active_entities.find(entity->id()) == m_active_entities.end())
+                        m_active_entities[entity->id()] = entity; //Gather entities
                 }
                 else {
                     use_dynamic_buffer = true;
-                    m_active_emitters[entity->id()] = entity;
+                    if (m_active_emitters.find(entity->id()) == m_active_emitters.end())
+                        m_active_emitters[entity->id()] = entity;
                 }
             }
         }
-        //-----------------------------------------------------------------------------
+
     }
 
     float PhysicsSolver3D::getTime() const {
@@ -684,7 +689,7 @@ namespace Merlin {
     void PhysicsSolver3D::onRenderMenu(){
         ImGui::Text("Solver properties");
 
-        ImGui::Text("Current Time: %s s", m_elapsed_time);
+        ImGui::Text("Current Time: %f s", m_elapsed_time);
         if (ImGui::Checkbox("Use fixed timestep", &use_fixed_timestep)) {
             useFixedTimeStep(use_fixed_timestep);
         }
@@ -692,12 +697,12 @@ namespace Merlin {
         if (ImGui::TreeNode("Entities")) {
             ImGui::Text("Active: %s", m_active ? "true" : "false");
             ImGui::Text("Ready: %s", m_ready ? "true" : "false");
-            ImGui::Text("Particle count: %s", cpu_position_buffer.size());
-            ImGui::Text("Emitter Particle count : %s", cpu_emitter_position_buffer.size());
+            ImGui::Text("Particle count: %i", cpu_position_buffer.size());
+            ImGui::Text("Emitter Particle count : %i", cpu_emitter_position_buffer.size());
 
-            ImGui::Text("Total Entities: %s", m_entity.size());
-            ImGui::Text("Total Active Entities: %s", m_active_entities.size());
-            ImGui::Text("Total Active Emitters: %s", m_active_emitters.size());
+            ImGui::Text("Total Entities: %i", m_entity.size());
+            ImGui::Text("Total Active Entities: %i", m_active_entities.size());
+            ImGui::Text("Total Active Emitters: %i", m_active_emitters.size());
             ImGui::TreePop();
         }
        
@@ -705,13 +710,13 @@ namespace Merlin {
 
             //m_grid->onRenderMenu();
             BoundingBox m_domain;
-            ImGui::InputFloat3("Domain: %s", &m_domain.size.x);
+            ImGui::InputFloat3("Domain: ", &m_domain.size.x);
 
-            ImGui::InputFloat("Particle radius: %s", &m_settings.particle_radius.value());
-            ImGui::InputFloat("Smoothing radius: %s", &m_settings.smoothing_radius.value());
-            ImGui::InputFloat("Bin size: %s", &m_settings.cell_width.value());
-            ImGui::InputFloat("Timestep: %s", &m_settings.timestep.value());
-            ImGui::InputFloat("Particle mass: %s", &m_settings.particle_mass.value());
+            ImGui::InputFloat("Particle radius: ", &m_settings.particle_radius.value());
+            ImGui::InputFloat("Smoothing radius: ", &m_settings.smoothing_radius.value());
+            ImGui::InputFloat("Bin size: ", &m_settings.cell_width.value());
+            ImGui::InputFloat("Timestep: ", &m_settings.timestep.value());
+            ImGui::InputFloat("Particle mass: ", &m_settings.particle_mass.value());
 
             
 
@@ -742,43 +747,51 @@ namespace Merlin {
         if (ImGui::TreeNode("Physics")) {
             for (const auto& physics : m_active_physics) {
                 if (ImGui::TreeNode((PhysicsModifier::toString(physics) + " properties").c_str())) {
+
+                    const char* pressureSolvers[] = { "WSPH", "PBF" };
+                    int pressureSolverIndex = (int)m_settings.pressureSolver;
+
+                    const char* viscositySolvers[] = { "XSPH" };
+                    int viscositySolverIndex = (int)m_settings.viscositySolver;
+
+                    const char* softBodySolver[] = { "MMC_SPH", "PBD_WDC", "MMC_PBD" };
+                    int softBodySolverIndex = (int)m_settings.softBodySolver;
+
+                    const char* rigidBodySolver[] = { "SHAPE_MATCHING" };
+                    int rigidBodySolverIndex = (int)m_settings.rigidBodySolver;
+
+                    const char* granularBodySolver[] = { "DEM", "PBD_DC" };
+                    int granularBodySolverIndex = (int)m_settings.granularBodySolver;
+
                     switch (physics) {
                     case PhysicsModifierType::FLUID:
-
-                        const char* pressureSolvers[] = { "WSPH", "PBF" };
-                        int pressureSolverIndex = (int) m_settings.pressureSolver;
                         if (ImGui::Combo("Pressure Solver", &pressureSolverIndex, pressureSolvers, IM_ARRAYSIZE(pressureSolvers))) {
                             m_settings.pressureSolver = (PressureSolver)pressureSolverIndex;
                         }
 
-                        const char* viscositySolvers[] = { "XSPH" };
-                        int viscositySolverIndex = (int) m_settings.viscositySolver;
                         if (ImGui::Combo("Viscosity Solver", &viscositySolverIndex, viscositySolvers, IM_ARRAYSIZE(viscositySolvers))) {
                             m_settings.viscositySolver = (ViscositySolver)viscositySolverIndex;
                         }
-
                         break;
+
                     case PhysicsModifierType::SOFT_BODY:
-                        const char* softBodySolver[] = { "MMC_SPH", "PBD_WDC", "MMC_PBD" };
-                        int softBodySolverIndex = (int)m_settings.softBodySolver;
                         if (ImGui::Combo("Soft Body Solver", &softBodySolverIndex, softBodySolver, IM_ARRAYSIZE(softBodySolver))) {
                             m_settings.softBodySolver = (SoftBodySolver)softBodySolverIndex;
                         }
                         break;
+
                     case PhysicsModifierType::RIGID_BODY:
-                        const char* rigidBodySolver[] = { "SHAPE_MATCHING" };
-                        int rigidBodySolverIndex = (int)m_settings.rigidBodySolver;
                         if (ImGui::Combo("Rigid Body Solver", &rigidBodySolverIndex, rigidBodySolver, IM_ARRAYSIZE(rigidBodySolver))) {
                             m_settings.rigidBodySolver = (RigidBodySolver)rigidBodySolverIndex;
                         }
                         break;
+
                     case PhysicsModifierType::GRANULAR_BODY:
-                        const char* granularBodySolver[] = { "DEM", "PBD_DC"};
-                        int granularBodySolverIndex = (int)m_settings.granularBodySolver;
                         if (ImGui::Combo("Granular Body Solver", &granularBodySolverIndex, granularBodySolver, IM_ARRAYSIZE(granularBodySolver))) {
                             m_settings.granularBodySolver = (GranularBodySolver)granularBodySolverIndex;
                         }
                         break;
+
                     case PhysicsModifierType::HEAT_TRANSFER:
 
                         break;

@@ -47,6 +47,35 @@ namespace Merlin {
         Transform_Feedback_Buffer = GL_TRANSFORM_FEEDBACK_BUFFER
     };
 
+    enum class BufferType {
+        Int,
+        Float,
+        UInt,
+        Bool,
+        Double,
+        DVec2,
+        DVec3,
+        DVec4,
+        IVec2,
+        IVec3,
+        IVec4,
+        UVec2,
+        UVec3,
+        UVec4,
+        Vec2,
+        Vec3,
+        Vec4,
+        Mat2,
+        Mat2x3,
+        Mat2x4,
+        Mat3x2,
+        Mat3,
+        Mat3x4,
+        Mat4x2,
+        Mat4x3,
+        Mat4
+    };
+
     // Base class for buffer objects
     class AbstractBufferObject : public GLObject<>{
     public:
@@ -82,8 +111,6 @@ namespace Merlin {
 
         inline void setType(GLuint typeSize) { m_type = typeSize; }
         inline void setElements(GLsizeiptr elements) { m_elements = elements; }
-
-
 
     protected:
         BufferUsage m_usage;
@@ -138,6 +165,11 @@ namespace Merlin {
         void read(std::vector<T>& data) const;
         std::vector<T> read() const;
     };
+
+    AbstractBufferObject_Ptr generateBuffer(const std::string& name, BufferTarget, BufferType);
+    AbstractBufferObject_Ptr generateBuffer(const std::string& name, BufferTarget, BufferType, GLsizeiptr size, void* data);
+    AbstractBufferObject_Ptr generateImmutableBuffer(const std::string& name, BufferTarget, BufferType);
+    AbstractBufferObject_Ptr generateImmutableBuffer(const std::string& name, BufferTarget, BufferType, GLsizeiptr size, void* data);
 }
 
 #include "bufferObject.inl"

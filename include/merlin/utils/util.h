@@ -25,8 +25,9 @@ namespace Merlin::Utils {
 	std::string getFileName(const std::string& filepath);
 	std::string getFileFolder(const std::string& filepath);
 
-	const std::map<std::string, GLuint>& getGLTypes();
-	const GLuint getGLTypeSize(const std::string&);//in bytes
+	const std::map<BufferType, GLuint>& getBufferTypes();
+	const GLuint getBufferTypeSize(BufferType);//in bytes
+	
 
 	template<typename T>
 	void debugVector(std::vector<T>& vec);

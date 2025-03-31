@@ -314,9 +314,8 @@ namespace Merlin {
 			shader->setMat4("view", camera.getViewMatrix()); //sync model matrix with GPU
 			shader->setMat4("projection", camera.getProjectionMatrix()); //sync model matrix with GPU
 
-			if (ps.hasField("position")) {
-				AbstractBufferObject_Ptr pos = ps.getField("position");
-				shader->attach(*pos);
+			if (ps.hasPositionBuffer()) {
+				shader->attach(*ps.getPositionBuffer());
 			}
 			
 			ps.draw();
@@ -359,6 +358,11 @@ namespace Merlin {
 
 			shader->setMat4("projection", camera.getProjectionMatrix()); //sync model matrix with GPU
 			if (shader->supportLights()) shader->setInt("numLights", m_activeLights.size());
+
+			if (ps.hasPositionBuffer()) {
+				AbstractBufferObject_Ptr pos = ps.getPositionBuffer();
+				shader->attach(*pos);
+			}
 
 			ps.draw();
 			mat->detach();

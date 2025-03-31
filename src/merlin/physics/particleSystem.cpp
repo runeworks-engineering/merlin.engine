@@ -56,10 +56,24 @@ namespace Merlin{
 
 
 
+	bool ParticleSystem::hasPositionBuffer() const {
+		if (m_position_buffer == nullptr) return false;
+		return true;
+	}
+
+	void ParticleSystem::setPositionBuffer(AbstractBufferObject_Ptr buffer) {
+		if(buffer)
+			m_position_buffer = buffer;
+	}
+
+	AbstractBufferObject_Ptr ParticleSystem::getPositionBuffer() const{
+		return m_position_buffer;
+	}
+
 	void ParticleSystem::setShader(Shader_Ptr shader) {
 		m_shader = shader;
-		m_currentProgram = m_shader->name();
-		m_links[shader->name()] = std::set<std::string>();
+		//m_currentProgram = m_shader->name();
+		//m_links[shader->name()] = std::set<std::string>();
 	}
 
 	bool ParticleSystem::hasShader() const{

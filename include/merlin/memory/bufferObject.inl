@@ -22,35 +22,35 @@ namespace Merlin {
         glUnmapNamedBuffer(id());
     }
 
-    inline void AbstractBufferObject::allocateBuffer(GLsizeiptr size, const void* data, BufferUsage usage) {
+    inline void AbstractBufferObject::allocateBuffer(GLsizeiptr bytes, const void* data, BufferUsage usage) {
         m_isMutable = true;
-        m_size = size;
+        m_size = bytes;
         m_usage = usage;
-        glNamedBufferData(id(), size, nullptr, static_cast<GLenum>(usage));
+        glNamedBufferData(id(), bytes, nullptr, static_cast<GLenum>(usage));
         clearBuffer();
-        writeBuffer(size, data);
+        writeBuffer(bytes, data);
     }
 
-    inline void AbstractBufferObject::allocateImmutableBuffer(GLsizeiptr size, const void* data, BufferStorageFlags flags) {
+    inline void AbstractBufferObject::allocateImmutableBuffer(GLsizeiptr bytes, const void* data, BufferStorageFlags flags) {
         m_isMutable = false;
-        m_size = size;
+        m_size = bytes;
         m_flags = flags;
-        glNamedBufferStorage(id(), size, data, static_cast<GLbitfield>(flags));
+        glNamedBufferStorage(id(), bytes, data, static_cast<GLbitfield>(flags));
     }
 
-    inline void AbstractBufferObject::resizeBuffer(GLsizeiptr size) {
+    inline void AbstractBufferObject::resizeBuffer(GLsizeiptr bytes) {
         checkMutable();
-        m_size = size;
-        glNamedBufferData(id(), size, nullptr, static_cast<GLenum>(m_usage));
+        m_size = bytes;
+        glNamedBufferData(id(), bytes, nullptr, static_cast<GLenum>(m_usage));
     }
 
-    inline void AbstractBufferObject::writeBuffer(GLsizeiptr size, const void* data) {
+    inline void AbstractBufferObject::writeBuffer(GLsizeiptr bytes, const void* data) {
         checkMutable();
-        glNamedBufferSubData(id(), 0, size, data);
+        glNamedBufferSubData(id(), 0, bytes, data);
     }
 
-    inline void AbstractBufferObject::readBuffer(GLsizeiptr size, void* data) const {
-        glGetNamedBufferSubData(id(), 0, size, data);
+    inline void AbstractBufferObject::readBuffer(GLsizeiptr bytes, void* data) const {
+        glGetNamedBufferSubData(id(), 0, bytes, data);
     }
 
 

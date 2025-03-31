@@ -33,8 +33,8 @@ namespace Merlin {
         m_bin_buffer = SSBO<Bin>::create("bin_buffer", m_thread);
         Console::info() << "Bin struct size :" << sizeof(Bin) << Console::endl;
         Console::info() << "Bin buffer size :" << int(m_bin_buffer->size()) << Console::endl;
-        m_bins->addField(m_bin_buffer);
-        m_bins->link(m_prefixSum->name(), m_bin_buffer->name());
+        //m_bins->addField(m_bin_buffer);
+        //m_bins->link(m_prefixSum->name(), m_bin_buffer->name());
 
         m_prefixSum->SetWorkgroupLayout(m_bWkgCount);
         m_prefixSum->use();
@@ -87,11 +87,11 @@ namespace Merlin {
 	}
 
     void NNS::solveLink(shared<ShaderBase> shader){
-        m_bins->solveLink(shader);
+        //m_bins->solveLink(shader);
     }
 
     void NNS::detach(shared<ShaderBase> shader) {
-        m_bins->detach(shader);
+       //m_bins->detach(shader);
     }
 
     void NNS::setShader(Shader_Ptr shader){

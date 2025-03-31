@@ -1,7 +1,8 @@
 #pragma once
 #include "merlin/core/core.h"
-
+#include "merlin/memory/ssbo.h"
 #include "merlin/shaders/computeShader.h"
+#include "merlin/physics/physicsEnum.h"
 
 #include <string>
 #include <vector>
@@ -19,8 +20,8 @@ namespace Merlin{
 
         void setProgram(ComputeShader_Ptr shader);
         void setProgram(StagedComputeShader_Ptr shader, int stage);
-        void attachBuffer(const std::string& bufferName);
-        const std::vector<std::string>& requiredBuffers() const;
+        void attachBuffer(BufferType type, const std::string& bufferName);
+        const std::unordered_map<std::string, BufferType>& requiredBuffers() const;
 
         void setIteration(int i);
         void execute();
@@ -38,7 +39,7 @@ namespace Merlin{
         int                     m_stage = 0;
 
         int m_iteration = 1;
-        std::vector<std::string> m_requiredBuffers;
+        std::unordered_map<std::string, BufferType> m_requiredBuffers;
         std::vector<shared<PhysicsPipelineStep>> m_children;
     };
 
@@ -59,8 +60,6 @@ namespace Merlin{
         std::unordered_map<std::string, AbstractBufferObject_Ptr>& buffers() { return m_buffers; }
         std::unordered_map<std::string, AbstractBufferObject_Ptr>& fields() { return m_fields; }
         std::unordered_map<std::string, ComputeShader_Ptr>& programs() { return m_programs; }
-
-		
 
 		//Memory 
 		void addField(AbstractBufferObject_Ptr buf);
@@ -86,7 +85,6 @@ namespace Merlin{
 		void detach(shared<ShaderBase>);
 		void solveLink(shared<ShaderBase>);
 		bool hasLink(const std::string& name) const;
-
 
 		AbstractBufferObject_Ptr getField(const std::string& name) const;
 		AbstractBufferObject_Ptr getBuffer(const std::string& name) const;
@@ -128,9 +126,11 @@ namespace Merlin{
 		SSBO_Ptr<T> f = SSBO<T>::create(name, m_default_fields_size);
 		m_fields[name] = f;
 
+		/*
 		if (sortable) {
 			m_sortableFields[name] = sizeof(T);
-		}
+		}*/
+
 		/*
 		for(const auto& prgm : m_programs)
 			if (hasLink(prgm.first)) {

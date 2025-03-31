@@ -34,6 +34,10 @@ namespace Merlin {
 		//void addProgram(ComputeShader_Ptr program);
 		//bool hasProgram(const std::string& name) const;
 
+		bool hasPositionBuffer() const;
+		AbstractBufferObject_Ptr getPositionBuffer() const;
+		void setPositionBuffer(AbstractBufferObject_Ptr buffer);
+
 		void setShader(Shader_Ptr shader);
 		inline void setShader(std::string shaderName) { m_shaderName = shaderName; }
 		Shader_Ptr getShader() const;
@@ -68,7 +72,7 @@ namespace Merlin {
 		Shader_Ptr m_shader = nullptr;
 		std::string m_shaderName = "default";
 
-		//AbstractBufferObject_Ptr m_position_buffer = nullptr;
+		AbstractBufferObject_Ptr m_position_buffer = nullptr;
 
 		Mesh_Ptr m_geometry = nullptr;
 		size_t m_instancesCount = 1;

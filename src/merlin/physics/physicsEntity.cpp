@@ -13,7 +13,7 @@ namespace Merlin {
 		m_sampler(sampler)
 	{}
 
-	std::vector<glm::vec4> PhysicsEntity::sample(bool forceReSample) {
+	const std::vector<glm::vec4>& PhysicsEntity::sample(bool forceReSample) {
 		if (!hasSampler()) {
 			Console::error("PhysicsEntity(" + m_name + ")") << " Entity has no sampler" << Console::endl;
 			return std::vector<glm::vec4>();

@@ -6,6 +6,7 @@
 #include "merlin/physics/nns.h"
 #include "merlin/physics/physicsPipeline.h"
 
+#include <set>
 #include <unordered_map>
 
 namespace Merlin {
@@ -125,7 +126,7 @@ namespace Merlin {
 
 		void gatherParticleGroup();
 
-		void generateBuffer();
+		//void generateBuffer();
 		void uploadFields();
 		void generateFields();
 

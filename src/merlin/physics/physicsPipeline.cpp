@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "merlin/physics/physicsPipeline.h"
+#include "merlin/utils/util.h"
 
 namespace Merlin {
 
@@ -28,12 +29,22 @@ namespace Merlin {
 
 	}
 
-
 	void PhysicsPipeline::addStep(std::shared_ptr<PhysicsPipelineStep> step){
 		m_steps.push_back(step);
 	}
 
 	void PhysicsPipeline::initialize(){
+
+		//Generate buffers
+		for (auto& step : m_steps) {
+			const auto& reqbuffers = step->requiredBuffers();
+			for (auto& buf : reqbuffers) {
+				if (!hasField(buf.first)) {
+					
+				}
+			}
+		}
+
 
 	}
 
@@ -188,13 +199,13 @@ namespace Merlin {
 		m_computeShader.reset();
 	}
 
-	// Attach a required buffer (by name) to this step.
-	void PhysicsPipelineStep::attachBuffer(const std::string& bufferName) {
-		m_requiredBuffers.push_back(bufferName);
+	void PhysicsPipelineStep::attachBuffer(BufferType type, const std::string& bufferName){
+		m_requiredBuffers[bufferName] = type;
 	}
 
+
 	// Retrieve the list of required buffer names.
-	const std::vector<std::string>& PhysicsPipelineStep::requiredBuffers() const {
+	const std::unordered_map<std::string, BufferType>& PhysicsPipelineStep::requiredBuffers() const {
 		return m_requiredBuffers;
 	}
 

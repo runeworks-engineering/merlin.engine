@@ -58,7 +58,7 @@ namespace Merlin{
 		void setSampler(ParticleSampler_Ptr);
 		void setMesh(Mesh_Ptr mesh);
 
-		std::vector<glm::vec4> sample(bool = false);
+		const std::vector<glm::vec4>& sample(bool = false);
 
 		BoundingBox getBoundingBox() const;
 
