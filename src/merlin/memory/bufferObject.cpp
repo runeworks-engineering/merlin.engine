@@ -119,6 +119,7 @@ namespace Merlin {
         AbstractBufferObject_Ptr buf = generateBuffer(name, target, type);
         GLsizeiptr bytes = size * Utils::getBufferTypeSize(type);
         buf->allocateBuffer(bytes, data, BufferUsage::StaticDraw);
+		return buf;
     }
 
     AbstractBufferObject_Ptr generateImmutableBuffer(const std::string& name, BufferTarget, BufferType)

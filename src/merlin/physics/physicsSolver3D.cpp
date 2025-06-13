@@ -140,6 +140,7 @@ namespace Merlin {
         setUniforms(*bshader);
 
 
+
         //----------------------------- PIPELINE -----------------------------
         if (!m_pipeline) {
             Console::info("PhysicsSolver") << "No pipeline set, generating default Pipeline" << Console::endl;
@@ -152,9 +153,6 @@ namespace Merlin {
 
         //--------------------------------------------------------------------
 
-
-
-
         //------------------------------ BUFFERS -----------------------------
         Console::printSeparator();
         Console::info("PhysicsSolver3D") << "Generating Buffers..." << Console::endl;
@@ -164,7 +162,9 @@ namespace Merlin {
         if (m_pipeline) {
             m_pipeline->initialize();
             m_pipeline->addBuffer(m_grid->getBuffer());
+            m_pipeline->addField<glm::vec4>("position_buffer", true);
             m_particles->setPositionBuffer(m_pipeline->getField("position_buffer"));
+            m_pipeline->link(pshader->name(), m_particles->getPositionBuffer()->name());
         }
         reset();
         
@@ -562,7 +562,7 @@ namespace Merlin {
             m_particles->setInstancesCount(m_settings.particles_count.value());
         m_particles->setActiveInstancesCount(m_settings.particles_count.value());
 
-        uploadFields();
+        //uploadFields();
 
         //m_solver->use();
         //m_solver->execute(SolverStages::INIT);

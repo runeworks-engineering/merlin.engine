@@ -1,0 +1,33 @@
+#version 430
+
+#include "uniforms.comp"
+#include "constants.comp"
+
+layout (local_size_x = PTHREAD) in;
+
+// meta[i].x = entityID
+// meta[i].y = phase/flags (bit-packed)
+// meta[i].z = particleID
+// meta[i].w = sortedID
+
+layout (std430) buffer MetaBuffer {
+    uvec4 meta[];
+};
+
+layout (std430) buffer PhysicsIndexBuffer {
+    uint indices[];
+};
+
+layout (offset = 0) uniform atomic_uint count;
+
+uniform uint targetFlag;
+
+void main() {
+	uint index = gl_GlobalInvocationID.x;
+	if (index < u_numParticles){ //is an active particle
+		if ((meta[index].y & targetFlags) != 0u) {
+			uint offset = atomicCounterIncrement(count, 1);
+			indices[offset] = index;
+		}
+	}
+}

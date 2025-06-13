@@ -234,11 +234,11 @@ namespace Merlin {
 			m_stagedComputeShader->execute(m_stage);
 		}
 	}
-
+	/*
 	PhysicsPipelineStep_Ptr PhysicsPipelineStep::create(const std::string& name)
 	{
 		return createShared<PhysicsPipelineStep>(name);
-	}
+	}*/
 
 	/*
 	void PhysicsPipelineStep::setDispatchCount(int count) {

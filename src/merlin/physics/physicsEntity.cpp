@@ -66,13 +66,13 @@ namespace Merlin {
 	GLuint PhysicsEntity::getPhase() const{
 		if (!hasPhase()) return 0;
 		if (hasModifier(PhysicsModifierType::FLUID))
-			return MaterialPhase::MATERIAL_FLUID;
+			return (GLuint) MaterialPhase::MATERIAL_FLUID;
 		else if (hasModifier(PhysicsModifierType::SOFT_BODY))
-			return MaterialPhase::MATERIAL_SOFT;
+			return (GLuint) MaterialPhase::MATERIAL_SOFT;
 		else if (hasModifier(PhysicsModifierType::GRANULAR_BODY))
-			return MaterialPhase::MATERIAL_GRANULAR;
+			return (GLuint) MaterialPhase::MATERIAL_GRANULAR;
 		else if (hasModifier(PhysicsModifierType::RIGID_BODY)) 
-			return MaterialPhase::MATERIAL_RIGID;
+			return (GLuint) MaterialPhase::MATERIAL_RIGID;
 
 		//getModifier<PhaseChanger>();
 		//if(hasModifier(PhysicsModifierType::PHASE_CHANGER))

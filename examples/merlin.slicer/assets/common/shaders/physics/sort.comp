@@ -1,0 +1,71 @@
+#version 430
+
+#include "uniforms.comp"
+#include "constants.comp"
+#include "buffers.comp"
+#include "nns.comp"
+
+layout (local_size_x = PTHREAD) in;
+
+layout (std430, binding = 1) buffer MetaBuffer {
+    uvec4 ssbo_meta[];
+};
+
+layout (std430, binding = 2) buffer PhysicsIndexBuffer {
+    uint ssbo_filter_indices[];
+};
+
+layout (std430, binding = 1) buffer CopyBuffer {
+    uvec4 ssbo_copy[];
+};
+
+void copyBuffers(uint i){
+		uint bin = getBinIndex(b_pi.xyz); //retrieve the bin index
+		atomicAdd(ssbo_bins[bin].count, 1); //count particle in bin
+		ssbo_copy[i].meta = ssbo_meta[i];
+
+
+
+		//TODO Generate this automatically CPU-side
+		//ssbo_copy[i].last_position = ssbo_last_position[i];
+		//ssbo_copy[i].position = ssbo_position[i];
+		//ssbo_copy[i].predicted_position = ssbo_predicted_position[i];
+		//ssbo_copy[i].position_correction = ssbo_position_correction[i];
+		//ssbo_copy[i].velocity = ssbo_velocity[i];
+		//ssbo_copy[i].density = ssbo_density[i];
+		//ssbo_copy[i].lambda = ssbo_lambda[i];
+		//ssbo_copy[i].temperature = ssbo_temperature[i];
+		//ssbo_copy[i].sigma = ssbo_sigma[i];
+		
+}
+
+void sortBuffers(uint i){
+	uint newID = atomicAdd(ssbo_bins[ssbo_copy[i].meta.y].index, -1) -1;
+	ssbo_meta[newID] = ssbo_copy[i].meta;
+	ssbo_meta[ssbo_meta[newID].z].z = newID;//Store the ID to track this particle later on
+
+	//TODO Generate this automatically CPU-side
+	//ssbo_last_position[newID]		  = ssbo_copy[i].last_position;
+	//ssbo_position[newID]			  = ssbo_copy[i].position;
+	//ssbo_predicted_position[newID]  = ssbo_copy[i].predicted_position;
+	//ssbo_position_correction[newID] = ssbo_copy[i].position_correction;
+	//ssbo_velocity[newID]			  = ssbo_copy[i].velocity;
+	//ssbo_density[newID]			  = ssbo_copy[i].density;
+	//ssbo_lambda[newID]			  = ssbo_copy[i].lambda;
+	//ssbo_temperature[newID]		  = ssbo_copy[i].temperature;
+	//ssbo_sigma[newID]				  = ssbo_copy[i].sigma;
+
+
+}
+
+void main() {
+	uint index = gl_GlobalInvocationID.x;
+
+
+	if (index < u_numParticles){ //is an active particle
+		if ((meta[index].y & targetFlags) != 0u) {
+			uint offset = atomicAdd(count, 1);
+			indices[offset] = index;
+		}
+	}
+}

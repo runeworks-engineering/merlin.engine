@@ -78,8 +78,8 @@ namespace Merlin{
 }
 
 template<typename T>
-inline void Merlin::PhysicsEntity::addInitialValue(const std::string& name, BufferType, T* value){
-	m_init_values[name] = std::make_pair(BufferType, (void*)value);
+inline void PhysicsEntity::addInitialValue(const std::string& name, BufferType type, T* value){
+	m_init_values[name] = std::make_pair(type, (void*)value);
 }
 
 template<>

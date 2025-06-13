@@ -31,7 +31,7 @@ namespace Merlin{
 
         virtual const std::string& name() const = 0;
 
-		static PhysicsPipelineStep_Ptr create(const std::string& name);
+		//static shared<PhysicsPipelineStep> create(const std::string& name);
 
 
     protected:

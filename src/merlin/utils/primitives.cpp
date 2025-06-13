@@ -58,7 +58,7 @@ namespace Merlin {
 		Vertices v = { v0, v1, v2, v3 };
 
 		Indices i = { 0, 1, 2, 0, 2, 3 };
-		return Mesh::create("Rectangle", v, i, GL_TRIANGLES);
+		return Mesh::create("OutlinedCircle", v, i, GL_TRIANGLES);
 	}
 
 
@@ -89,7 +89,7 @@ namespace Merlin {
 
 
 		Vertices v = { v0, v1, v2, v3 };
-		Mesh_Ptr m = Mesh::create("Cube", v, GL_QUADS);
+		Mesh_Ptr m = Mesh::create("QuadRectangle", v, GL_QUADS);
 		m->castShadow(false);
 		return m;
 	}
@@ -270,7 +270,7 @@ namespace Merlin {
 			Vertex{ glm::vec3(x_lo,y_up,z_up),glm::vec3(0,0,1),glm::vec3(1), glm::vec2(1.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)}
 
 		};
-		Mesh_Ptr m = Mesh::create("Cube", v, GL_QUADS);
+		Mesh_Ptr m = Mesh::create("QuadBox", v, GL_QUADS);
 		m->castShadow(false);
 		return m;
 	}
@@ -326,7 +326,7 @@ namespace Merlin {
 			Vertex{ glm::vec3(x_up,y_lo,z_up),glm::vec3(0,0,1),glm::vec3(1), glm::vec2(1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f)}
 		};
 
-		return Mesh::create("Cube", v);
+		return Mesh::create("Box", v);
 	}
 
 	shared<Mesh> Primitives::createHollowCube(float w, float th) { return createHollowBox(w, w, w, th); }
