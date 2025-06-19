@@ -3,8 +3,8 @@
 #define INCLUDE_BUFFERS_GLSL
 
 //Macro to access buffer elements
-#define phase(index)		ssbo_meta[index].x		//phase
-#define bin_index(index)	ssbo_meta[index].y		//bin index
+#define entity(index)		ssbo_meta[index].x		//phase
+#define phase(index)		ssbo_meta[index].y		//phase
 #define id(index)			ssbo_meta[index].z		//particle ID
 #define sorted_id(index)	ssbo_meta[index].w		//particle destination ID (sort)
 
@@ -129,7 +129,7 @@ struct Bin {
 	uint index;
 };
 
-layout(std430) buffer BinBuffer {
+layout(std430) buffer bin_buffer {
 	Bin ssbo_bins[];
 };
 

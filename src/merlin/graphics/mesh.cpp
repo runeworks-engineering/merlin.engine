@@ -53,7 +53,7 @@ namespace Merlin {
 		m_vao->addBuffer(*vbo, Vertex::getLayout());
 		m_vao->bindBuffer(*ebo);
 		computeBoundingBox();
-		Console::info("Mesh") << "Loaded " << m_vertices.size() << " vertices." << Console::endl;
+		Console::trace("Mesh") << "Loaded " << m_vertices.size() << " vertices." << Console::endl;
 	}
 
 	Mesh::Mesh(std::string name, std::vector<Vertex>& vertices, GLuint mode) : RenderableObject(name) {
@@ -66,7 +66,7 @@ namespace Merlin {
 		m_vao->addBuffer(vbo, Vertex::getLayout());
 		m_vao->bindBuffer(ebo);
 		computeBoundingBox();
-		Console::info("Mesh") << "Loaded " << m_vertices.size() << " vertices." << Console::endl;
+		Console::trace("Mesh") << "Loaded " << m_vertices.size() << " vertices." << Console::endl;
 	}
 
 	Mesh::Mesh(std::string name, std::vector<Vertex>& vertices, std::vector<GLuint>& indices, GLuint mode) : RenderableObject(name) {
@@ -83,7 +83,7 @@ namespace Merlin {
 		m_vao->addBuffer(vbo, Vertex::getLayout());
 		m_vao->bindBuffer(ebo);
 		computeBoundingBox();
-		Console::info("Mesh") << "Loaded " << m_vertices.size() << " vertices." << Console::endl;
+		Console::trace("Mesh") << "Loaded " << m_vertices.size() << " vertices." << Console::endl;
 	}
 
 	Mesh::Mesh(std::string name, VAO_Ptr vao, GLuint count, GLuint mode) : RenderableObject(name) {
@@ -190,7 +190,7 @@ namespace Merlin {
 		m_bbox.centroid = (min + max) / 2.0f;
 		m_bbox.size = glm::abs(m_bbox.max - m_bbox.min);
 		m_hasBoundingBox = true;
-		Console::info("Mesh") << "Bounding box is " << m_bbox.max - m_bbox.min << " starting at " << m_bbox.min << " and ending at " << m_bbox.max << Console::endl;
+		Console::trace("Mesh") << "Bounding box is " << m_bbox.max - m_bbox.min << " starting at " << m_bbox.min << " and ending at " << m_bbox.max << Console::endl;
 	}
 
 	void Mesh::swapNormals() {

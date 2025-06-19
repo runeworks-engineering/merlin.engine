@@ -5,23 +5,25 @@
 
 using namespace Merlin;
 
-namespace Settings {
-	constexpr float nozzle_diameter = 0.4f;
-	constexpr float layer_height = 0.2f;
-	constexpr float interface_overlap = 1.0f;
-	constexpr float filament_diameter = 1.75f;
-	constexpr float full_flowrate = 1.0f;
-	constexpr float interface_flowrate = 0.5f;
-	constexpr int tool_A{ 0 }, tool_B{ 1 };
-	constexpr float feedrate(1800.0);
+class SampleObject {
+public:
+	SampleObject(const Sample& props);
 
-	float computeExtrusion(float length, float lineWidth, float height, float flowMultiplier) {
-		float area = lineWidth * height;
-		float volume = area * length * flowMultiplier;
-		float filArea = static_cast<float>(glm::pi<float>()) * std::pow(filament_diameter * 0.5f, 2);
-		return volume / filArea;
-	}
-}
+	void renderMenu();
+	const Sample& getProperties() const { return props; }
+	const Mesh_Ptr& getMeshA() const { return mesh_A; }
+	const Mesh_Ptr& getMeshB() const { return mesh_B; }
+
+private:
+	Sample props;
+	Mesh_Ptr mesh_A;
+	Mesh_Ptr mesh_B;
+
+	bool show_toolpath = false;
+	bool show_mesh = true;
+	bool show_tool = true;
+	bool show_purge_tower = false;
+};
 
 
 class MainLayer : public Layer3D {
@@ -31,7 +33,7 @@ public:
 
 	void createScene();
 	void slice();
-
+	void createSample(Sample);
 
 	virtual void onAttach() override;
 	virtual void onUpdate(Timestep ts) override;
@@ -40,9 +42,16 @@ private:
 
 	Slicer slicer;
 
-	Mesh_Ptr sample_A;
-	Mesh_Ptr sample_B;
-	Mesh_Ptr interface;
+	ParticleSystem_Ptr toolpath;
+	TransformObject_Ptr origin;
+	Model_Ptr bed;
+	Model_Ptr bed_glass;
+	Model_Ptr bed_surface;
+
+	Shader_Ptr toolpathShader;
+
+	std::vector<SampleObject> samples;
+	std::vector<Mesh_Ptr> samples_3D;
 
 
 	Scene_Ptr scene;

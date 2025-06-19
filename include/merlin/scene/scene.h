@@ -24,6 +24,7 @@ namespace Merlin {
 		void add(shared<Model>);
 		void add(shared<ParticleSystem>);
 		void add(shared<IsoSurface>);
+		void clear();
 		//void add(shared<deprecated_GenericParticleSystem>);
 		void add(shared<Light>);
 		void add(shared<TransformObject> t);

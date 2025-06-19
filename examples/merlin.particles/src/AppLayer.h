@@ -23,6 +23,9 @@ private:
 	Scene scene;
 	Renderer renderer;
 
+	SSBO_Ptr<glm::vec4> pos;
+	SSBO_Ptr<glm::vec4> vel;
+
 	ParticleSystem_Ptr ps;
 	ComputeShader_Ptr solver;
 	//ParticleSystem_Ptr bs;

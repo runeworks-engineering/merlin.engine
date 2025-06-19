@@ -43,8 +43,8 @@ float computeTemperatureDelta(uint i) {
 		float rhoj = mj / (3.1415926*(4/3)*pow(cst_particleRadius,3));
 		float lambda = 0.00001;//( 0.13 / (1590  * rhoj));
 
-		if(phase(i) == phase(j) && (phase(i) == SOLID || phase(i) == FLUID )) lambda *= 200.0;
-		if(phase(i) != phase(j) && phase(j) == FLUID ) lambda *= 100.0;
+		if(phase(i) == phase(j) && (phase(i) == MATERIAL_SOFT || phase(i) == MATERIAL_FLUID )) lambda *= 200.0;
+		if(phase(i) != phase(j) && phase(j) == MATERIAL_FLUID ) lambda *= 100.0;
 
 
 		temperatureDelta += lambda*(b_Tj-b_Ti)/(c_Dij*1e-3);

@@ -20,7 +20,7 @@ float interpolate(in vec3 position){
 		if(dist < 1e-6 || dist > H) continue;
 		float Wij = poly6(dist);
 
-		if(phase(j) == SOLID || phase(j) == FLUID)
+		if(phase(j) == MATERIAL_RIGID || phase(j) == MATERIAL_SOFT || phase(j) == MATERIAL_FLUID)
 			density += mj * Wij;
 	OVERNNS_END
 	return density;
@@ -33,7 +33,7 @@ float interpolateHeat(in vec3 position){
 		float dist = distance(b_xj.xyz, position);
 		if(dist < 1e-6 || dist > H) continue;
 		float Wij = poly6(dist);
-		if(phase(j) == SOLID || phase(j) == FLUID){
+		if(phase(j) == MATERIAL_RIGID || phase(j) == MATERIAL_SOFT || phase(j) == MATERIAL_FLUID){
 			temp += b_Tj * (mj/b_rho_j) * Wij;
 		}
 	OVERNNS_END

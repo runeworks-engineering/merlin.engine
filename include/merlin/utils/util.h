@@ -33,15 +33,16 @@ namespace Merlin::Utils {
 	void debugVector(std::vector<T>& vec);
 
 	std::string get_uuid();
-}
 
-template<typename T>
-void  Merlin::Utils::debugVector(std::vector<T>& vec) {
-	Console::info("Vector") << " : " << Console::endl << "[";
-	for (GLuint i = 0; i < ((vec.size() > 100) ? 100 : vec.size() - 1); i++) {
-		Console::print() << vec[i] << ", ";
+
+	template<typename T>
+	void debugVector(std::vector<T>& vec) {
+		Console::info("Vector") << " : " << Console::endl << "[";
+		for (GLuint i = 0; i < ((vec.size() > 100) ? 100 : vec.size() - 1); i++) {
+			Console::print() << vec[i] << ", ";
+		}
+		if (vec.size() > 100) Console::print() << "..., ";
+		Console::print() << vec[vec.size() - 1] << "]" << Console::endl << Console::endl;
+
 	}
-	if (vec.size() > 100) Console::print() << "..., ";
-	Console::print() << vec[vec.size() - 1] << "]" << Console::endl << Console::endl;
-
 }

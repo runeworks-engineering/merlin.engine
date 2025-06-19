@@ -2,14 +2,13 @@
 #include "merlin/physics/physicsEntity.h"
 #include "merlin/utils/util.h"
 #include "merlin/physics/samplers/voxelSampler.h"
-
-using namespace Merlin::Utils;
+#include "merlin/ui/imguiLayer.h"
 
 namespace Merlin {
 
 	PhysicsEntity::PhysicsEntity(const std::string& name, ParticleSampler_Ptr sampler) :
 		m_name(name), 
-		m_id(get_uuid()),
+		m_id(Utils::get_uuid()),
 		m_sampler(sampler)
 	{}
 
@@ -71,7 +70,7 @@ namespace Merlin {
 			return (GLuint) MaterialPhase::MATERIAL_SOFT;
 		else if (hasModifier(PhysicsModifierType::GRANULAR_BODY))
 			return (GLuint) MaterialPhase::MATERIAL_GRANULAR;
-		else if (hasModifier(PhysicsModifierType::RIGID_BODY)) 
+		else if (hasModifier(PhysicsModifierType::RIGID_BODY))
 			return (GLuint) MaterialPhase::MATERIAL_RIGID;
 
 		//getModifier<PhaseChanger>();

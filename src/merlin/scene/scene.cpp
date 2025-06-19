@@ -22,6 +22,11 @@ namespace Merlin {
 		m_currentNode->addChild(ps);
 	}*/
 
+	void Scene::clear() {
+		m_rootNode = createShared<RenderableObject>(name());
+		m_currentNode = m_rootNode;
+	}
+
 	void Scene::add(shared<Model> mdl) {
 		m_currentNode->addChild(mdl);
 	}

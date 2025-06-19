@@ -20,7 +20,7 @@ float map(in vec3 position){
 		if(dist < 1e-6 || dist > H) continue;
 		float Wij = poly6(dist);
 
-		if(phase(j) == SOLID || phase(j) == FLUID)
+		if(phase(j) == MATERIAL_SOFT || phase(j) == MATERIAL_FLUID)
 			density += mj * Wij;
 	OVERNNS_END
 	return density;
@@ -30,7 +30,7 @@ float mapHeat(in vec3 position){
 	float temp = 0;
 	int n = 0;
 	OVERNNS
-		if(phase(j) == SOLID || phase(j) == FLUID){
+		if(phase(j) == MATERIAL_SOFT || phase(j) == MATERIAL_FLUID){
 			temp += b_Tj;
 			n++;
 		}

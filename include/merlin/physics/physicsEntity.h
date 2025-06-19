@@ -75,65 +75,65 @@ namespace Merlin{
 	};
 
 	typedef shared<PhysicsEntity> PhysicsEntity_Ptr;
-}
 
-template<typename T>
-inline void PhysicsEntity::addInitialValue(const std::string& name, BufferType type, T* value){
-	m_init_values[name] = std::make_pair(type, (void*)value);
-}
+	template<typename T>
+	inline void PhysicsEntity::addInitialValue(const std::string& name, BufferType type, T* value){
+		m_init_values[name] = std::make_pair(type, (void*)value);
+	}
 
-template<>
-inline shared<FluidModifier> PhysicsEntity::getModifier<FluidModifier>() {
-	if (hasModifier(PhysicsModifierType::FLUID))
-		return std::dynamic_pointer_cast<FluidModifier>(m_modifiers[PhysicsModifierType::FLUID]);
-	return nullptr;
-}
+	template<>
+	inline shared<FluidModifier> PhysicsEntity::getModifier<FluidModifier>() {
+		if (hasModifier(PhysicsModifierType::FLUID))
+			return std::dynamic_pointer_cast<FluidModifier>(m_modifiers[PhysicsModifierType::FLUID]);
+		return nullptr;
+	}
 
-template<>
-inline shared<SoftBody> PhysicsEntity::getModifier<SoftBody>() {
-	if (hasModifier(PhysicsModifierType::SOFT_BODY))
-		return std::dynamic_pointer_cast<SoftBody>(m_modifiers[PhysicsModifierType::SOFT_BODY]);
-	return nullptr;
-}
+	template<>
+	inline shared<SoftBody> PhysicsEntity::getModifier<SoftBody>() {
+		if (hasModifier(PhysicsModifierType::SOFT_BODY))
+			return std::dynamic_pointer_cast<SoftBody>(m_modifiers[PhysicsModifierType::SOFT_BODY]);
+		return nullptr;
+	}
 
-template<>
-inline shared<RigidBody> PhysicsEntity::getModifier<RigidBody>() {
-	if (hasModifier(PhysicsModifierType::RIGID_BODY))
-		return std::dynamic_pointer_cast<RigidBody>(m_modifiers[PhysicsModifierType::RIGID_BODY]);
-	return nullptr;
-}
+	template<>
+	inline shared<RigidBody> PhysicsEntity::getModifier<RigidBody>() {
+		if (hasModifier(PhysicsModifierType::RIGID_BODY))
+			return std::dynamic_pointer_cast<RigidBody>(m_modifiers[PhysicsModifierType::RIGID_BODY]);
+		return nullptr;
+	}
 
-template<>
-inline shared<GranularBody> PhysicsEntity::getModifier<GranularBody>() {
-	if (hasModifier(PhysicsModifierType::GRANULAR_BODY))
-		return std::dynamic_pointer_cast<GranularBody>(m_modifiers[PhysicsModifierType::GRANULAR_BODY]);
-	return nullptr;
-}
+	template<>
+	inline shared<GranularBody> PhysicsEntity::getModifier<GranularBody>() {
+		if (hasModifier(PhysicsModifierType::GRANULAR_BODY))
+			return std::dynamic_pointer_cast<GranularBody>(m_modifiers[PhysicsModifierType::GRANULAR_BODY]);
+		return nullptr;
+	}
 
-template<>
-inline shared<HeatTransfer> PhysicsEntity::getModifier<HeatTransfer>() {
-	if (hasModifier(PhysicsModifierType::HEAT_TRANSFER))
-		return std::dynamic_pointer_cast<HeatTransfer>(m_modifiers[PhysicsModifierType::HEAT_TRANSFER]);
-	return nullptr;
-}
+	template<>
+	inline shared<HeatTransfer> PhysicsEntity::getModifier<HeatTransfer>() {
+		if (hasModifier(PhysicsModifierType::HEAT_TRANSFER))
+			return std::dynamic_pointer_cast<HeatTransfer>(m_modifiers[PhysicsModifierType::HEAT_TRANSFER]);
+		return nullptr;
+	}
 
-template<>
-inline shared<PhaseChanger> PhysicsEntity::getModifier<PhaseChanger>() {
-	if (hasModifier(PhysicsModifierType::PHASE_CHANGER))
-		return std::dynamic_pointer_cast<PhaseChanger>(m_modifiers[PhysicsModifierType::PHASE_CHANGER]);
-	return nullptr;
-}
+	template<>
+	inline shared<PhaseChanger> PhysicsEntity::getModifier<PhaseChanger>() {
+		if (hasModifier(PhysicsModifierType::PHASE_CHANGER))
+			return std::dynamic_pointer_cast<PhaseChanger>(m_modifiers[PhysicsModifierType::PHASE_CHANGER]);
+		return nullptr;
+	}
 
-template<>
-inline shared<Plasticity> PhysicsEntity::getModifier<Plasticity>() {
-	if (hasModifier(PhysicsModifierType::PLASTICITY))
-		return std::dynamic_pointer_cast<Plasticity>(m_modifiers[PhysicsModifierType::PLASTICITY]);
-	return nullptr;
-}
+	template<>
+	inline shared<Plasticity> PhysicsEntity::getModifier<Plasticity>() {
+		if (hasModifier(PhysicsModifierType::PLASTICITY))
+			return std::dynamic_pointer_cast<Plasticity>(m_modifiers[PhysicsModifierType::PLASTICITY]);
+		return nullptr;
+	}
 
-template<>
-inline shared<Emitter> PhysicsEntity::getModifier<Emitter>() {
-	if (hasModifier(PhysicsModifierType::EMITTER))
-		return std::dynamic_pointer_cast<Emitter>(m_modifiers[PhysicsModifierType::EMITTER]);
-	return nullptr;
-}/**/
+	template<>
+	inline shared<Emitter> PhysicsEntity::getModifier<Emitter>() {
+		if (hasModifier(PhysicsModifierType::EMITTER))
+			return std::dynamic_pointer_cast<Emitter>(m_modifiers[PhysicsModifierType::EMITTER]);
+		return nullptr;
+	}/**/
+}

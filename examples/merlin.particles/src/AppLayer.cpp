@@ -9,7 +9,6 @@ using namespace Merlin;
 const float radius = 3;
 
 AppLayer::AppLayer(){}
-
 AppLayer::~AppLayer(){}
 
 void AppLayer::setupScene() {
@@ -17,7 +16,7 @@ void AppLayer::setupScene() {
 	camera().setRotation(glm::vec3(70, 0, +90));
 
 	shared<Model> bunny = ModelLoader::loadModel("./assets/common/models/bunny.stl");
-	bunny->meshes()[0]->smoothNormals();
+	//bunny->children().front()->smoothNormals();
 	bunny->setMaterial("pearl");
 	bunny->scale(0.2);
 	bunny->translate(glm::vec3(0, 0, -0.5));
@@ -69,24 +68,14 @@ void AppLayer::setupPhysics() {
 
 	ps = ParticleSystem::create("Particles", position.size());
 
-	SSBO_Ptr<glm::vec4> pos = SSBO<glm::vec4>::create("position_buffer", position, BufferUsage::StaticDraw);
-	SSBO_Ptr<glm::vec4> vel = SSBO<glm::vec4>::create("velocity_buffer", velocity, BufferUsage::StaticDraw);
+	pos = SSBO<glm::vec4>::create("position_buffer", position, BufferUsage::StaticDraw);
+	vel = SSBO<glm::vec4>::create("velocity_buffer", velocity, BufferUsage::StaticDraw);
 
 
 	solver = ComputeShader::create("solver", "assets/shaders/solver.comp");
 	ps->setShader(Shader::create("particle", "./assets/shaders/particle.vert", "./assets/shaders/particle.frag"));
-	
-	ps->addProgram(solver);
-	ps->addField(pos);
-	ps->addField(vel);
 	ps->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE_SHADED);
-	
-	
-	ps->link("particle", "position_buffer");
-	ps->link("particle", "velocity_buffer");
-
-	ps->link("solver", "position_buffer");
-	ps->link("solver", "velocity_buffer");
+	ps->setPositionBuffer(pos);
 
 	solver->use();
 	solver->setUInt("numParticles", position.size());
@@ -125,15 +114,24 @@ void AppLayer::onPhysicsUpdate(Timestep ts) {
 void AppLayer::onUpdate(Timestep ts){
 	Layer3D::onUpdate(ts);
 
-	ps->solveLink(ps->getShader());
+	ps->getShader()->attach(*pos);
+	ps->getShader()->attach(*vel);
+
 	renderer.clear();
 	renderer.renderScene(scene, camera());
 	renderer.reset();
-	ps->detach(ps->getShader());
 
-	ps->solveLink(solver);
+	ps->getShader()->detach(*pos);
+	ps->getShader()->detach(*vel);
+
+
+	solver->attach(*pos);
+	solver->attach(*vel);
+
 	onPhysicsUpdate(0.016);
-	ps->detach(solver);
+
+	solver->detach(*pos);
+	solver->detach(*vel);
 }
 
 void AppLayer::onImGuiRender()

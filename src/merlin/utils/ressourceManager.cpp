@@ -234,7 +234,14 @@ namespace Merlin {
 		water->setDiffuse(glm::vec3(91 / 255.0, 178 / 255.0, 244 / 255.0));
 		water->setSpecular(glm::vec3(91 / 255.0, 178 / 255.0, 244 / 255.0));
 		water->setShininess(0.8);
-		//water->setAlphaBlending(0.4);
+		water->setAlphaBlending(0.1);
+
+		shared<PhongMaterial> glass = createShared<PhongMaterial>("glass");
+		water->setAmbient(glm::vec3(80 / 255.0, 80 / 255.0, 80 / 255.0));
+		water->setDiffuse(glm::vec3(150 / 255.0, 150 / 255.0, 150 / 255.0));
+		water->setSpecular(glm::vec3(1.0, 1.0, 1.0));
+		water->setShininess(0.95);
+		water->setAlphaBlending(0.4);
 		
 		add(defaultMaterial);
 		add(defaultWhite);

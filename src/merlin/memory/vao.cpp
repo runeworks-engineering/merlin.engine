@@ -10,7 +10,7 @@ namespace Merlin {
     GLuint VertexArray::create() {
         GLuint id;
         glCreateVertexArrays(1, &id);
-        Console::success("VertexArray") << "VertexArray " << id << " generated. " << Console::endl;
+        Console::trace("VertexArray") << "VertexArray " << id << " generated. " << Console::endl;
         return id;
     }
 

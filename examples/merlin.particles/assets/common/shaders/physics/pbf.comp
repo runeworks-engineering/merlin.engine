@@ -12,6 +12,8 @@ float pbf_computeLambda(uint i);
 vec3 pbf_computePositionDelta(uint i);
 vec3 pbf_computeXPSH(uint i);
 
+#define SOLID_COUPLING(x) (phase(x) >= MATERIAL_BOUNDARY || phase(x) == MATERIAL_RIGID || phase(x) == MATERIAL_SOFT || phase(x) == MATERIAL_GRANULAR)
+
 void pbf_step(uint i, uint kernel) {
 	if(kernel == 0){
 		b_last_xi = b_xi;
@@ -76,9 +78,9 @@ vec3 pbf_computeXPSH(uint i){
 		if(dist < 1e-6 || dist > H) continue;
 		float Wij = poly6(dist);
 
-		if(phase(j) == FLUID)
+		if(phase(j) == MATERIAL_FLUID)
 			xsphSum += (mj/b_rho_j) * c_Vji * Wij;
-		else if(phase(j) >= BOUNDARY || phase(j) == SOLID || phase(j) == GRANULAR)
+		else if(SOLID_COUPLING(j))
 			xsphSum += (1.0/b_rho_j) * c_Vji * Wij*3.0;
 
 	OVERNNS_END
@@ -102,19 +104,19 @@ float pbf_computeLambda(uint i) {
 
 		vec3 gradCj = -spiky_grad(diff);
 
-		if(phase(j) == FLUID){
+		if(phase(j) == MATERIAL_FLUID){
 			gradCi += mj * gradCj;
-		}else if (phase(j) == SOLID|| phase(j) == GRANULAR || phase(j) >= BOUNDARY){
+		}else if (SOLID_COUPLING(j)){
 			if(b_rho_j > 1e-6)
 				gradCi += (1.0/b_rho_j) * gradCj;
 		}
 
 		
 		if(i != j){
-			if(phase(j) == FLUID){
+			if(phase(j) == MATERIAL_FLUID){
 				sumGradCj += dot(gradCj, gradCj);
 				density += mj * poly6(dist);
-			}else if (phase(j) == SOLID|| phase(j) == GRANULAR || phase(j) >= BOUNDARY){
+			}else if (SOLID_COUPLING(j)){
 				density += (rho0/b_rho_j) * 2.0 * poly6(dist);
 				vec3 gradCk = (1.0/b_rho_j) * 2.0 *  gradCj;
 				sumGradCj += dot(gradCk, gradCk);
@@ -155,9 +157,9 @@ vec3 pbf_computePositionDelta(uint i) {
 		float dist = c_Dij;
 		if(dist > H || dist <= 1e-6) continue;
 		sCorr = -u_artificialPressureMultiplier * H2 * pow(poly6(dist) / poly6(normalize(vec3(1)) * 0.2*H), 4);
-		if(phase(j) == FLUID){
+		if(phase(j) == MATERIAL_FLUID){
 			posDelta += (spikyGradient(c_Rij) * (b_lambda_i + b_lambda_j + sCorr)) / rho0;
-		}else if(phase(j) == SOLID|| phase(j) == GRANULAR || phase(j) >= BOUNDARY){
+		}else if(SOLID_COUPLING(j)){
 			posDelta += spikyGradient(c_Rij) * (1.0/b_rho_j) * (2.0 * b_lambda_i + sCorr)*1.0;
 		}
 

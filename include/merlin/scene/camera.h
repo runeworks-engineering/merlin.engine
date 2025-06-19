@@ -4,8 +4,6 @@
 #include "merlin/shaders/shader.h"
 #include "merlin/events/applicationevent.h"
 
-using namespace Merlin;
-
 namespace Merlin {
 
 	enum class Projection {

@@ -2,9 +2,6 @@
 #include "merlin/core/core.h"
 #include "merlin/textures/texture.h"
 
-using namespace Merlin;
-using namespace Merlin;
-
 namespace Merlin {
 
 	class TextureLoader {
