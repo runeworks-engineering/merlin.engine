@@ -151,8 +151,8 @@ void Slicer::generateSample(Sample props){
     float yOverlapMax = props.y_offset + props.overlap / 2.0f;
     numLayers = int(std::ceil(props.height / props.layer_height));
 
-    int linesPerSection = static_cast<int>(std::floor(fill_height + props.overlap / 2.0f) / props.line_width);
-    int overlapLines = static_cast<int>(std::floor(props.overlap / 2.0f / props.line_width));
+    int linesPerSection = static_cast<int>(std::ceil(fill_height + props.overlap / 2.0f) / props.line_width);
+    int overlapLines = static_cast<int>(std::ceil(props.overlap / 2.0f / props.line_width));
     add_gcode("\n");
     comment("-----------------------");
     comment("Start of Sample");
@@ -192,8 +192,8 @@ void Slicer::generateSample(Sample props){
         m_active_tool = tool;
 
         tool_change(tool);
-        retract(-1, 2400);
         brush();
+        retract(1, 2400);
         new_layer(z);
 
         add_gcode("G0 X" + std::to_string(xStart) + " Y" + std::to_string(props.y_offset) + " F30000");
@@ -228,7 +228,7 @@ void Slicer::generateSample(Sample props){
         }
 
         // PLA Section
-        retract(-1, 2400);
+        retract(1, 2400);
         tool = tool.id == props.tool_a ? Tb : Ta; // do the 0 110011 sequence
         m_active_tool = tool;
 		tool_change(tool);
@@ -236,7 +236,7 @@ void Slicer::generateSample(Sample props){
         feedrate = (tool.id == props.tool_a) ? props.feedrate_a : props.feedrate_b;
         flow = (tool.id == props.tool_a) ? props.flow_a : props.flow_b;
 
-        retract(-1.4, 2400);
+        retract(1.4, 2400);
         move(glm::vec4(xStart, props.y_offset, z, 0), 30000);
         move(glm::vec4(m_current_position.x, m_current_position.y, z, m_current_position.w));
         extrude(1.4, 2400);
@@ -266,7 +266,7 @@ void Slicer::generateSample(Sample props){
         }
     }
 
-    retract(-0.8, 2400);
+    retract(0.8, 2400);
     comment("End of Sample");
 }
 
@@ -325,9 +325,15 @@ void Slicer::move(glm::vec4 destination, int mode, float feedrate_override) {
 }
 
 void Slicer::tool_change(Tool tool) {
+    ToolPath tpa = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z + 10, 0), m_active_tool, 30000);
+
 	m_active_tool = tool;
 	add_gcode("T" + std::to_string(tool.id));
-	move(glm::vec4(m_current_position.x, m_current_position.y, m_current_position.z, 0), 0, 30000);
+
+    ToolPath tpb = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z + 10, 0), m_active_tool, 30000);
+
+    toolpath.push_back(tpa);
+    toolpath.push_back(tpb);
 }
 
 void Slicer::move_Z(float destination, int mode, float feedrate) {
