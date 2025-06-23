@@ -392,7 +392,7 @@ namespace Merlin {
             default_marchingCubes = ComputeShader::create("mc", "assets/common/shaders/mc.comp");
             glm::ivec3 pWkgSize = glm::ivec3(8, 8, 8); //Number of thread per workgroup
             glm::ivec3 pWkgCount = (volume_size + pWkgSize - glm::ivec3(1)) / pWkgSize; //Total number of workgroup needed
-            default_marchingCubes->SetWorkgroupLayout(pWkgCount);
+            default_marchingCubes->setWorkgroupLayout(pWkgCount);
         }
         
         /*

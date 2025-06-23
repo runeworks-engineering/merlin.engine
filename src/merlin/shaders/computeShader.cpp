@@ -79,11 +79,11 @@ namespace Merlin {
 		glMemoryBarrier(barrier);
 	}
 
-	void ComputeShader::SetWorkgroupLayout(GLuint x, GLuint y, GLuint z) {
+	void ComputeShader::setWorkgroupLayout(GLuint x, GLuint y, GLuint z) {
 		m_wkgrpLayout = glm::uvec3(x, y, z);
 	}
 
-	void ComputeShader::SetWorkgroupLayout(glm::uvec3 layout) {
+	void ComputeShader::setWorkgroupLayout(glm::uvec3 layout) {
 		m_wkgrpLayout = layout;
 	}
 

@@ -13,8 +13,8 @@ MainLayer::MainLayer(){
 	camera().setNearPlane(2.0f);
 	camera().setFarPlane(600);
 	camera().setFOV(45); //Use 90.0f as we are using cubemaps
-	camera().setPosition(glm::vec3(0, -200, 50));
-	camera().setRotation(glm::vec3(0, 0, +90));
+	camera().setPosition(glm::vec3(150, -200, 200));
+	camera().setRotation(glm::vec3(0, 30, +90));
 
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_LINE_SMOOTH);
@@ -26,7 +26,7 @@ void MainLayer::createScene() {
 	renderer.initialize();
 	renderer.enableSampleShading();
 	//renderer.setEnvironmentGradientColor(1.0, 1.0, 1.0);
-	renderer.setEnvironmentGradientColor(0.5, 0.5, 0.5);
+	renderer.setEnvironmentGradientColor(0.9, 0.9, 0.9);
 	renderer.enableEnvironment();
 	renderer.disableShadows();
 	//renderer.showLights();
@@ -114,7 +114,7 @@ void MainLayer::createScene() {
 		Toolpath Viz
 	************************/
 
-	toolpath = ParticleSystem::create("toolpath");
+	toolpath = ParticleSystem::create("toolpath", 1);
 	toolpath->setDisplayMode(ParticleSystemDisplayMode::MESH);
 	toolpath->setMesh(Primitives::createLine(1, glm::vec3(1,0,0)));
 	toolpath_shader = Shader::create("toolpathShader", "./assets/shaders/toolpath.vert", "./assets/shaders/toolpath.frag");
@@ -124,11 +124,12 @@ void MainLayer::createScene() {
 	toolpath_shader->supportShadows(false);
 	toolpath_shader->supportTexture(false);
 
-	toolpath_buffer = SSBO<ToolPath>::create("toolpath_buffer");
+	toolpath_buffer = SSBO<ToolPath>::create("toolpath_buffer", 1);
 	toolpath_shader->attach(toolpath_buffer);
+	toolpath->setPositionBuffer(toolpath_buffer);
 
 	toolpath->setShader(toolpath_shader);
-	toolpath->translate(glm::vec3(150, 100, 0));
+	//toolpath->translate(glm::vec3(150, 100, 0));
 
 	/***********************
 		Scene decoration
@@ -178,6 +179,16 @@ void MainLayer::slice(){
 	for (auto& s : samples) {
 		slicer.generateSample(s.getProperties());
 	}
+	toolpath_buffer->bind();
+	auto& data = slicer.getToolPath();
+
+	if (toolpath_buffer->elements() < data.size()) {
+		toolpath_buffer->allocateBuffer(data.size() * sizeof(ToolPath), data.data(), BufferUsage::StaticDraw);
+	}
+	else toolpath_buffer->writeBuffer(data.size() * sizeof(ToolPath), data.data());
+	toolpath->setInstancesCount(data.size());
+	current_layer = data.size();
+
 	slicer.export_gcode("./samples.gcode");
 }
 
@@ -211,6 +222,9 @@ void MainLayer::onUpdate(Timestep ts){
 		scene->add(s.getMeshB());
 	}
 
+	toolpath_shader->use();
+	toolpath_shader->setInt("layer", current_layer);
+
 	renderer.clear();
 	renderer.render(scene, camera());
 	renderer.reset();
@@ -233,6 +247,9 @@ void MainLayer::onImGuiRender(){
 	ImGui::End();
 
 	static int selected_sample_index = -1;
+	static int node_clicked = -1;
+	static shared<RenderableObject> selected_renderable = nullptr;  // Track selected 3D scene object
+
 
 	ImGui::Begin("Sample List");
 
@@ -265,6 +282,7 @@ void MainLayer::onImGuiRender(){
 
 		if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
 			selected_sample_index = i;
+			selected_renderable = nullptr;
 		}
 
 		if (open) {
@@ -324,9 +342,6 @@ void MainLayer::onImGuiRender(){
 	
 
 
-	static int node_clicked = -1;
-	static PhysicsEntity_Ptr selected_entity = nullptr;
-	static shared<RenderableObject> selected_renderable = nullptr;  // Track selected 3D scene object
 
 	// 3D Scene Graph selection logic
 	std::function<void(const std::list<shared<RenderableObject>>&)> traverseNodes = [&](const std::list<shared<RenderableObject>>& nodes) {
@@ -341,7 +356,6 @@ void MainLayer::onImGuiRender(){
 
 			if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen()) {
 				selected_renderable = node;
-				selected_entity = nullptr;
 			}
 
 			if (node_open) {
@@ -356,11 +370,13 @@ void MainLayer::onImGuiRender(){
 	traverseNodes(scene->nodes());
 	ImGui::End();
 
+	ImGui::Begin("Layers");
+	ImGui::VSliderInt("layer", ImVec2(30, 1000), &current_layer, 0, slicer.getLayer());
+	ImGui::End();
+
 	// Properties panel (shows either physics or graphics properties)
 	ImGui::Begin("Properties");
-	if (selected_entity) {
-		selected_entity->onRenderMenu();  // Render physics properties
-	}else if (selected_renderable) {
+	if (selected_renderable) {
 		selected_renderable->onRenderMenu();  // Assume `drawProperties()` exists for graphics properties
 	}else if(selected_sample_index != -1){
 		samples[selected_sample_index].renderMenu();  // Render sample properties

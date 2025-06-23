@@ -90,6 +90,11 @@ namespace Merlin {
 			m_buffers.erase(buf.name());
 	}
 
+	void ShaderBase::detach(AbstractBufferObject_Ptr buf) {
+		if (hasBuffer(buf->name()))
+			m_buffers.erase(buf->name());
+	}
+
 	//TODO : bind the shaders automatically before setting uniforms.
 	GLuint ShaderBase::getUniformLocation(const char* uniform) const{
 		if (!isCompiled()) return 0;

@@ -14,13 +14,14 @@ AppLayer::~AppLayer(){}
 void AppLayer::setupScene() {
 	camera().setPosition(glm::vec3(0.7, -35, 7.4));
 	camera().setRotation(glm::vec3(70, 0, +90));
-
+	/*
 	shared<Model> bunny = ModelLoader::loadModel("./assets/common/models/bunny.stl");
 	//bunny->children().front()->smoothNormals();
 	bunny->setMaterial("pearl");
 	bunny->scale(0.2);
 	bunny->translate(glm::vec3(0, 0, -0.5));
 	//scene.add(bunny);
+	*/
 
 	shared<DirectionalLight>  dirlight;
 	/**/
@@ -53,7 +54,10 @@ void AppLayer::setupScene() {
 	scene.add(amLight);
 	/**/
 
-	scene.add(Primitives::createFloor(50, 0.5));
+	//scene.add(Primitives::createFloor(200, 10));
+	Mesh_Ptr floor = Primitives::createCircle(30, 100);
+	floor->setMaterial("gray plastic");
+	scene.add(floor);
 }
 
 void AppLayer::setupPhysics() {
@@ -62,7 +66,7 @@ void AppLayer::setupPhysics() {
 	std::vector<glm::vec4> velocity;
 	for(float y = -24.5 * 0.5; y < 25 * 0.5; y += 0.25*0.5)
 		for (float x = -24.5 * 0.5; x < 25 * 0.5; x += 0.25*0.5) {
-			position.push_back(glm::vec4(x, y, (0.5*(x + y) + 25.0)/20.0, 0));
+			position.push_back(glm::vec4(x, y, (0.5*(x + y) + 40.0)/20.0, 0));
 			velocity.push_back(glm::vec4(0));
 	}
 
@@ -77,8 +81,20 @@ void AppLayer::setupPhysics() {
 	ps->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE_SHADED);
 	ps->setPositionBuffer(pos);
 
+	ps->getShader()->attach(pos);
+	ps->getShader()->attach(vel);
+
+	solver->attach(pos);
+	solver->attach(vel);
+
 	solver->use();
 	solver->setUInt("numParticles", position.size());
+	
+
+	GLuint pThread = position.size();
+	GLuint pWkgSize = 64; //Number of thread per workgroup
+	GLuint pWkgCount = (pThread + pWkgSize - 1) / pWkgSize; //Total number of workgroup needed
+	solver->setWorkgroupLayout(pWkgCount);
 
 	scene.add(ps);
 }
@@ -114,24 +130,11 @@ void AppLayer::onPhysicsUpdate(Timestep ts) {
 void AppLayer::onUpdate(Timestep ts){
 	Layer3D::onUpdate(ts);
 
-	ps->getShader()->attach(*pos);
-	ps->getShader()->attach(*vel);
-
 	renderer.clear();
 	renderer.renderScene(scene, camera());
 	renderer.reset();
 
-	ps->getShader()->detach(*pos);
-	ps->getShader()->detach(*vel);
-
-
-	solver->attach(*pos);
-	solver->attach(*vel);
-
 	onPhysicsUpdate(0.016);
-
-	solver->detach(*pos);
-	solver->detach(*vel);
 }
 
 void AppLayer::onImGuiRender()

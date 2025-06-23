@@ -392,12 +392,18 @@ void Slicer::moveXYE(glm::vec2 destination, float e, int mode, float feedrate) {
     add_gcode(tp, mode == 0 ? "G0" : "G1");
 }
 
+int Slicer::getLayer() const{
+    return m_current_layer;
+}
+
 void Slicer::new_layer(float z) {
     glm::vec4 start = m_current_position;
     glm::vec4 end = m_current_position;
     end.w = 0;
     end.z = z;
     actual_max_z = z > actual_max_z ? z : actual_max_z;
+
+    m_current_layer++;
     ToolPath tp = gen_toolpath(start, end, m_active_tool);
     add_gcode(tp);
 
@@ -426,6 +432,7 @@ ToolPath Slicer::gen_toolpath(const glm::vec4& start, const glm::vec4& end, cons
     tp.meta.y = tool.temperature;
     tp.meta.z = tool.flowrate;
     tp.meta.w = tool.id;
+    tp.meta_bis.x = m_current_layer;
     return tp;
 }
 

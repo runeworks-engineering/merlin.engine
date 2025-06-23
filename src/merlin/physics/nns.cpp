@@ -36,7 +36,7 @@ namespace Merlin {
         //m_bins->addField(m_bin_buffer);
         //m_bins->link(m_prefixSum->name(), m_bin_buffer->name());
 
-        m_prefixSum->SetWorkgroupLayout(m_bWkgCount);
+        m_prefixSum->setWorkgroupLayout(m_bWkgCount);
         m_prefixSum->use();
         m_prefixSum->setUInt("dataSize", m_thread); //data size
         m_prefixSum->setUInt("blockSize", m_blockSize); //block size

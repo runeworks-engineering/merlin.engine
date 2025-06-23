@@ -36,6 +36,10 @@ namespace Merlin {
         if (it != resources.end()) {
             return it->second;
         }
+        else {
+        Console::error("RessourceManager") << "Ressource not found : " << name << Console::endl;
+            return get("default");
+        }
         // Handle the case where the resource is not found
         return nullptr;
     }

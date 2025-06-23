@@ -15,6 +15,7 @@ struct ToolPath {
     glm::vec4 start = glm::vec4(0); // x, y, z, e;
     glm::vec4 end = glm::vec4(0);   // x, y, z, e;
     glm::vec4 meta = glm::vec4(0);  // feed, T°, flow, tool
+    glm::vec4 meta_bis = glm::vec4(0);  // lauer, null, null, null
 };
 
 struct Sample {
@@ -57,6 +58,8 @@ public:
     void process();
     void postprocess();
 
+    int getLayer() const;
+
     void generateSample(Sample props);
     inline std::vector<ToolPath>& getToolPath() { return toolpath; };
 private:
@@ -73,8 +76,6 @@ private:
     void moveXY(glm::vec2 destination, int mode = 1, float feedrate = -1);
     void moveXYE(glm::vec2 destination, float e, int mode = 1, float feedrate = -1);
 
-
-
     void tool_change(Tool tool);
     void new_layer(float z);
     void brush();
@@ -87,6 +88,7 @@ private:
 
 private:
     int numLayers;
+    int m_current_layer = 0;
     float filament_diameter;
     float actual_max_z = 0;
     float m_cumulative_E;

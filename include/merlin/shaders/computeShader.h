@@ -19,8 +19,8 @@ namespace Merlin{
 		
 		void dispatch(); //execute using the default WorkgroupLayout
 		void dispatch(GLuint width, GLuint height = 1, GLuint layers = 1); //execute using the given WorkgroupLayout
-		void SetWorkgroupLayout(GLuint width, GLuint height = 1, GLuint layers = 1); // Set current workgroup Layout
-		void SetWorkgroupLayout(glm::uvec3); // Set current workgroup Layout
+		void setWorkgroupLayout(GLuint width, GLuint height = 1, GLuint layers = 1); // Set current workgroup Layout
+		void setWorkgroupLayout(glm::uvec3); // Set current workgroup Layout
 
 		void wait();
 		void barrier(GLbitfield barrier = GL_ALL_BARRIER_BITS);

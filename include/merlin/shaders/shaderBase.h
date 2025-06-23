@@ -77,6 +77,7 @@ namespace Merlin {
 
 		bool hasBuffer(std::string buf);
 		void attach(AbstractBufferObject_Ptr buf);
+		void detach(AbstractBufferObject_Ptr buf);
 		void detach(const AbstractBufferObject& buf);
 
 		inline const GLuint id() const { return m_programID; }

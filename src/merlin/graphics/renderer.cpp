@@ -308,7 +308,7 @@ namespace Merlin {
 				return;
 			}
 
-			if (ps.hasPositionBuffer() && shader->hasBuffer(ps.getPositionBuffer()->name())) {
+			if (ps.hasPositionBuffer() && !shader->hasBuffer(ps.getPositionBuffer()->name())) {
 				shader->attach(ps.getPositionBuffer());
 			}
 
@@ -361,7 +361,7 @@ namespace Merlin {
 			shader->setMat4("projection", camera.getProjectionMatrix()); //sync model matrix with GPU
 			if (shader->supportLights()) shader->setInt("numLights", m_activeLights.size());
 
-			if (ps.hasPositionBuffer() && shader->hasBuffer(ps.getPositionBuffer()->name())) {
+			if (ps.hasPositionBuffer() && !shader->hasBuffer(ps.getPositionBuffer()->name())) {
 				AbstractBufferObject_Ptr pos = ps.getPositionBuffer();
 				shader->attach(pos);
 			}

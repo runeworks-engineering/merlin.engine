@@ -41,6 +41,8 @@ public:
 	virtual void onImGuiRender() override;
 private:
 
+	int current_layer = 0;
+
 	Slicer slicer;
 
 	ParticleSystem_Ptr toolpath;
