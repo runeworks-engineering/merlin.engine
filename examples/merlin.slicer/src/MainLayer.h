@@ -14,6 +14,7 @@ public:
 	const Mesh_Ptr& getMeshA() const { return mesh_A; }
 	const Mesh_Ptr& getMeshB() const { return mesh_B; }
 
+	bool enabled = true;
 private:
 	Sample props;
 	Mesh_Ptr mesh_A;
@@ -48,11 +49,12 @@ private:
 	Model_Ptr bed_glass;
 	Model_Ptr bed_surface;
 
-	Shader_Ptr toolpathShader;
+	Shader_Ptr toolpath_shader;
+	SSBO_Ptr<ToolPath> toolpath_buffer;
 
 	std::vector<SampleObject> samples;
 	std::vector<Mesh_Ptr> samples_3D;
-
+	Sample default_props;
 
 	Scene_Ptr scene;
 	Renderer renderer;

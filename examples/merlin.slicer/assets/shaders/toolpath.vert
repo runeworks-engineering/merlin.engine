@@ -19,12 +19,12 @@ void main() {
 	uint i = gl_InstanceID;
 
 	vec3 offset = vec3(0);
-	if(vout.position.x == 0) offset = ssbo_a[i].xyz;
-	else offset = ssbo_a[i].xyz;
+	if(_position == 0) offset = ssbo_toolpath[i].start.xyz;
+	else offset = ssbo_toolpath[i].end.xyz;
 
 	vout.position = model * (vec4(_position + vec3(offset),1));
 	vout.screen_position = projection * view * vout.position;
-	vout.color = colorMap(length(ssbo_meta[i].x),parula);
+	vout.color = colorMap(length(ssbo_toolpath[i].meta.x),parula);
 	vout.mv = projection * view;
 		
 	gl_Position = vout.screen_position;

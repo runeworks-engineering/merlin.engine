@@ -35,34 +35,80 @@ void MainLayer::createScene() {
 
 	scene = Scene::create("scene");
 
+	default_props.name = "Sample 0";
+	default_props.comment = "Specimen 0";
+	default_props.x_offset = 230.0f;
+	default_props.y_offset = 120.0f;
+	default_props.width = 30.0f;
+	default_props.height = 3.0f;
+	default_props.thickness = 4.0f;
+	default_props.layer_height = 0.2;
+	default_props.line_width = 0.4;
+	default_props.tool_a = 0;
+	default_props.tool_b = 1;
+	default_props.flow_a = 0.9f;
+	default_props.flow_b = 1.4f;
+	default_props.retract_a = 1.0f;
+	default_props.retract_b = 1.0f;
+	default_props.feedrate_a = 1050;
+	default_props.feedrate_b = 1050;
+	default_props.temperature_a = 220.0f;
+	default_props.temperature_b = 230.0f;
+	default_props.overlap = 2;
+	default_props.overlap_flow_modifier = 1.3f;
+	default_props.use_purge_tower = false;
+	default_props.use_alternate_sweep = true;
+	default_props.use_in_to_out = true;
 
-	Sample sample_props;
-	sample_props.name = "Sample 1";
-	sample_props.comment = "This is a sample comment for Sample 1";
-	sample_props.x_offset = 230.0f;
-	sample_props.y_offset = 120.0f;
-	sample_props.width = 30.0f;
-	sample_props.height = 4.0f;
-	sample_props.thickness = 4.0f;
-	sample_props.layer_height = 0.2;
-	sample_props.tool_a = 0;
-	sample_props.tool_b = 1;
-	sample_props.flow_a = 0.0f;
-	sample_props.flow_b = 1.4f;
-	sample_props.retract_a = 1.0f;
-	sample_props.retract_b = 1.0f;
-	sample_props.feedrate_a = 300.0f;
-	sample_props.feedrate_b = 300.0f;
-	sample_props.temperature_a = 220.0f;
-	sample_props.temperature_b = 230.0f;
-	sample_props.overlap = 0.6f;
-	sample_props.overlap_flow_modifier = 0.8f;
-	sample_props.use_purge_tower = true;
-	sample_props.use_alternate_sweep = true;
-	
-	createSample(sample_props);
-	createSample(sample_props);
-	createSample(sample_props);
+	default_props.name = "Sample 0";
+	default_props.comment = "Specimen 0";
+	default_props.x_offset = 150;
+	default_props.y_offset = 100;
+	default_props.overlap = 2;
+	default_props.feedrate_a = 600;
+	default_props.feedrate_b = 600;
+
+	createSample(default_props);
+
+	default_props.name = "Sample 1";
+	default_props.comment = "Specimen 1";
+	default_props.x_offset += -60;
+	default_props.y_offset += -60;
+	default_props.overlap = 1;
+	default_props.feedrate_a = 300;
+	default_props.feedrate_b = 300;
+
+	createSample(default_props);
+
+	default_props.name = "Sample 2";
+	default_props.comment = "Specimen 2";
+	default_props.x_offset += +120;
+	default_props.y_offset += 0;
+	default_props.overlap = 1;
+	default_props.feedrate_a = 900;
+	default_props.feedrate_b = 900;
+
+	createSample(default_props);
+
+	default_props.name = "Sample 3";
+	default_props.comment = "Specimen 2";
+	default_props.x_offset += 0;
+	default_props.y_offset += 120;
+	default_props.overlap = 3;
+	default_props.feedrate_a = 900;
+	default_props.feedrate_b = 900;
+
+	createSample(default_props);
+
+	default_props.name = "Sample 4";
+	default_props.comment = "Specimen 2";
+	default_props.x_offset += -120;
+	default_props.y_offset += 0;
+	default_props.overlap = 3;
+	default_props.feedrate_a = 300;
+	default_props.feedrate_b = 300;
+
+	createSample(default_props);
 
 	/***********************
 		Toolpath Viz
@@ -71,13 +117,17 @@ void MainLayer::createScene() {
 	toolpath = ParticleSystem::create("toolpath");
 	toolpath->setDisplayMode(ParticleSystemDisplayMode::MESH);
 	toolpath->setMesh(Primitives::createLine(1, glm::vec3(1,0,0)));
-	toolpathShader = Shader::create("toolpathShader", "./assets/shaders/toolpath.vert", "./assets/shaders/toolpath.frag");
-	toolpathShader->supportEnvironment(false);
-	toolpathShader->supportLights(false);
-	toolpathShader->supportMaterial(false);
-	toolpathShader->supportShadows(false);
-	toolpathShader->supportTexture(false);
-	toolpath->setShader(toolpathShader);
+	toolpath_shader = Shader::create("toolpathShader", "./assets/shaders/toolpath.vert", "./assets/shaders/toolpath.frag");
+	toolpath_shader->supportEnvironment(false);
+	toolpath_shader->supportLights(false);
+	toolpath_shader->supportMaterial(false);
+	toolpath_shader->supportShadows(false);
+	toolpath_shader->supportTexture(false);
+
+	toolpath_buffer = SSBO<ToolPath>::create("toolpath_buffer");
+	toolpath_shader->attach(toolpath_buffer);
+
+	toolpath->setShader(toolpath_shader);
 	toolpath->translate(glm::vec3(150, 100, 0));
 
 	/***********************
@@ -88,6 +138,7 @@ void MainLayer::createScene() {
 	bed->translate(glm::vec3(0.75, -0.25, 0));
 	//bed->scale(glm::vec3(1.025, 1.025, 1.0));
 	bed->setMaterial("chrome");
+	//bed->setShader("debug.normals");
 	bed->translate(glm::vec3(150, 100, -5.2));
 
 	bed_glass = ModelLoader::loadModel("./assets/models/glass.stl");
@@ -116,6 +167,7 @@ void MainLayer::createScene() {
 	scene->add(bed);
 	scene->add(bed_surface);
 	scene->add(bed_glass);
+	scene->add(toolpath);
 
 	origin = TransformObject::create("origin", 10);
 	scene->add(origin);
@@ -152,7 +204,7 @@ void MainLayer::onUpdate(Timestep ts){
 	scene->add(bed_surface);
 	scene->add(bed_glass);
 	scene->add(origin);
-	//scene->add(toolpath);
+	scene->add(toolpath);
 
 	for (auto& s : samples) {
 		scene->add(s.getMeshA());
@@ -184,6 +236,22 @@ void MainLayer::onImGuiRender(){
 
 	ImGui::Begin("Sample List");
 
+	if (ImGui::Button("Create Sample")) {
+		if (selected_sample_index != -1 && selected_sample_index < samples.size()) {
+			createSample(samples[selected_sample_index].getProperties());
+		}
+		else createSample(default_props);
+	}
+
+	if (ImGui::Button("Remove Selected Sample")) {
+		if (selected_sample_index != -1 && selected_sample_index < samples.size()) {
+			samples.erase(samples.begin() + selected_sample_index);
+			selected_sample_index = -1;  // Reset selection after removal
+			ImGui::End();
+			return;
+		}
+	}
+
 	for (int i = 0; i < samples.size(); i++) {
 
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -200,7 +268,7 @@ void MainLayer::onImGuiRender(){
 		}
 
 		if (open) {
-			
+
 			ImGui::TreePop();
 		}
 	}
@@ -329,6 +397,8 @@ void SampleObject::renderMenu(){
 
 	bool changed = false;
 
+	ImGui::Checkbox("Enabled", &enabled);
+
 	changed |= ImGui::DragFloat("X Offset", &props.x_offset);
 	changed |= ImGui::DragFloat("Y Offset", &props.y_offset);
 	changed |= ImGui::DragFloat("Width", &props.width);
@@ -347,14 +417,17 @@ void SampleObject::renderMenu(){
 	ImGui::InputFloat("Feedrate A", &props.feedrate_a);
 	ImGui::InputFloat("Feedrate B", &props.feedrate_b);
 
+	ImGui::InputFloat("Line Width", &props.line_width);
+
 	ImGui::InputFloat("Temperature A", &props.temperature_a);
 	ImGui::InputFloat("Temperature B", &props.temperature_b);
 
-	ImGui::InputFloat("Overlap", &props.overlap);
+	ImGui::InputInt("Overlap lines", &props.overlap);
 	ImGui::InputFloat("Overlap Flow Modifier", &props.overlap_flow_modifier);
 
 	ImGui::Checkbox("Use Purge Tower", &props.use_purge_tower);
 	ImGui::Checkbox("Use Alternate Sweep", &props.use_alternate_sweep);
+	ImGui::Checkbox("Use In to Out", &props.use_in_to_out);
 
 	char buffer[256];
 	strncpy(buffer, props.comment.c_str(), sizeof(buffer));
@@ -377,5 +450,4 @@ void SampleObject::renderMenu(){
 		mesh_B->setMaterial("cyan plastic");  //TPU
 
 	}
-
 }

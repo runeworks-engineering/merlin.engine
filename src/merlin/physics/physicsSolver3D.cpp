@@ -932,7 +932,7 @@ namespace Merlin {
         GLuint initialValue = 0;
         atomicCounterBuffer.writeBuffer(sizeof(GLuint), &initialValue);
         
-        m_filter->attach(atomicCounterBuffer);
+        //m_filter->attach(atomicCounterBuffer);
         m_filter->use();
         //m_filter->dispatch(m_settings.particles_count);
 

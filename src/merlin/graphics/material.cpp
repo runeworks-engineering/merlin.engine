@@ -2,7 +2,7 @@
 #include "merlin/graphics/material.h"
 
 namespace Merlin {
-
+	
 	void PhongMaterial::loadTexture(const std::string& path, TextureType t, bool flipped) {
 		shared<Texture2D> tex = Texture2D::create(path, t, flipped);
 		tex->setInterpolationMode(GL_LINEAR, GL_LINEAR);
@@ -56,6 +56,10 @@ namespace Merlin {
 		default:
 			break;
 		}
+	}
+
+	bool PhongMaterial::isTransparent() const {
+		return m_alpha < 1.0;
 	}
 
 
@@ -283,5 +287,7 @@ namespace Merlin {
 
 
 	*/
+
+	
 
 }

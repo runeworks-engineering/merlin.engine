@@ -66,12 +66,13 @@ namespace Merlin{
 
 		//Memory 
 		void addField(AbstractBufferObject_Ptr buf);
-		void addBuffer(AbstractBufferObject_Ptr buf);
 		bool hasField(const std::string& name) const;
-		bool hasBuffer(const std::string& name) const;
-
 		void clearField(const std::string& name);
+
+		void addBuffer(AbstractBufferObject_Ptr buf);
+		bool hasBuffer(const std::string& name) const;
 		void clearBuffer(const std::string& name);
+		
 		void removeAllField();
 		void removeAllBuffer();
 

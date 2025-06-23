@@ -24,6 +24,7 @@ namespace Merlin {
         virtual void detach() const = 0;
         MaterialType type() const { return m_type; }
         std::string name() const { return m_name; }
+        
 
     private:
         MaterialType m_type;
@@ -52,6 +53,7 @@ namespace Merlin {
         inline void setSpecular(const glm::vec3& specular) { m_specular_color = specular; };
         inline void setShininess(const float& shininess) { m_shininess = shininess; };
         inline void setAlphaBlending(const float& alpha) { m_alpha = alpha; };
+        bool isTransparent() const;
 
         void loadTexture(const std::string& path, TextureType t = TextureType::DIFFUSE, bool flipped = false);
 

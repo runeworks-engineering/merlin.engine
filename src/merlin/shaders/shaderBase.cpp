@@ -36,33 +36,58 @@ namespace Merlin {
 			glDeleteProgram(m_programID);
 			m_programID = 0;
 		}
+		if (bound_shader == this) bound_shader = nullptr;
+	}
+
+	void ShaderBase::detach() const {
+		for(auto buf : m_buffers)
+			buf.second->releaseBindingPoint();
+
+		if (bound_shader == this) bound_shader = nullptr;
 	}
 
 	void ShaderBase::use() const {
-		//LOG_TRACE("Shader") << "Using program : " << m_programID << Console::endl;
 		if (!isCompiled()) {
-			//LOG_ERROR("Shader") << "Failed to bind shader. Program is not compiled" << Console::endl;
 			return;
 		}
-		glUseProgram(m_programID);
-	}
 
-	void ShaderBase::attach(AbstractBufferObject& buf) {
-		int block_index = glGetProgramResourceIndex(m_programID, GL_SHADER_STORAGE_BLOCK, buf.name().c_str());
-		if (block_index == -1) Console::error("ShaderBase") << "Block " << buf.name() << " not found in shader '" << m_name << "'. Did you bind it properly ?" << Console::endl;
-		else {
-			BindingPointManager& manager = BindingPointManager::instance();
-			auto bindingPoint = manager.allocateBindingPoint(buf.target(), buf.id());
-			buf.bind();
-			buf.setBindingPoint(bindingPoint);
-			Console::trace("ShaderBase") << buf.name() << "( block index " << block_index << ") is now bound to " << name() << " using binding point " << bindingPoint << Console::endl;
-			glShaderStorageBlockBinding(m_programID, block_index, bindingPoint);//Do this explicitly in your shader !
-			buf.unbind();
+		if (bound_shader) bound_shader->detach();
+		glUseProgram(m_programID);
+		bound_shader = this;
+
+
+		for (auto buf_ptr: m_buffers) {
+			AbstractBufferObject& buf = *buf_ptr.second;
+			int block_index = glGetProgramResourceIndex(m_programID, GL_SHADER_STORAGE_BLOCK, buf.name().c_str());
+			if (block_index == -1) Console::error("ShaderBase") << "Block " << buf.name() << " not found in shader '" << m_name << "'. Did you bind it properly ?" << Console::endl;
+			else {
+				BindingPointManager& manager = BindingPointManager::instance();
+				auto bindingPoint = manager.allocateBindingPoint(buf.target(), buf.id());
+				buf.bind();
+				buf.setBindingPoint(bindingPoint);
+				Console::trace("ShaderBase") << buf.name() << "( block index " << block_index << ") is now bound to " << name() << " using binding point " << bindingPoint << Console::endl;
+				glShaderStorageBlockBinding(m_programID, block_index, bindingPoint);//Do this explicitly in your shader !
+				buf.unbind();
+			}
 		}
 	}
 
-	void ShaderBase::detach(AbstractBufferObject& buf){
-		buf.releaseBindingPoint();
+	bool ShaderBase::hasBuffer(std::string buf)	{
+		return m_buffers.find(buf) != m_buffers.end();
+	}
+
+	void ShaderBase::attach(AbstractBufferObject_Ptr buf) {
+		if (buf) {
+			if (hasBuffer(buf->name())) Console::warn("ShaderBase") << "overriding an existing buffer in shader attach points" << Console::endl;
+			m_buffers[buf->name()] = buf;
+		}
+		
+		
+	}
+
+	void ShaderBase::detach(const AbstractBufferObject& buf){
+		if(hasBuffer(buf.name()))
+			m_buffers.erase(buf.name());
 	}
 
 	//TODO : bind the shaders automatically before setting uniforms.

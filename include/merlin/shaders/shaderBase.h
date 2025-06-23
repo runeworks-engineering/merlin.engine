@@ -23,6 +23,7 @@ namespace Merlin {
 		virtual ~ShaderBase();
 
 		virtual void use() const;
+		void detach() const;
 		virtual void destroy();
 
 		GLuint getUniformLocation(const char*) const;
@@ -74,8 +75,9 @@ namespace Merlin {
 
 		bool hasConstant(const std::string&) const;
 
-		void attach(AbstractBufferObject& buf);
-		void detach(AbstractBufferObject& buf);
+		bool hasBuffer(std::string buf);
+		void attach(AbstractBufferObject_Ptr buf);
+		void detach(const AbstractBufferObject& buf);
 
 		inline const GLuint id() const { return m_programID; }
 		inline void setID(GLuint _id_) { m_programID = _id_; };
@@ -87,6 +89,8 @@ namespace Merlin {
 		static std::string readSrc(const std::string& filename);
 	
 	protected:
+		inline static const ShaderBase* bound_shader = nullptr;
+
 		void precompileSrc(std::string& src);
 		static bool compileShader(const std::string& name, const std::string& src, GLuint id);
 		std::string updateConstants(const std::string& originalSrc);
@@ -97,6 +101,7 @@ namespace Merlin {
 		bool m_compiled = false;
 		std::unordered_map<std::string, std::string> m_constants;
 		std::unordered_map<std::string, std::string> m_defines;
+		std::unordered_map<std::string, AbstractBufferObject_Ptr> m_buffers;
 
 		static int shader_instances;
 

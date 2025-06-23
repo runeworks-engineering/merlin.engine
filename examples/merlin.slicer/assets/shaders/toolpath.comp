@@ -15,16 +15,15 @@
 #define fi ssbo_meta[buffer_index].x //feedrate
 #define ti ssbo_meta[buffer_index].y //temperature
 
-layout(std430, binding = 0) buffer a_buffer {
-	vec4 ssbo_a[];
+struct ToolPath{
+	vec4 start; // x, y, z, e;
+	vec4 end;   // x, y, z, e;
+	vec4 meta;  // feed, T°, flow, tool
 };
 
-layout(std430, binding = 1 ) buffer b_buffer {
-	vec4 ssbo_b[];
+layout(std430, binding = 0) buffer toolpath_buffer {
+	ToolPath ssbo_toolpath[];
 };
 
-layout(std430, binding = 2 ) buffer meta_buffer {
-	vec4 ssbo_meta[];
-};
 
 #endif// INCLUDE_BUFFERS_HLSL

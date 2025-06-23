@@ -138,9 +138,9 @@ namespace Merlin {
 		if (hasLink(shader->name())) {
 			for (const auto& entry : m_links[shader->name()]) {
 				if (hasField(entry))
-					shader->attach(*getField(entry));
+					shader->attach(getField(entry));
 				else if (hasBuffer(entry))
-					shader->attach(*getBuffer(entry));
+					shader->attach(getBuffer(entry));
 				else
 					Console::error("PhysicsPipeline") << entry << " is not registered as field in the pipeline. cannot attach" << Console::endl;
 
