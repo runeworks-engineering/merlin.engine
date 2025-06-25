@@ -12,6 +12,16 @@ namespace Merlin {
 		//Isometric
 	};
 
+	enum class CameraView {
+		Iso,
+		Top,
+		Bottom,
+		Right,
+		Left, 
+		Rear, 
+		Front
+	};
+
 	class Camera{
 	public:
 		Camera();
@@ -25,11 +35,12 @@ namespace Merlin {
 		void translate(glm::vec3 du3d);
 		void translate(glm::vec2 du2d);
 
-		void rotate(float dRx, float dRy, float dRz);
-		void rotate(glm::vec3 dR);
+		void rotate(float deltaYaw, float deltaPitch, float deltaRoll = 0);
 
 		bool isOrthoGraphic() const { return _projection == Projection::Orthographic; }
 		//bool () const { return _projection == Projection::Orthographic; }
+
+		void setView(CameraView, glm::vec3 center, float distance);
 
 		void reset();
 		void resetProjection();
@@ -49,8 +60,6 @@ namespace Merlin {
 		void setPosition(const glm::vec3& position) { _Position = position; recalculateViewMatrix(); }
 		const glm::vec3& getTarget() const { return _Target; }
 		void setTarget(const glm::vec3& target) { _Target = target; recalculateViewMatrix(); }
-		glm::vec3 getRotation() const { return _Rotation; }
-		void setRotation(glm::vec3 rotation) { _Rotation = rotation; recalculateViewMatrix(); }
 
 		glm::vec3 right() const { return _Right; }
 		glm::vec3 front() const { return _Front; }
@@ -76,7 +85,6 @@ namespace Merlin {
 		glm::mat4 _ViewProjectionMatrix;
 
 		glm::vec3 _Position = {  0.0f, 0.0f, 0.0f };
-		glm::vec3 _Rotation = { 0.0f, 0.0f, 0.0f }; //(roll, pitch, yaw)
 
 		glm::vec3 _Target = { 0.0f, 0.0f, 0.0f };
 		glm::vec3 _WorldUp = { 0.0f, 0.0f, 1.0f };
@@ -84,6 +92,12 @@ namespace Merlin {
 		glm::vec3 _Right = { 1.0f, 0.0f, 0.0f };
 		glm::vec3 _Front = { 0.0f, 1.0f, 0.0f };
 		glm::vec3 _Up    = { 0.0f, 0.0f, 1.0f };
+
+
+		float _Yaw = -90.0f;   // Facing forward in Y by default
+		float _Pitch = 0.0f;   // Looking flat horizontally
+		float _Roll = 0.0f;    // Rotation around Y (bank)
+
 
 		int _width, _height;
 

@@ -24,13 +24,16 @@ public:
 	void onUpdate(Timestep ts) override;
 	void onImGuiRender() override;
 
-	void saveProject(std::string filepath);
-	void importProject(std::string filepath);
+	void newProject();
+	void saveProject();
+	void importProject();
 
 private:
 
 	int current_layer = 0;
 	bool showG0 = false;
+
+	std::string current_project_path = "";
 
 	Slicer slicer;
 

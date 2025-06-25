@@ -15,7 +15,12 @@ MainLayer::MainLayer(){
 	camera().setFarPlane(600);
 	camera().setFOV(45); //Use 90.0f as we are using cubemaps
 	camera().setPosition(glm::vec3(150, -200, 200));
-	camera().setRotation(glm::vec3(0, 40, +90));
+
+	glm::vec3 viewCenter;
+	if (current_machine == Machine::NEOTECH) viewCenter = glm::vec3(0);
+	else if (current_machine == Machine::TOOLHANGER) viewCenter = glm::vec3(150, 100, 0);
+
+	camera().setView(CameraView::Top, viewCenter, glm::distance(glm::vec3(0), camera().getPosition()));
 
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_LINE_SMOOTH);
@@ -191,16 +196,16 @@ void MainLayer::slice(){
 	toolpath->setInstancesCount(data.size());
 	current_layer = data.size();
 
-	slicer.export_gcode("./samples.gcode");
+	//slicer.export_gcode("./samples.gcode");
 }
 
 
-void MainLayer::createSample(SampleProperty props){
+void MainLayer::createSample(SampleProperty props) {
 	samples.emplace_back(props);
 }
 
 
-void MainLayer::onAttach(){
+void MainLayer::onAttach() {
 	Layer3D::onAttach();
 
 	Console::setLevel(ConsoleLevel::_INFO);
@@ -208,7 +213,7 @@ void MainLayer::onAttach(){
 	createScene();
 }
 
-void MainLayer::onUpdate(Timestep ts){
+void MainLayer::onUpdate(Timestep ts) {
 	Layer3D::onUpdate(ts);
 
 	scene->clear();
@@ -219,7 +224,7 @@ void MainLayer::onUpdate(Timestep ts){
 	else if (current_machine == Machine::TOOLHANGER) {
 		scene->add(bed);
 	}
-	
+
 	scene->add(origin);
 	scene->add(toolpath);
 
@@ -239,56 +244,70 @@ void MainLayer::onUpdate(Timestep ts){
 }
 
 
-void MainLayer::onImGuiRender(){
+void MainLayer::onImGuiRender() {
 	//ImGui::ShowDemoWindow();
 	ImGui::DockSpaceOverViewport((ImGuiViewport*)0, ImGuiDockNodeFlags_PassthruCentralNode);
-	
+
 	if (ImGui::BeginMainMenuBar()) {
 		if (ImGui::BeginMenu("File")) {
 
-			ImGui::MenuItem("New Project", "Ctrl+N", false);
+			if (ImGui::MenuItem("New Project", "Ctrl+N", false)) {
+				newProject();
+			}
 
-			ImGui::MenuItem("Open Project", "Ctrl+O", false);
-
+			if (ImGui::MenuItem("Open Project", "Ctrl+O", false)) {
+				importProject();
+			}
+			/*
 			if (ImGui::BeginMenu("Recent Project")) {
 
 				ImGui::MenuItem("...", "", false);
 
 				ImGui::EndMenu();
 			}
+			*/
+			if (ImGui::MenuItem("Save Project", "Ctrl+S", false)) {
+				saveProject();
+			}
 
-			ImGui::MenuItem("Save Project", "Ctrl+S", false);
-
-			ImGui::MenuItem("Save Project as", "Ctrl+Alt+S", false);
+			if (ImGui::MenuItem("Save Project as", "Ctrl+Alt+S", false)) {
+				current_project_path = "";
+				saveProject();
+			}
 
 			ImGui::Separator();
 			if (ImGui::BeginMenu("Import")) {
 
 				ImGui::MenuItem("Import Mesh", "Ctrl+I", false);
 
-				ImGui::MenuItem("Import Configuration", "", false);
+				//ImGui::MenuItem("Import Configuration", "", false);
 
 				ImGui::EndMenu();
 			}
 
 			if (ImGui::BeginMenu("Export")) {
 
-				ImGui::MenuItem("Export G-Code..", "Ctrl+G", false);
+				if(ImGui::MenuItem("Export G-Code..", "Ctrl+G", false)){
+					std::string gcode_path = Dialog::saveFileDialog(Dialog::FileType::DATA);
+					if (gcode_path.size() != 0)
+						slicer.export_gcode(gcode_path);
+				}
 
-				ImGui::MenuItem("Send G-Code..", "Ctrl+Shift+G", false);
+				//ImGui::MenuItem("Send G-Code..", "Ctrl+Shift+G", false);
 
-				ImGui::MenuItem("Export G-code to SD-Card", "Ctrl+U", false);
+				//ImGui::MenuItem("Export G-code to SD-Card", "Ctrl+U", false);
 
-				ImGui::Separator();
-				ImGui::MenuItem("Export project as STL", "", false);
+				//ImGui::Separator();
+				//ImGui::MenuItem("Export project as STL", "", false);
 
-				ImGui::Separator();
-				ImGui::MenuItem("Export Configuration", "", false);
+				//ImGui::Separator();
+				//ImGui::MenuItem("Export Configuration", "", false);
 
 				ImGui::EndMenu();
 			}
-
+			
 			ImGui::Separator();
+			/*
 			if (ImGui::BeginMenu("Convert")) {
 
 				ImGui::MenuItem("Convert ASCII G-code to Binary", "", false);
@@ -296,7 +315,7 @@ void MainLayer::onImGuiRender(){
 				ImGui::MenuItem("Convert Binary G-code to ASCII", "", false);
 
 				ImGui::EndMenu();
-			}
+			}*/
 
 			ImGui::Separator();
 			ImGui::MenuItem("Exit", "Alt+F4", false);
@@ -304,6 +323,7 @@ void MainLayer::onImGuiRender(){
 			ImGui::EndMenu();
 		}
 
+		/*
 		if (ImGui::BeginMenu("Edit")) {
 
 			ImGui::MenuItem("Select All", "Ctrl+A", false);
@@ -326,36 +346,30 @@ void MainLayer::onImGuiRender(){
 			ImGui::MenuItem("Paste", "Ctrl+V", false);
 
 			ImGui::EndMenu();
-		}
-
-		if (ImGui::BeginMenu("Tool")) {
-
-			ImGui::MenuItem("Nozzle ID tool", "", false);
-
-			ImGui::MenuItem("3D Object Gallery", "", false);
-
-			ImGui::EndMenu();
-		}
+		}*/
 
 		if (ImGui::BeginMenu("View")) {
+			glm::vec3 viewCenter;
+			if (current_machine == Machine::NEOTECH) viewCenter = glm::vec3(0);
+			else if (current_machine == Machine::TOOLHANGER) viewCenter = glm::vec3(150,100,0);
 
-			ImGui::MenuItem("Iso", "0", false);
-
-			ImGui::Separator();
-			ImGui::MenuItem("Top", "1", false);
-
-			ImGui::MenuItem("Bottom", "2", false);
-
-			ImGui::MenuItem("Front", "3", false);
-
-			ImGui::MenuItem("Rear", "4", false);
-
-			ImGui::MenuItem("Left", "5", false);
-
-			ImGui::MenuItem("Right", "6", false);
+			if (ImGui::MenuItem("Iso", "0", false)) camera().setView(CameraView::Iso, viewCenter, glm::distance(origin->position(), camera().getPosition()));
 
 			ImGui::Separator();
-			ImGui::MenuItem("FullScreen", "F11", false);
+			if (ImGui::MenuItem("Top", "1", false)) camera().setView(CameraView::Top, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+
+			if (ImGui::MenuItem("Bottom", "2", false)) camera().setView(CameraView::Bottom, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+
+			if (ImGui::MenuItem("Front", "3", false)) camera().setView(CameraView::Front, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+
+			if (ImGui::MenuItem("Rear", "4", false)) camera().setView(CameraView::Rear, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+
+			if (ImGui::MenuItem("Left", "5", false)) camera().setView(CameraView::Left, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+
+			if (ImGui::MenuItem("Right", "6", false)) camera().setView(CameraView::Right, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+
+			//ImGui::Separator();
+			//if (ImGui::MenuItem("FullScreen", "F11", false)) camera().setView(CameraView::Iso, viewCenter, glm::distance(origin->position(), camera().getPosition()));
 
 			ImGui::EndMenu();
 		}
@@ -397,25 +411,7 @@ void MainLayer::onImGuiRender(){
 		slice();
 	}
 
-	if (ImGui::Button("Save Project")) {
 
-		std::string savePath = Dialog::saveFileDialog(Dialog::FileType::DATA);
-		if (!savePath.size() == 0) {
-			saveProject(savePath);
-			Console::info("Exported sample to " + savePath);
-		}
-
-	}
-
-	if (ImGui::Button("Import Project")) {
-
-		std::string savePath = Dialog::saveFileDialog(Dialog::FileType::DATA);
-		if (!savePath.size() == 0) {
-			saveProject(savePath);
-			Console::info("Exported sample to " + savePath);
-		}
-
-	}
 
 	ImGui::Checkbox("Show Rapid Toolpath", &showG0);
 
@@ -511,14 +507,25 @@ void MainLayer::onImGuiRender(){
 
 }
 
-void MainLayer::saveProject(std::string path){
-	std::ofstream file(path);
+void MainLayer::saveProject(){
+	if (current_project_path == "") {
+		current_project_path = Dialog::saveFileDialog(Dialog::FileType::DATA);
+	}
+	if (current_project_path.size() == 0) return;
+
+
+	std::ofstream file(current_project_path);
 	if (!file.is_open()) {
-		std::cerr << "Failed to open file for XML export: " << path << std::endl;
+		std::cerr << "Failed to open file for XML export: " << current_project_path << std::endl;
 		return;
 	}
 
 	file << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+	std::string machine = "";
+	if (current_machine == Machine::NEOTECH) machine = "NEOTECH";
+	else if (current_machine == Machine::TOOLHANGER) machine = "TOOLHANGER";
+
+	file << "<Machine>" << machine << "</Machine>\n";
 	file << "<Samples>\n";
 
 	for (auto& s : samples) {
@@ -530,18 +537,16 @@ void MainLayer::saveProject(std::string path){
 
 }
 
-void MainLayer::importProject(std::string path) {
+void MainLayer::importProject() {
 	using namespace tinyxml2;
 
 	std::string answer = Dialog::inputBox("Save current project", "Save", "Yes");
 
 	if (answer == "Yes") {
-		std::string savePath = Dialog::saveFileDialog(Dialog::FileType::DATA);
-		if (!savePath.size() == 0) {
-			saveProject(savePath);
-			Console::info("Exported sample to " + savePath);
-		}
+		saveProject();
 	}
+
+	std::string path = Dialog::openFileDialog(Dialog::FileType::DATA);
 
 	XMLDocument doc;
 	if (doc.LoadFile(path.c_str()) != XML_SUCCESS) {
@@ -559,8 +564,32 @@ void MainLayer::importProject(std::string path) {
 
 	samples.clear();
 
+	// Load machine type
+	XMLElement* machineElement = doc.FirstChildElement("Machine");
+	if (machineElement && machineElement->GetText()) {
+		std::string machineText = machineElement->GetText();
+		if (machineText == "NEOTECH") current_machine = Machine::NEOTECH;
+		else if (machineText == "TOOLHANGER") current_machine = Machine::TOOLHANGER;
+		else std::cerr << "Unknown machine type: " << machineText << std::endl;
+	}
+	else {
+		std::cerr << "Missing <Machine> element in XML\n";
+	}
+
 	for (XMLElement* elem = root->FirstChildElement("Sample"); elem != nullptr; elem = elem->NextSiblingElement("Sample")) {
 		SampleProperty s = SampleObject::fromXML(elem);
 		createSample(s);
 	}
+}
+
+void MainLayer::newProject() {
+	using namespace tinyxml2;
+
+	std::string answer = Dialog::inputBox("Save current project", "Save", "Yes");
+
+	if (answer == "Yes") {
+		saveProject();
+	}
+
+	samples.clear(); // optional: reset current project
 }

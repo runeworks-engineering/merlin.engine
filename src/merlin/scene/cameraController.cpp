@@ -44,16 +44,9 @@ namespace Merlin {
 		}
 
 		
-		if (Input::isKeyPressed(MRL_KEY_Q))
-			_dR.x += _CameraSpeed;
-		if (Input::isKeyPressed(MRL_KEY_E))
-			_dR.x -= _CameraSpeed;
-
 		_dR *= ts * 2.0;
 		_Camera->translate(_dU);
-
-		if (_Camera->getRotation().y + _dR.y > -90 && _Camera->getRotation().y + _dR.y < 90)
-			_Camera->rotate(_dR);
+		_Camera->rotate(_dR.x, _dR.y);
 
 		_dU = glm::vec3(0.0f);
 		_dR = glm::vec3(0.0f);
@@ -74,8 +67,8 @@ namespace Merlin {
 		if (Input::isMouseButtonPressed(MRL_MOUSE_BUTTON_RIGHT)) { //Mouse dragged
 			_deltaMousePos = _lastMousePos - newMousePos;
 
-			_dR.z = -_deltaMousePos.x * std::min(_CameraSpeed * 0.5f, 50.0f);
-			_dR.y = _deltaMousePos.y * std::min(_CameraSpeed * 0.5f, 50.0f);
+			_dR.x = -_deltaMousePos.x * std::min(_CameraSpeed * 0.5f, 50.0f);
+			_dR.y = -_deltaMousePos.y * std::min(_CameraSpeed * 0.5f, 50.0f);
 		}
 
 		_lastMousePos = newMousePos;

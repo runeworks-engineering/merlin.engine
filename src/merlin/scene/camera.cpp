@@ -47,7 +47,6 @@ namespace Merlin {
 
 	void Camera::reset(){
 		_Position = { 0.0f, 0.0f, 0.0f };
-		_Rotation = { 0.0f, 0.0f, 0.0f };
 
 		_Target = { 0.0f, 0.0f, 0.0f };
 		_WorldUp = { 0.0f, 0.0f, 1.0f };
@@ -82,27 +81,68 @@ namespace Merlin {
 	}
 
 	void Camera::translate(glm::vec3 du) {
-		glm::vec3 transform(0.0f, 0.0f, 0.0f);
-
-		
-		transform += _Front * du.x;
-		transform += _Right * -du.y;
-		transform += _Up * du.z;
-
-		_Position += transform;
-		_Target += transform;
+		// Move relative to camera orientation
+		_Position += _Front * du.x;
+		_Position -= _Right * du.y;
+		_Position += _Up * du.z;
 
 		recalculateViewMatrix();
 	}
 
-	void Camera::rotate(float dRx, float dRy, float dRz) {
-		rotate(glm::vec3(dRx, dRy, dRz));
-	}
+	void Camera::setView(CameraView view, glm::vec3 center, float distance) {
+		glm::vec3 offset;
 
-	void Camera::rotate(glm::vec3 dR) {
-		_Rotation += dR;
+		switch (view) {
+		case CameraView::Iso:
+			offset = glm::normalize(glm::vec3(1, -1, 1)) * distance;
+			break;
+		case CameraView::Top:
+			offset = glm::vec3(0, 0, distance);
+			break;
+		case CameraView::Bottom:
+			offset = glm::vec3(0, 0, -distance);
+			break;
+		case CameraView::Right:
+			offset = glm::vec3(distance, 0, 0);
+			break;
+		case CameraView::Left:
+			offset = glm::vec3(-distance, 0, 0);
+			break;
+		case CameraView::Front:
+			offset = glm::vec3(0, -distance, 0);
+			break;
+		case CameraView::Rear:
+			offset = glm::vec3(0, distance, 0);
+			break;
+		}
+
+		_Position = center + offset;
+
+		glm::vec3 dir = glm::normalize(center - _Position);
+
+		_Yaw = -glm::degrees(atan2(dir.x, dir.y));      // horizontal angle: X over Y
+		_Pitch = glm::degrees(asin(dir.z));              // vertical tilt from Z
+		_Roll = 0.0f;
+
 		recalculateViewMatrix();
 	}
+
+
+
+
+
+
+	void Camera::rotate(float deltaYaw, float deltaPitch, float deltaRoll) {
+		_Yaw += deltaYaw;
+		_Pitch += deltaPitch;
+		_Roll += deltaRoll;
+		_Pitch = glm::clamp(_Pitch, -89.9f, 89.9f);
+		//_Pitch = glm::clamp(_Pitch, -89.0f, 89.0f); // Prevent gimbal lock
+		recalculateViewMatrix();
+	}
+
+
+
 
 	bool Camera::onWindowResized(WindowResizeEvent& e) {
 		if (e.getHeight() == 0 || e.getWidth() == 0) return false;
@@ -114,25 +154,32 @@ namespace Merlin {
 		return false;
 	}
 
+
 	void Camera::recalculateViewMatrix() {
+		// Step 1: apply yaw around world Z (Z-up)
+		glm::quat qYaw = glm::angleAxis(glm::radians(_Yaw), glm::vec3(0, 0, 1));
 
-		glm::vec3 direction = { 1.0f, 0.0f, 0.0f };
-		glm::vec3 eulerAngles = _Rotation;
-		glm::fquat quaternion{ glm::radians(eulerAngles) };
-		
-		direction = quaternion * direction;
+		// Step 2: pitch around camera-local right (after yaw)
+		glm::vec3 right = qYaw * glm::vec3(1, 0, 0);
+		glm::quat qPitch = glm::angleAxis(glm::radians(_Pitch), right);
 
-		_Front = normalize(direction);
+		// Combine yaw and pitch
+		glm::quat orientation = qPitch * qYaw;
+
+		// Base direction is +Y in your system
+		_Front = glm::normalize(orientation * glm::vec3(0, 1, 0));
 		_Right = glm::normalize(glm::cross(_Front, _WorldUp));
 		_Up = glm::normalize(glm::cross(_Right, _Front));
 
-		if (isOrthoGraphic()) {
-			glm::mat4 transform = glm::translate(glm::mat4(1.0f), _Position);
-			_ViewMatrix = glm::inverse(transform);
-		}else{
-			_ViewMatrix = glm::lookAt(_Position, _Position + _Front, _Up);
-		}
+		_ViewMatrix = glm::lookAt(_Position, _Position + _Front, _Up);
 		_ViewProjectionMatrix = _ProjectionMatrix * _ViewMatrix;
 	}
+
+
+
+
+
+
+
 
 }
