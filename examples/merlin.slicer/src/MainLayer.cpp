@@ -7,7 +7,6 @@ using namespace Merlin;
 #include <string>
 #include <fstream>
 #include <GLFW/glfw3.h>
-#include "ui.h"
 
 const float radius = 3;
 
@@ -242,8 +241,143 @@ void MainLayer::onUpdate(Timestep ts){
 
 void MainLayer::onImGuiRender(){
 	//ImGui::ShowDemoWindow();
-	ui.Draw();
 	ImGui::DockSpaceOverViewport((ImGuiViewport*)0, ImGuiDockNodeFlags_PassthruCentralNode);
+	
+	if (ImGui::BeginMainMenuBar()) {
+		if (ImGui::BeginMenu("File")) {
+
+			ImGui::MenuItem("New Project", "Ctrl+N", false);
+
+			ImGui::MenuItem("Open Project", "Ctrl+O", false);
+
+			if (ImGui::BeginMenu("Recent Project")) {
+
+				ImGui::MenuItem("...", "", false);
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::MenuItem("Save Project", "Ctrl+S", false);
+
+			ImGui::MenuItem("Save Project as", "Ctrl+Alt+S", false);
+
+			ImGui::Separator();
+			if (ImGui::BeginMenu("Import")) {
+
+				ImGui::MenuItem("Import Mesh", "Ctrl+I", false);
+
+				ImGui::MenuItem("Import Configuration", "", false);
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Export")) {
+
+				ImGui::MenuItem("Export G-Code..", "Ctrl+G", false);
+
+				ImGui::MenuItem("Send G-Code..", "Ctrl+Shift+G", false);
+
+				ImGui::MenuItem("Export G-code to SD-Card", "Ctrl+U", false);
+
+				ImGui::Separator();
+				ImGui::MenuItem("Export project as STL", "", false);
+
+				ImGui::Separator();
+				ImGui::MenuItem("Export Configuration", "", false);
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::Separator();
+			if (ImGui::BeginMenu("Convert")) {
+
+				ImGui::MenuItem("Convert ASCII G-code to Binary", "", false);
+
+				ImGui::MenuItem("Convert Binary G-code to ASCII", "", false);
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::Separator();
+			ImGui::MenuItem("Exit", "Alt+F4", false);
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Edit")) {
+
+			ImGui::MenuItem("Select All", "Ctrl+A", false);
+
+			ImGui::MenuItem("Deselect All", "Esc", false);
+
+			ImGui::Separator();
+			ImGui::MenuItem("Delete Selected", "Del", false);
+
+			ImGui::Separator();
+			ImGui::MenuItem("Delete All", "Ctrl+Del", false);
+
+			ImGui::MenuItem("Undo", "Ctrl+Z", false);
+
+			ImGui::MenuItem("Redo", "Ctrl+Y", false);
+
+			ImGui::Separator();
+			ImGui::MenuItem("Copy", "Ctrl+C", false);
+
+			ImGui::MenuItem("Paste", "Ctrl+V", false);
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Tool")) {
+
+			ImGui::MenuItem("Nozzle ID tool", "", false);
+
+			ImGui::MenuItem("3D Object Gallery", "", false);
+
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("View")) {
+
+			ImGui::MenuItem("Iso", "0", false);
+
+			ImGui::Separator();
+			ImGui::MenuItem("Top", "1", false);
+
+			ImGui::MenuItem("Bottom", "2", false);
+
+			ImGui::MenuItem("Front", "3", false);
+
+			ImGui::MenuItem("Rear", "4", false);
+
+			ImGui::MenuItem("Left", "5", false);
+
+			ImGui::MenuItem("Right", "6", false);
+
+			ImGui::Separator();
+			ImGui::MenuItem("FullScreen", "F11", false);
+
+			ImGui::EndMenu();
+		}
+
+		ImGui::MenuItem("Configuration", "", false);
+
+		if (ImGui::BeginMenu("Help")) {
+
+			ImGui::MenuItem("About", "", false);
+
+			ImGui::MenuItem("Report an Issue", "", false);
+
+			ImGui::MenuItem("Documentation", "", false);
+
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMainMenuBar();
+	}
+
+
+
 	ImGui::Begin("Infos");
 
 	ImGui::LabelText("FPS", std::to_string(fps()).c_str());
