@@ -25,10 +25,15 @@ namespace Merlin {
 			aSingleFilterDescription = "Mesh files";
 			break;
 		case FileType::DATA:
+			aNumOfFilterPatterns = 1;
+			aFilterPatterns[0] = "*.xml";
+
+			/*
 			aNumOfFilterPatterns = 3;
 			aFilterPatterns[0] = "*.csv";
 			aFilterPatterns[1] = "*.json";
 			aFilterPatterns[2] = "*.xml";
+			*/
 			aSingleFilterDescription = "Data files";
 			break;
 		case FileType::ALL:

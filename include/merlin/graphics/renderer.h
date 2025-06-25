@@ -25,5 +25,7 @@ namespace Merlin {
 		void renderDepth(const shared<RenderableObject>& object, shared<Shader> shader);
 		void gatherLights(const shared<RenderableObject>& object);
 
+	private:
+		bool transparent_pass = false;
 	};
 }

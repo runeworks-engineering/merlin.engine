@@ -40,6 +40,8 @@ project "merlin"
 	MRL_IncludeDir["glm"] = "vendor/glm"
 	MRL_IncludeDir["stb_image"] = "vendor/stb_image"
 	MRL_IncludeDir["tinyfiledialogs"] = "vendor/tinyfiledialogs"
+	MRL_IncludeDir["tinyxml2"] = "vendor/tinyxml2"
+	MRL_IncludeDir["imrad"] = "vendor/imrad"
 	MRL_IncludeDir["assimp"] = "vendor/assimp/include"
 
 
@@ -52,6 +54,8 @@ project "merlin"
 		"%{MRL_IncludeDir.glm}",
 		"%{MRL_IncludeDir.stb_image}",
 		"%{MRL_IncludeDir.tinyfiledialogs}",
+		"%{MRL_IncludeDir.tinyxml2}",
+		"%{MRL_IncludeDir.imrad}",
 		"%{MRL_IncludeDir.assimp}"
 	}
 
@@ -62,6 +66,8 @@ project "merlin"
 		"imgui",
 		"stb_image",
 		"tinyfiledialogs",
+		"tinyxml2",
+		"imrad",
 		"assimp",
 		"opengl32.lib"
 	}

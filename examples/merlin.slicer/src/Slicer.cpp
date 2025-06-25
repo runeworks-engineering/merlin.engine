@@ -5,6 +5,10 @@
 #include <ctime>
 #include <fstream>
 
+
+
+
+
 Slicer::Slicer()
     : toolpath(0), noTool({ -1,0,0,10000,0 }) {
 
@@ -128,7 +132,7 @@ void Slicer::postprocess() {
     // Placeholder for any post-processing steps
 }
 
-void Slicer::generateSample(Sample props) {
+void Slicer::generateSample(SampleProperty props) {
     Tool Ta;
     Tool Tb;
 
@@ -203,7 +207,7 @@ void Slicer::generateSample(Sample props) {
         new_layer(z);
 
         retract(1.4, 2400);
-        move(glm::vec4(xStart, props.y_offset, actual_max_z, 0), 0, 30000);
+        move(glm::vec4(xStart, props.y_offset, actual_max_z + 5, 0), 0, 30000);
         move(glm::vec4(m_current_position.x, m_current_position.y, z, 0), 17800);
         extrude(1.4, 2400);
 
@@ -257,9 +261,8 @@ void Slicer::generateSample(Sample props) {
 
         feedrate = (tool.id == props.tool_a) ? props.feedrate_a : props.feedrate_b;
 
-
         retract(1.4, 2400);
-        move(glm::vec4(xStart, props.y_offset, actual_max_z, 0), 0, 30000);
+        move(glm::vec4(xStart, props.y_offset, actual_max_z + 5, 0), 0, 30000);
         move(glm::vec4(m_current_position.x, m_current_position.y, z, 0));
         extrude(1.4, 2400);
 
@@ -356,39 +359,40 @@ void Slicer::extrude(float length, float feedrate_override) {
 void Slicer::move(glm::vec4 destination, int mode, float feedrate_override) {
     glm::vec4 start = m_current_position;
     glm::vec4 end = destination;
-    ToolPath tp = gen_toolpath(start, end, m_active_tool, feedrate_override);
+    ToolPath tp = gen_toolpath(start, end, m_active_tool, feedrate_override, mode);
     add_gcode(tp, mode == 0 ? "G0" : "G1");
 }
 
 void Slicer::tool_change(Tool tool) {
-    ToolPath tpa = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z + 10, 0), m_active_tool, 30000);
+    
+    if (m_active_tool.id == tool.id) return;
 
-    if (m_active_tool.id == tool.id) return
-
-        brush();
     m_active_tool = tool;
     retract(1.4, 2400);
-    move_Z(m_current_position.w + 3, 0, 30000);
+    move_Z(actual_max_z + 5, 0, 30000);
     add_gcode("T" + std::to_string(tool.id));
-
-    ToolPath tpb = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z + 10, 0), m_active_tool, 30000);
-    m_current_position = glm::vec4(330, 240, m_current_position.z + 10, 0);
+    brush();
+    ToolPath tpa = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z, 0), m_active_tool, 30000);
+    ToolPath tpb = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z, 0), m_active_tool, 30000);
+    m_current_position = glm::vec4(330, 240, m_current_position.z, 0);
     toolpath.push_back(tpa);
     toolpath.push_back(tpb);
 }
 
 void Slicer::move_Z(float destination, int mode, float feedrate) {
-    ToolPath tp = gen_toolpath(m_current_position, m_current_position + glm::vec4(0, 0, destination, 0), m_active_tool, feedrate);
+    glm::vec4 dest = m_current_position;
+    dest.z = destination;
+    ToolPath tp = gen_toolpath(m_current_position, dest, m_active_tool, feedrate, mode);
     add_gcode(tp, mode == 0 ? "G0" : "G1");
 }
 
 void Slicer::moveXY(glm::vec2 destination, int mode, float feedrate) {
-    ToolPath tp = gen_toolpath(m_current_position, glm::vec4(destination.x, destination.y, m_current_position.z, 0), m_active_tool, feedrate);
+    ToolPath tp = gen_toolpath(m_current_position, glm::vec4(destination.x, destination.y, m_current_position.z, 0), m_active_tool, feedrate, mode);
     add_gcode(tp, mode == 0 ? "G0" : "G1");
 }
 
 void Slicer::moveXYE(glm::vec2 destination, float e, int mode, float feedrate) {
-    ToolPath tp = gen_toolpath(m_current_position, glm::vec4(destination.x, destination.y, m_current_position.z, e), m_active_tool, feedrate);
+    ToolPath tp = gen_toolpath(m_current_position, glm::vec4(destination.x, destination.y, m_current_position.z, e), m_active_tool, feedrate, mode);
     add_gcode(tp, mode == 0 ? "G0" : "G1");
 }
 
@@ -404,7 +408,7 @@ void Slicer::new_layer(float z) {
     actual_max_z = z > actual_max_z ? z : actual_max_z;
 
     m_current_layer++;
-    ToolPath tp = gen_toolpath(start, end, m_active_tool);
+    ToolPath tp = gen_toolpath(start, end, m_active_tool, m_current_feedrate, 0);
     add_gcode(tp);
 
     //m_sliced_object.push_back(m_current_layer);
@@ -412,18 +416,16 @@ void Slicer::new_layer(float z) {
 }
 
 void Slicer::brush() {
-    move_Z(actual_max_z + 5);
+    move_Z(actual_max_z + 5, 0);
     add_gcode("M98 Pbrush.g");
-    ToolPath tp1 = gen_toolpath(m_current_position, m_current_position + glm::vec4(0, 0, 10, 0), m_active_tool);
-    ToolPath tp2 = gen_toolpath(m_current_position, glm::vec4(335, 100, m_current_position.z, 0), m_active_tool);
-    ToolPath tp3 = gen_toolpath(m_current_position, glm::vec4(335, 180, m_current_position.z, 0), m_active_tool);
-    toolpath.push_back(tp1);
+    ToolPath tp2 = gen_toolpath(m_current_position, glm::vec4(335, 100, m_current_position.z, 0), m_active_tool, 10000, 0);
+    ToolPath tp3 = gen_toolpath(m_current_position, glm::vec4(335, 180, m_current_position.z, 0), m_active_tool, 10000, 0);
     toolpath.push_back(tp2);
     toolpath.push_back(tp3);
-    m_current_position = glm::vec4(330, 240, m_current_position.z + 10, 0);
+    m_current_position = glm::vec4(330, 180, m_current_position.z, 0);
 }
 
-ToolPath Slicer::gen_toolpath(const glm::vec4& start, const glm::vec4& end, const Tool& tool, float feedrate_override) {
+ToolPath Slicer::gen_toolpath(const glm::vec4& start, const glm::vec4& end, const Tool& tool, float feedrate_override, int mode) {
     ToolPath tp = ToolPath();
     tp.start = start;
     tp.end = end;
@@ -433,6 +435,7 @@ ToolPath Slicer::gen_toolpath(const glm::vec4& start, const glm::vec4& end, cons
     tp.meta.z = tool.flowrate;
     tp.meta.w = tool.id;
     tp.meta_bis.x = m_current_layer;
+    tp.meta_bis.y = mode;
     return tp;
 }
 

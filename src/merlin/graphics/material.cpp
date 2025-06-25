@@ -58,6 +58,10 @@ namespace Merlin {
 		}
 	}
 
+	bool MaterialBase::isTransparent() const {
+		return false;
+	}
+
 	bool PhongMaterial::isTransparent() const {
 		return m_alpha < 1.0;
 	}

@@ -84,7 +84,7 @@ namespace Merlin {
 		void useSmoothShading(bool value);
 		void useNormalMap(bool value);
 
-		std::list<shared<RenderableObject>>& children();
+		const std::list<shared<RenderableObject>>& children() const;
 		shared<RenderableObject> getChild(std::string name);
 		RenderableObject* parent();
 

@@ -43,8 +43,6 @@ namespace Merlin {
 		if (debug)Console::info() << "Rendering scene" << Console::endl;
 
 		//Gather lights
-		
-
 		for (const auto& node : scene.nodes()) {
 			if (!node->isHidden()) gatherLights(node);
 		}
@@ -69,11 +67,35 @@ namespace Merlin {
 		}
 		
 		camera.restoreViewport();
+
+
 		//Render the scene
 		if (debug)Console::info() << "Rendering scene objects" << Console::endl;
+		
+		transparent_pass = false;
+
+		// Render opaque objects first
+		enableDepthTest();
+		//enableDepthWrite();
+		disableTransparency();
+
 		for (const auto& node : scene.nodes()) {
 			render(node, camera);
 		}
+
+		// Now render transparent objects
+		transparent_pass = true;
+
+		//disableDepthWrite();     // Avoid writing to depth buffer
+		enableTransparency();    // Enable blending
+
+		// Ideally, sort transparent nodes back-to-front here
+
+		for (const auto& node : scene.nodes()) {
+			render(node, camera); // Should only render if node is transparent
+		}
+
+		enableDepthWrite();      // Re-enable depth writes for future frames
 
 		//Render default lights
 		if (display_lights && (!hasLights || use_default_light)) {
@@ -160,6 +182,14 @@ namespace Merlin {
 
 		if (mesh.hasMaterial()) mat = mesh.getMaterial();
 		else mat = getMaterial(mesh.getMaterialName());
+
+		//render transparent object
+		if (mat->isTransparent() && !transparent_pass) {
+			return;
+		}
+		if (!mat->isTransparent() && transparent_pass) {
+			return;
+		}
 
 		if (mesh.hasShader())
 			shader = mesh.getShader();

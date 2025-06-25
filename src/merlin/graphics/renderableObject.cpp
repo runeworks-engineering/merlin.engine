@@ -148,7 +148,7 @@ namespace Merlin {
 		}
 	}
 
-	std::list<shared<RenderableObject>>& RenderableObject::children() {
+	const std::list<shared<RenderableObject>>& RenderableObject::children() const{
 		return m_children;
 	}
 

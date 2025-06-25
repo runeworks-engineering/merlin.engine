@@ -113,6 +113,14 @@ namespace Merlin {
 		glEnable(GL_DEPTH_TEST);
 	}	
 	
+	void RendererBase::enableDepthWrite() {
+		glDepthMask(GL_TRUE); // Write to depth buffer
+	}
+
+	void RendererBase::disableDepthWrite() {
+		glDepthMask(GL_FALSE);
+	}
+
 	void RendererBase::enableCubeMap() {
 		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	}	

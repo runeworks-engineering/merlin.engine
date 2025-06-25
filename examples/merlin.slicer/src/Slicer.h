@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "SampleObject.h"
 #include "merlin.h"
 
 struct Tool {
@@ -15,37 +16,7 @@ struct ToolPath {
     glm::vec4 start = glm::vec4(0); // x, y, z, e;
     glm::vec4 end = glm::vec4(0);   // x, y, z, e;
     glm::vec4 meta = glm::vec4(0);  // feed, T°, flow, tool
-    glm::vec4 meta_bis = glm::vec4(0);  // lauer, null, null, null
-};
-
-struct Sample {
-    std::string name;
-    std::string comment;
-    float x_offset = 0;
-    float y_offset = 0;
-    float width = 30;
-    float height = 10;
-    float thickness = 4;
-    float layer_height = 0.2;
-    float line_width = 0.42;
-    int tool_a = 0;
-    int tool_b = 1;
-    float flow_a = 1.0;
-    float flow_b = 1.0;
-    float retract_a = 0.8;
-    float retract_b = 0.8;
-    float feedrate_a = 600;
-    float feedrate_b = 600;
-    float temperature_a = 220;
-    float temperature_b = 230;
-
-    int overlap = 1;
-    float overlap_flow_modifier = 1.0;
-
-
-    bool use_purge_tower = false;
-    bool use_alternate_sweep = true;
-    bool use_in_to_out = true;
+    glm::vec4 meta_bis = glm::vec4(0);  // layer, type, null, null
 };
 
 class Slicer {
@@ -60,7 +31,7 @@ public:
 
     int getLayer() const;
 
-    void generateSample(Sample props);
+    void generateSample(SampleProperty props);
     inline std::vector<ToolPath>& getToolPath() { return toolpath; };
 private:
     void comment(const std::string& comment);
@@ -80,7 +51,7 @@ private:
     void new_layer(float z);
     void brush();
 
-    ToolPath gen_toolpath(const glm::vec4& start, const glm::vec4& end, const Tool& tool, float feedrate = -1);
+    ToolPath gen_toolpath(const glm::vec4& start, const glm::vec4& end, const Tool& tool, float feedrate = -1, int mode = 1);
 
     void add_gcode(ToolPath tp, const std::string& command = "G1");
     void add_gcode(const std::string& cmd);

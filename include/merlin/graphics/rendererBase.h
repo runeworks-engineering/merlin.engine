@@ -37,6 +37,9 @@ namespace Merlin {
 		void enableDepthTest();
 		void disableDepthTest();
 
+		void enableDepthWrite();
+		void disableDepthWrite();
+
 		void enableCubeMap();
 		void disableCubeMap();
 

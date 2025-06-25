@@ -5,7 +5,9 @@ using namespace Merlin;
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <fstream>
 #include <GLFW/glfw3.h>
+#include "ui.h"
 
 const float radius = 3;
 
@@ -14,7 +16,7 @@ MainLayer::MainLayer(){
 	camera().setFarPlane(600);
 	camera().setFOV(45); //Use 90.0f as we are using cubemaps
 	camera().setPosition(glm::vec3(150, -200, 200));
-	camera().setRotation(glm::vec3(0, 30, +90));
+	camera().setRotation(glm::vec3(0, 40, +90));
 
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_LINE_SMOOTH);
@@ -39,23 +41,23 @@ void MainLayer::createScene() {
 	default_props.comment = "Specimen 0";
 	default_props.x_offset = 230.0f;
 	default_props.y_offset = 120.0f;
-	default_props.width = 30.0f;
+	default_props.width = 35;
 	default_props.height = 3.0f;
 	default_props.thickness = 4.0f;
 	default_props.layer_height = 0.2;
 	default_props.line_width = 0.4;
 	default_props.tool_a = 0;
 	default_props.tool_b = 1;
-	default_props.flow_a = 0.9f;
-	default_props.flow_b = 1.4f;
+	default_props.flow_a = 1.0f;
+	default_props.flow_b = 1.0f;
 	default_props.retract_a = 1.0f;
 	default_props.retract_b = 1.0f;
 	default_props.feedrate_a = 1050;
 	default_props.feedrate_b = 1050;
 	default_props.temperature_a = 220.0f;
-	default_props.temperature_b = 230.0f;
+	default_props.temperature_b = 235.0f;
 	default_props.overlap = 2;
-	default_props.overlap_flow_modifier = 1.3f;
+	default_props.overlap_flow_modifier = 1.0f;
 	default_props.use_purge_tower = false;
 	default_props.use_alternate_sweep = true;
 	default_props.use_in_to_out = true;
@@ -91,7 +93,7 @@ void MainLayer::createScene() {
 	createSample(default_props);
 
 	default_props.name = "Sample 3";
-	default_props.comment = "Specimen 2";
+	default_props.comment = "Specimen 3";
 	default_props.x_offset += 0;
 	default_props.y_offset += 120;
 	default_props.overlap = 3;
@@ -101,7 +103,7 @@ void MainLayer::createScene() {
 	createSample(default_props);
 
 	default_props.name = "Sample 4";
-	default_props.comment = "Specimen 2";
+	default_props.comment = "Specimen 4";
 	default_props.x_offset += -120;
 	default_props.y_offset += 0;
 	default_props.overlap = 3;
@@ -117,6 +119,7 @@ void MainLayer::createScene() {
 	toolpath = ParticleSystem::create("toolpath", 1);
 	toolpath->setDisplayMode(ParticleSystemDisplayMode::MESH);
 	toolpath->setMesh(Primitives::createLine(1, glm::vec3(1,0,0)));
+
 	toolpath_shader = Shader::create("toolpathShader", "./assets/shaders/toolpath.vert", "./assets/shaders/toolpath.frag");
 	toolpath_shader->supportEnvironment(false);
 	toolpath_shader->supportLights(false);
@@ -137,41 +140,41 @@ void MainLayer::createScene() {
 
 	bed = ModelLoader::loadModel("./assets/models/bed.stl");
 	bed->translate(glm::vec3(0.75, -0.25, 0));
-	//bed->scale(glm::vec3(1.025, 1.025, 1.0));
 	bed->setMaterial("chrome");
-	//bed->setShader("debug.normals");
-	bed->translate(glm::vec3(150, 100, -5.2));
+	
 
 	bed_glass = ModelLoader::loadModel("./assets/models/glass.stl");
 	bed_glass->setMaterial("water");
-	bed_glass->translate(glm::vec3(-4, -4, -5));
+	bed_glass->translate(glm::vec3(-8, -8, 5));
 	bed_glass->scale(glm::vec3(0.98f, 0.98f, 1.0f));
-	
-	//modelShader->Use();
-	//modelShader->setVec3("lightPos", glm::vec3(0.0, 10.0, 10));
+	bed_glass->translate(glm::vec3(-150, -100, -5.2));
+	bed->addChild(bed_glass);
 
 	bed_surface = Model::create("floorSurface", Primitives::createRectangle(316, 216));
-	bed_surface->translate(glm::vec3(0.75, -0.25, 0));
-	bed_surface->scale(glm::vec3(1, -1, 1));
-	//bed_surface->scale(glm::vec3(1.0, 1.0, 1.0));
-	bed_surface->translate(glm::vec3(150, -100, -5.1));
-
+	bed_surface->translate(glm::vec3(0.75, -0.25, 0.3));
+	bed_surface->scale(glm::vec3(0.98, 0.98, 1));	
+	bed_surface->scale(glm::vec3(1, -1, 1));	
+		
 	shared<PhongMaterial> floorMat2 = createShared<PhongMaterial>("floorMat2");
 	floorMat2->setAmbient(glm::vec3(0.02));
 	floorMat2->setDiffuse(glm::vec3(0.95));
 	floorMat2->setSpecular(glm::vec3(0.99));
 	floorMat2->setShininess(0.95);
-	floorMat2->setAlphaBlending(0.8);
 	floorMat2->loadTexture("assets/textures/bed.png", TextureType::DIFFUSE);
+
 	bed_surface->setMaterial(floorMat2);
-	
-	scene->add(bed);
-	scene->add(bed_surface);
-	scene->add(bed_glass);
-	scene->add(toolpath);
+	bed->addChild(bed_surface);
+	bed->translate(glm::vec3(150, 100, -5.2));
+
+	bed_neotech = ModelLoader::loadModel("./assets/models/bed.neotech.stl");
+	bed_neotech->setMaterial("black plastic");
+	Mesh_Ptr bed_surface_neotech = Primitives::createCircle(50, 50);
+	bed_surface_neotech->setMaterial("gray plastic");
+	bed_surface_neotech->translate(glm::vec3(0, 0, 1));
+	bed_neotech->translate(glm::vec3(0, 0, -1));
+	bed_neotech->addChild(bed_surface_neotech);
 
 	origin = TransformObject::create("origin", 10);
-	scene->add(origin);
 }
 
 void MainLayer::slice(){
@@ -193,7 +196,7 @@ void MainLayer::slice(){
 }
 
 
-void MainLayer::createSample(Sample props){
+void MainLayer::createSample(SampleProperty props){
 	samples.emplace_back(props);
 }
 
@@ -211,9 +214,13 @@ void MainLayer::onUpdate(Timestep ts){
 
 	scene->clear();
 
-	scene->add(bed);
-	scene->add(bed_surface);
-	scene->add(bed_glass);
+	if (current_machine == Machine::NEOTECH) {
+		scene->add(bed_neotech);
+	}
+	else if (current_machine == Machine::TOOLHANGER) {
+		scene->add(bed);
+	}
+	
 	scene->add(origin);
 	scene->add(toolpath);
 
@@ -224,6 +231,7 @@ void MainLayer::onUpdate(Timestep ts){
 
 	toolpath_shader->use();
 	toolpath_shader->setInt("layer", current_layer);
+	toolpath_shader->setInt("showG0", showG0);
 
 	renderer.clear();
 	renderer.render(scene, camera());
@@ -234,15 +242,48 @@ void MainLayer::onUpdate(Timestep ts){
 
 void MainLayer::onImGuiRender(){
 	//ImGui::ShowDemoWindow();
-
+	ui.Draw();
 	ImGui::DockSpaceOverViewport((ImGuiViewport*)0, ImGuiDockNodeFlags_PassthruCentralNode);
 	ImGui::Begin("Infos");
 
 	ImGui::LabelText("FPS", std::to_string(fps()).c_str());
 
+	static int selectedMachine = 1;
+	static const char* items[]{ "Neotech 15XBT","Toolchanger" };
+
+	if (ImGui::Combo("Machine", &selectedMachine, items, 2)) {
+		current_machine = Machine(selectedMachine);
+		
+		if(current_machine == Machine::TOOLHANGER) camera().setPosition(glm::vec3(150, -200, 200));
+		else camera().setPosition(glm::vec3(0, -200, 200));
+
+	}
+
 	if (ImGui::Button("Slice")) {
 		slice();
 	}
+
+	if (ImGui::Button("Save Project")) {
+
+		std::string savePath = Dialog::saveFileDialog(Dialog::FileType::DATA);
+		if (!savePath.size() == 0) {
+			saveProject(savePath);
+			Console::info("Exported sample to " + savePath);
+		}
+
+	}
+
+	if (ImGui::Button("Import Project")) {
+
+		std::string savePath = Dialog::saveFileDialog(Dialog::FileType::DATA);
+		if (!savePath.size() == 0) {
+			saveProject(savePath);
+			Console::info("Exported sample to " + savePath);
+		}
+
+	}
+
+	ImGui::Checkbox("Show Rapid Toolpath", &showG0);
 
 	ImGui::End();
 
@@ -293,56 +334,6 @@ void MainLayer::onImGuiRender(){
 
 	ImGui::End();
 
-	/*
-	if (ImGui::Checkbox("Show Isosurface", &use_isosurface)) {
-		if (use_isosurface) isosurface->show();
-		else isosurface->hide();
-	}
-	*/
-
-	/*
-	if (ImGui::SmallButton("Restart simulation")) {
-		ImGui::OpenPopup("Confirmation");
-
-		bool open = true;
-		if (ImGui::BeginPopupModal("Confirmation", &open)){
-			ImGui::Text("Are you sure you want to restart ?");
-			ImGui::Text("This will erase the simulation data and re-allocate buffers");
-			ImGui::Text("This may take a while...");
-			if (ImGui::Button("Close"))
-				ImGui::CloseCurrentPopup();
-			ImGui::EndPopup();
-		}
-
-		//User OK, do stuff here
-	}*/
-
-	/*
-	static bool Pstate = true;
-	if (ImGui::Checkbox("Show Particles", &Pstate)) {
-		if (Pstate) solver.getParticles()->show();
-		else solver.getParticles()->hide();
-	}
-
-	static bool Bstate = false;
-	if (ImGui::Checkbox("Show Bins", &Bstate)) {
-		if (Bstate) solver.getBins()->show();
-		else solver.getBins()->hide();
-	}*/
-
-
-	/*
-	static bool BBstate = false;
-	if (ImGui::Checkbox("Show Boundaries", &BBstate)) {
-		particleShader->use();
-		particleShader->setInt("showBoundary", BBstate);
-	}
-	/**/
-
-	
-
-
-
 	// 3D Scene Graph selection logic
 	std::function<void(const std::list<shared<RenderableObject>>&)> traverseNodes = [&](const std::list<shared<RenderableObject>>& nodes) {
 		for (auto& node : nodes) {
@@ -386,84 +377,56 @@ void MainLayer::onImGuiRender(){
 
 }
 
-SampleObject::SampleObject(const Sample& props){
+void MainLayer::saveProject(std::string path){
+	std::ofstream file(path);
+	if (!file.is_open()) {
+		std::cerr << "Failed to open file for XML export: " << path << std::endl;
+		return;
+	}
 
-	this->props = props;
+	file << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+	file << "<Samples>\n";
 
-	static int i = 0;
-	mesh_A = Primitives::createBox(props.width, props.thickness*0.5, props.height);
-	mesh_A->rename("s_" + std::to_string(i) + "PLA");
-	mesh_A->translate(glm::vec3(0, props.thickness * 0.25, props.height * 0.5) + glm::vec3(props.x_offset, props.y_offset, 0));
-	mesh_A->setMaterial("black plastic");  //PLA
+	for (auto& s : samples) {
+		file << s.toXML();
+	}
 
-
-	mesh_B = Primitives::createBox(props.width, props.thickness*0.5, props.height);
-	mesh_B->rename("s_" + std::to_string(i) + "TPU");
-	mesh_B->translate(glm::vec3(0, -props.thickness * 0.25, props.height * 0.5) + glm::vec3(props.x_offset, props.y_offset, 0));
-	mesh_B->setMaterial("cyan plastic");  //TPU
-
-	i++;
+	file << "</Samples>\n";
+	file.close();
 
 }
 
-void SampleObject::renderMenu(){
-	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+void MainLayer::importProject(std::string path) {
+	using namespace tinyxml2;
 
-	ImGui::Text((std::string("name : ") + props.name).c_str());
+	std::string answer = Dialog::inputBox("Save current project", "Save", "Yes");
 
-	bool changed = false;
-
-	ImGui::Checkbox("Enabled", &enabled);
-
-	changed |= ImGui::DragFloat("X Offset", &props.x_offset);
-	changed |= ImGui::DragFloat("Y Offset", &props.y_offset);
-	changed |= ImGui::DragFloat("Width", &props.width);
-	changed |= ImGui::DragFloat("Height", &props.height);
-	changed |= ImGui::DragFloat("Thickness", &props.thickness);
-
-	ImGui::InputInt("Tool A", &props.tool_a);
-	ImGui::InputInt("Tool B", &props.tool_b);
-
-	ImGui::InputFloat("Flow A", &props.flow_a);
-	ImGui::InputFloat("Flow B", &props.flow_b);
-
-	ImGui::InputFloat("Retract A", &props.retract_a);
-	ImGui::InputFloat("Retract B", &props.retract_b);
-
-	ImGui::InputFloat("Feedrate A", &props.feedrate_a);
-	ImGui::InputFloat("Feedrate B", &props.feedrate_b);
-
-	ImGui::InputFloat("Line Width", &props.line_width);
-
-	ImGui::InputFloat("Temperature A", &props.temperature_a);
-	ImGui::InputFloat("Temperature B", &props.temperature_b);
-
-	ImGui::InputInt("Overlap lines", &props.overlap);
-	ImGui::InputFloat("Overlap Flow Modifier", &props.overlap_flow_modifier);
-
-	ImGui::Checkbox("Use Purge Tower", &props.use_purge_tower);
-	ImGui::Checkbox("Use Alternate Sweep", &props.use_alternate_sweep);
-	ImGui::Checkbox("Use In to Out", &props.use_in_to_out);
-
-	char buffer[256];
-	strncpy(buffer, props.comment.c_str(), sizeof(buffer));
-	buffer[sizeof(buffer) - 1] = '\0';
-	if (ImGui::InputText("Comment", buffer, sizeof(buffer))) {
-		props.comment = buffer;
+	if (answer == "Yes") {
+		std::string savePath = Dialog::saveFileDialog(Dialog::FileType::DATA);
+		if (!savePath.size() == 0) {
+			saveProject(savePath);
+			Console::info("Exported sample to " + savePath);
+		}
 	}
 
-	if (ImGui::Button("Apply changes") || changed) {
-		std::string name_A = mesh_A->name();
-		mesh_A = Primitives::createBox(props.width, props.thickness * 0.5, props.height);
-		mesh_A->rename(name_A);
-		mesh_A->translate(glm::vec3(0, props.thickness * 0.25, props.height * 0.5) + glm::vec3(props.x_offset, props.y_offset, 0));
-		mesh_A->setMaterial("black plastic");  //PLA
+	XMLDocument doc;
+	if (doc.LoadFile(path.c_str()) != XML_SUCCESS) {
+		std::cerr << "Failed to load XML file: " << path << std::endl;
+		return;
+	}
 
-		std::string name_B = mesh_B->name();
-		mesh_B = Primitives::createBox(props.width, props.thickness * 0.5, props.height);
-		mesh_B->rename(name_B);
-		mesh_B->translate(glm::vec3(0, -props.thickness * 0.25, props.height * 0.5) + glm::vec3(props.x_offset, props.y_offset, 0));
-		mesh_B->setMaterial("cyan plastic");  //TPU
+	samples.clear(); // optional: reset current project
 
+	XMLElement* root = doc.FirstChildElement("Samples");
+	if (!root) {
+		std::cerr << "Invalid XML format (missing <Samples>)" << std::endl;
+		return;
+	}
+
+	samples.clear();
+
+	for (XMLElement* elem = root->FirstChildElement("Sample"); elem != nullptr; elem = elem->NextSiblingElement("Sample")) {
+		SampleProperty s = SampleObject::fromXML(elem);
+		createSample(s);
 	}
 }
