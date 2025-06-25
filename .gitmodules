@@ -16,7 +16,7 @@
 	url = https://github.com/JulesTopart/tinyfiledialogs.git
 [submodule "vendor/tinyxml2"]
 	path = vendor/tinyxml2
-	url = https://github.com/leethomason/tinyxml2.git
+	url = https://github.com/JulesTopart/tinyxml2.git
 [submodule "vendor/imrad"]
 	path = vendor/imrad
-	url = https://github.com/tpecholt/imrad.git
+	url = https://github.com/JulesTopart/imrad.git
