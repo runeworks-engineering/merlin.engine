@@ -184,6 +184,7 @@ void MainLayer::createScene() {
 void MainLayer::slice(){
 	slicer.clear();
 	for (auto& s : samples) {
+		if (!s.enabled) continue;
 		slicer.generateSample(s.getProperties());
 	}
 	toolpath_buffer->bind();
@@ -229,6 +230,7 @@ void MainLayer::onUpdate(Timestep ts) {
 	scene->add(toolpath);
 
 	for (auto& s : samples) {
+		if (!s.enabled) continue;
 		scene->add(s.getMeshA());
 		scene->add(s.getMeshB());
 	}
@@ -415,6 +417,13 @@ void MainLayer::onImGuiRender() {
 
 	ImGui::Checkbox("Show Rapid Toolpath", &showG0);
 
+	static int colorMode = 1;
+	static const char* options[] = { "Tool index", "Feedrate", "Temperature" };
+	if (ImGui::ListBox("Colored field", &colorMode, options, 3)) {
+		toolpath_shader->use();
+		toolpath_shader->setInt("colorMode", colorMode);
+	}
+
 	ImGui::End();
 
 	static int selected_sample_index = -1;
@@ -540,11 +549,11 @@ void MainLayer::saveProject(){
 void MainLayer::importProject() {
 	using namespace tinyxml2;
 
-	std::string answer = Dialog::inputBox("Save current project", "Save", "Yes");
-
-	if (answer == "Yes") {
-		saveProject();
-	}
+	int answer = Dialog::messageBox("Save current project", "Discard", Dialog::MessageType::YES_NO_CANCEL);
+	/* 0 for cancel/no , 1 for ok/yes , 2 for no in yesnocancel */
+	if (answer == 0) return;
+	if (answer == 1) saveProject();
+	if (answer == 2) ;//just import
 
 	std::string path = Dialog::openFileDialog(Dialog::FileType::DATA);
 
@@ -585,11 +594,11 @@ void MainLayer::importProject() {
 void MainLayer::newProject() {
 	using namespace tinyxml2;
 
-	std::string answer = Dialog::inputBox("Save current project", "Save", "Yes");
-
-	if (answer == "Yes") {
-		saveProject();
-	}
+	int answer = Dialog::messageBox("Save current project", "Discard", Dialog::MessageType::YES_NO_CANCEL);
+	/* 0 for cancel/no , 1 for ok/yes , 2 for no in yesnocancel */
+	if (answer == 0) return;
+	if (answer == 1) saveProject();
+	if (answer == 2);//just import
 
 	samples.clear(); // optional: reset current project
 }

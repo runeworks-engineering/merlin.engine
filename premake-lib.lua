@@ -128,4 +128,5 @@ group "Examples"
 	include "examples/merlin.graphics"
 	include "examples/merlin.sandbox"
 	include "examples/merlin.slicer"
+	include "examples/merlin.slicer.neotech"
 	

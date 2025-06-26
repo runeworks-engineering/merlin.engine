@@ -19,6 +19,7 @@ uniform mat4 projection;
 uniform mat4 model;
 
 uniform bool showG0 = false;
+uniform int colorMode = 1;
 
 void main() {
 	uint i = gl_InstanceID;
@@ -35,7 +36,14 @@ void main() {
 
 	vout.position = model * (vec4(_position + vec3(offset),1));
 	vout.screen_position = projection * view * vout.position;
-	vout.color = colorMap(map(length(ssbo_toolpath[i].meta.x), 0, 1000),parula);
+	
+
+	if(colorMode == 0)		vout.color = vec4(randomColor(uint(ssbo_toolpath[i].meta.w) + 1),1);
+	else if(colorMode == 1)	vout.color = colorMap(map(length(ssbo_toolpath[i].meta.x), 0, 1000),parula);
+	else if(colorMode == 2)	vout.color = colorMap(map(length(ssbo_toolpath[i].meta.y), 0, 250),inferno);
+
+
+
 	vout.mv = projection * view;
 		
 	gl_Position = vout.screen_position;	

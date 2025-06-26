@@ -157,7 +157,7 @@ void Slicer::generateSample(SampleProperty props) {
     float yOverlapMax = props.y_offset + props.overlap * props.line_width / 2.0f;
     numLayers = int(std::ceil(props.height / props.layer_height));
 
-    int linesPerSection = static_cast<int>(std::ceil(fill_height + props.overlap / 2.0f) / props.line_width);
+    int linesPerSection = static_cast<int>(std::ceil(fill_height) / props.line_width) + props.overlap;
     int overlapLines = props.overlap;
 
 
@@ -212,13 +212,15 @@ void Slicer::generateSample(SampleProperty props) {
         extrude(1.4, 2400);
 
         int feedrate = (tool.id == props.tool_a) ? props.feedrate_a : props.feedrate_b;
-
+        float yStart = (layer % 2 == 0) ? yOverlapMax : yOverlapMin;
 
         for (int i = 0; i < linesPerSection; ++i) {
+
             float y = 0;
+            
             float flow = (tool.id == props.tool_a) ? props.flow_a : props.flow_b;
             if (props.use_in_to_out) {
-                y = (layer % 2 == 0) ? props.y_offset - i * props.line_width : props.y_offset + i * props.line_width;
+                y = (layer % 2 == 0) ? yStart - i * props.line_width : props.y_offset + i * props.line_width;
             }
             else {
                 y = (layer % 2 == 0) ? yMin + i * props.line_width : yMax - i * props.line_width;
@@ -266,11 +268,13 @@ void Slicer::generateSample(SampleProperty props) {
         move(glm::vec4(m_current_position.x, m_current_position.y, z, 0));
         extrude(1.4, 2400);
 
+        yStart = (layer % 2 == 0) ? yOverlapMin : yOverlapMax;
+
         for (int i = 0; i < linesPerSection; ++i) {
             float flow = (tool.id == props.tool_a) ? props.flow_a : props.flow_b;
             float y = 0;
             if (props.use_in_to_out) {
-                y = (layer % 2 == 0) ? props.y_offset + i * props.line_width : props.y_offset - i * props.line_width;
+                y = (layer % 2 == 0) ? yStart + i * props.line_width : props.y_offset - i * props.line_width;
             }
             else {
                 y = (layer % 2 == 0) ? yMin - i * props.line_width : yMax + i * props.line_width;

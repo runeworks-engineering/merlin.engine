@@ -19,7 +19,7 @@ struct ToolPath{
 	vec4 start; // x, y, z, e;
 	vec4 end;   // x, y, z, e;
 	vec4 meta;  // feed, T°, flow, tool
-	vec4 meta_bis; //layer, null, null, null
+	vec4 meta_bis; //layer, mode, null, null
 };
 
 layout(std430) buffer toolpath_buffer {
