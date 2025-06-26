@@ -6,10 +6,10 @@
 #include <fstream>
 
 Slicer::Slicer()
-    : toolpath(0), noTool({ -1,0,10000,0 }) {
+    : toolpath(0), noTool({ -1,0,2400,0 }) {
 
     start_gcode = {
-        "% 1000",
+        "%1000",
         "G90",
         "G17",
         "HOME_EXTRUDER_AXES",
@@ -19,13 +19,24 @@ Slicer::Slicer()
         "BED_LEVELING[22, 80.0, 0.0, 0.0, 5.944]",
         "G0 Z30",
         "TOOLID[15]",
-        "G0 QA = 0 QB = 0",
+        "G0 QA=0 QB=0",
         "G0 X0 Y0",
+        "G90",
+        "M82",
+        "SET_EXTRUDER_AXES[0.0,0.0,0.0,0.0]"
     };
 
     end_gcode = {
+        "SET_EXTRUDER_AXES[0.0,0.0,0.0,0.0]",
+        "G90",
+        "G17",
         "PS2 F1000"
+        "HOME_EXTRUDER_AXES"
     };
+
+
+
+
     clear();
 }
 
@@ -122,6 +133,7 @@ void Slicer::generateSample(SampleProperty props) {
     if (props.sample_type < 2) numLayers = int(std::ceil(props.height / props.layer_height));
     else numLayers = 1;
 
+    m_active_tool = tool;
     m_current_feedrate = props.feedrate;
 
     add_gcode("\n");
@@ -150,23 +162,25 @@ void Slicer::generateSample(SampleProperty props) {
     for (int layer = 0; layer < numLayers; ++layer) {
         float z = props.layer_height * (layer + 1);
 
-        retract(1, 2400);
-        new_layer(z);
+        //retract(1, 2400);
+        
 
-        retract(1.4, 2400);
-        move(glm::vec4(props.x_offset, props.y_offset, actual_max_z + 5, 0), 0, 30000);
-        move(glm::vec4(m_current_position.x, m_current_position.y, z, 0), 17800);
+        //retract(1.4, 2400);
         extrude(1.4, 2400);
+        move(glm::vec4(props.x_offset, props.y_offset, actual_max_z + 5, 0), 0, 7800);
+        new_layer(z);
+        move(glm::vec4(m_current_position.x, m_current_position.y, z, 0), 1, 17800);
+        
 
         if (props.sample_type == 0) generateConcentric(props);
         else if (props.sample_type == 1) generateSpiral(props);
         else generateLineTest(props);
 
         // PLA Section
-        retract(1, 2400);
+        //retract(1, 2400);
     }
-    move_Z(actual_max_z + 5, 0, 30000);
-    retract(1, 2400);
+    move_Z(actual_max_z + 5, 0, 7800);
+    //retract(1, 2400);
     comment("End of Sample");
 }
 
@@ -325,11 +339,11 @@ void Slicer::tool_change(Tool tool) {
 
     m_active_tool = tool;
     retract(1.4, 2400);
-    move_Z(actual_max_z + 5, 0, 30000);
-    add_gcode("T" + std::to_string(tool.id));
-    brush();
-    ToolPath tpa = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z, 0), m_active_tool, 30000);
-    ToolPath tpb = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z, 0), m_active_tool, 30000);
+    move_Z(actual_max_z + 5, 0, 7800);
+    add_gcode("TOOLID[" + std::to_string(tool.id) + "]");
+    //brush();
+    ToolPath tpa = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z, 0), m_active_tool, 7800);
+    ToolPath tpb = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z, 0), m_active_tool, 7800);
     m_current_position = glm::vec4(330, 240, m_current_position.z, 0);
     toolpath.push_back(tpa);
     toolpath.push_back(tpb);
@@ -364,9 +378,13 @@ void Slicer::new_layer(float z) {
     actual_max_z = z > actual_max_z ? z : actual_max_z;
 
     m_current_layer++;
+    
     ToolPath tp = gen_toolpath(start, end, m_active_tool, m_current_feedrate, 0);
     add_gcode(tp);
 
+    add_gcode("SET_EXTRUDER_AXES[0.0,0.0,0.0,0.0]");
+    m_current_position.w = 0;
+    
     //m_sliced_object.push_back(m_current_layer);
     //m_current_layer.clear();
 }
@@ -374,8 +392,8 @@ void Slicer::new_layer(float z) {
 void Slicer::brush() {
     move_Z(actual_max_z + 5, 0);
     add_gcode("M98 Pbrush.g");
-    ToolPath tp2 = gen_toolpath(m_current_position, glm::vec4(335, 100, m_current_position.z, 0), m_active_tool, 10000, 0);
-    ToolPath tp3 = gen_toolpath(m_current_position, glm::vec4(335, 180, m_current_position.z, 0), m_active_tool, 10000, 0);
+    ToolPath tp2 = gen_toolpath(m_current_position, glm::vec4(335, 100, m_current_position.z, 0), m_active_tool, 2400, 0);
+    ToolPath tp3 = gen_toolpath(m_current_position, glm::vec4(335, 180, m_current_position.z, 0), m_active_tool, 2400, 0);
     toolpath.push_back(tp2);
     toolpath.push_back(tp3);
     m_current_position = glm::vec4(330, 180, m_current_position.z, 0);
@@ -401,13 +419,12 @@ void Slicer::add_gcode(ToolPath tp, const std::string& command) {
 
     if (tp.end.x != m_current_position.x) line << "X" << std::fixed << std::setprecision(3) << tp.end.x << " ";
     if (tp.end.y != m_current_position.y) line << "Y" << std::fixed << std::setprecision(3) << std::to_string(tp.end.y) + " ";
-    if (tp.end.z != m_current_position.z) line << "Z" << std::fixed << std::setprecision(3) << std::to_string(tp.end.z) + " ";
-    if (tp.end.w != 0) line << "QV=" << std::fixed << std::setprecision(5) << std::to_string(tp.end.w) + " ";
+    if (tp.end.z != m_current_position.z) line << "Z" << std::fixed << std::setprecision(3) << std::to_string(tp.end.z + z_offset) + " ";
+    if (tp.end.w != 0) line << "QV=" << std::fixed << std::setprecision(5) << std::to_string(m_current_position.w + tp.end.w) + " ";
     if (tp.meta.x != m_current_feedrate) line << "F" << std::to_string(int(tp.meta.x)) + " ";
 
     if (line.str() == command + " ") return;
-    m_current_position = tp.end;
-    m_current_position.w = 0;
+    m_current_position = tp.end + glm::vec4(0,0,0,m_current_position.w);
     m_current_feedrate = tp.meta.x;
     gcode.push_back(line.str());
     toolpath.push_back(tp);

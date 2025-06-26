@@ -107,9 +107,13 @@ std::string SampleObject::toXML() const {
 
 	ss << "<Sample name=\"" << props.name << "\">\n";
 	ss << "  <Comment>" << props.comment << "</Comment>\n";
+
 	ss << "  <Position x=\"" << props.x_offset << "\" y=\"" << props.y_offset << "\" />\n";
 
-	ss << "  <Geometry radius=\"" << props.radius << "\" height=\"" << props.height << "\" />\n";
+	ss << "  <Geometry radius=\"" << props.radius
+		<< "\" length=\"" << props.length
+		<< "\" height=\"" << props.height
+		<< "\" resolution=\"" << props.resolution << "\" />\n";
 
 	ss << "  <Print layerHeight=\"" << props.layer_height
 		<< "\" lineWidth=\"" << props.line_width
@@ -117,6 +121,9 @@ std::string SampleObject::toXML() const {
 		<< "\" flow=\"" << props.flow
 		<< "\" retract=\"" << props.retract
 		<< "\" feedrate=\"" << props.feedrate << "\" />\n";
+
+	ss << "  <Options sampleType=\"" << props.sample_type
+		<< "\" useOutline=\"" << (props.use_outline ? "true" : "false") << "\" />\n";
 
 	ss << "</Sample>\n";
 	return ss.str();
@@ -129,8 +136,8 @@ SampleProperty SampleObject::fromXML(const tinyxml2::XMLElement* elem) {
 
 	if (!elem) return props;
 
-	const char* name = elem->Attribute("name");
-	if (name) props.name = name;
+	if (const char* name = elem->Attribute("name"))
+		props.name = name;
 
 	if (auto comment = elem->FirstChildElement("Comment"))
 		props.comment = comment->GetText() ? comment->GetText() : "";
@@ -142,7 +149,9 @@ SampleProperty SampleObject::fromXML(const tinyxml2::XMLElement* elem) {
 
 	if (auto geo = elem->FirstChildElement("Geometry")) {
 		geo->QueryFloatAttribute("radius", &props.radius);
+		geo->QueryFloatAttribute("length", &props.length);
 		geo->QueryFloatAttribute("height", &props.height);
+		geo->QueryFloatAttribute("resolution", &props.resolution);
 	}
 
 	if (auto print = elem->FirstChildElement("Print")) {
@@ -152,6 +161,14 @@ SampleProperty SampleObject::fromXML(const tinyxml2::XMLElement* elem) {
 		print->QueryFloatAttribute("flow", &props.flow);
 		print->QueryFloatAttribute("retract", &props.retract);
 		print->QueryFloatAttribute("feedrate", &props.feedrate);
+	}
+
+	if (auto options = elem->FirstChildElement("Options")) {
+		options->QueryIntAttribute("sampleType", &props.sample_type);
+
+		const char* useOutlineStr = options->Attribute("useOutline");
+		if (useOutlineStr)
+			props.use_outline = (std::string(useOutlineStr) == "true");
 	}
 
 	return props;
