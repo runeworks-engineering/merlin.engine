@@ -23,6 +23,7 @@ namespace Merlin {
 			IMAGE,
 			MESH,
 			DATA,
+			GCODE,
 			ALL
 		};
 

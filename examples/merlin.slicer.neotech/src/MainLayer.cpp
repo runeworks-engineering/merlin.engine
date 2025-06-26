@@ -31,11 +31,9 @@ MainLayer::~MainLayer(){}
 void MainLayer::createScene() {
 	renderer.initialize();
 	renderer.enableSampleShading();
-	//renderer.setEnvironmentGradientColor(1.0, 1.0, 1.0);
 	renderer.setEnvironmentGradientColor(0.9, 0.9, 0.9);
 	renderer.enableEnvironment();
 	renderer.disableShadows();
-	//renderer.showLights();
 	renderer.disableFaceCulling();
 	renderer.enableTransparency();
 
@@ -53,6 +51,7 @@ void MainLayer::createScene() {
 	default_props.flow = 1.0f;
 	default_props.retract = 1.0f;
 	default_props.feedrate = 1050;
+	default_props.resolution = 1;
 
 
 	default_props.name = "Sample 0";
@@ -210,7 +209,7 @@ void MainLayer::onUpdate(Timestep ts) {
 
 	for (auto& s : samples) {
 		if (!s.enabled) continue;
-		scene->add(s.getMesh());
+		scene->add(s.getModel());
 	}
 
 	toolpath_shader->use();
@@ -268,7 +267,7 @@ void MainLayer::onImGuiRender() {
 			if (ImGui::BeginMenu("Export")) {
 
 				if(ImGui::MenuItem("Export G-Code..", "Ctrl+G", false)){
-					std::string gcode_path = Dialog::saveFileDialog(Dialog::FileType::DATA);
+					std::string gcode_path = Dialog::saveFileDialog(Dialog::FileType::GCODE);
 					if (gcode_path.size() != 0)
 						slicer.export_gcode(gcode_path);
 				}
