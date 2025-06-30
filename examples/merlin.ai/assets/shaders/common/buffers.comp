@@ -53,6 +53,49 @@
 #define c_wi (1.0/particleMass)
 #define c_wj (1.0/particleMass)
 
+
+
+
+
+
+
+
+
+/*
+struct vec6{
+	vec4 a; 
+	vec4 b;
+};
+
+layout(std430) buffer stress_buffer {
+	vec6 ssbo_sigma[];
+};*/
+
+
+
+
+struct Bin {
+	uint count;
+	uint sum;
+	uint csum;
+	uint index;
+};
+
+struct CopyContent{
+	vec4 last_position;
+	vec4 position;
+	vec4 predicted_position;
+	vec4 position_correction;
+	vec4 velocity;
+	uvec4 meta;
+	vec2 temperature;
+	float density;
+	float lambda;
+};
+
+
+
+
 // SSBO declaration
 layout(std430) buffer last_position_buffer {
 	vec4 ssbo_last_position[];
@@ -87,43 +130,8 @@ layout(std430) buffer temperature_buffer {
 	vec2 ssbo_temperature[];
 };
 
-
-
 layout(std430) buffer meta_buffer {
 	uvec4 ssbo_meta[]; //phase, binindex, id , sortedID
-};
-
-struct Bin {
-	uint count;
-	uint sum;
-	uint csum;
-	uint index;
-};
-
-layout(std430) buffer bin_buffer {
-	Bin ssbo_bins[];
-};
-
-/*
-struct vec6{
-	vec4 a; 
-	vec4 b;
-};
-
-layout(std430) buffer stress_buffer {
-	vec6 ssbo_sigma[];
-};*/
-
-struct CopyContent{
-	vec4 last_position;
-	vec4 position;
-	vec4 predicted_position;
-	vec4 position_correction;
-	vec4 velocity;
-	uvec4 meta;
-	vec2 temperature;
-	float density;
-	float lambda;
 };
 
 layout(std430) buffer copy_buffer {
@@ -133,6 +141,13 @@ layout(std430) buffer copy_buffer {
 layout(std430) buffer emitter_position_buffer {
 	vec4 ssbo_emitter_positions[];
 };
+
+layout(std430) buffer bin_buffer {
+	Bin ssbo_bins[];
+};
+
+
+
 
 
 #endif// INCLUDE_BUFFERS_HLSL

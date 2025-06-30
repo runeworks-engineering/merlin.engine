@@ -2,6 +2,13 @@
 #include <Merlin.h>
 #include <glm/glm.hpp>
 
+
+#define PROFILE(VAR, CODE) double start_ ## VAR ## _time = glfwGetTime(); CODE VAR = (glfwGetTime() - start_ ## VAR ## _time)*1000.0;
+#define GPU_PROFILE(VAR, CODE) double start_ ## VAR ## _time = glfwGetTime(); CODE glFinish(); VAR = (glfwGetTime() - start_ ## VAR ## _time)*1000.0;
+
+#define PROFILE_BEGIN(STARTVAR) STARTVAR = glfwGetTime();
+#define PROFILE_END(STARTVAR, VAR) VAR = (glfwGetTime() - STARTVAR)*1000.0
+
 struct Bin {
 	GLuint count; //particle count in the bin
 	GLuint sum;   //global sum
@@ -13,12 +20,10 @@ struct CopyContent {
 	alignas(16) glm::vec4 lx;
 	alignas(16) glm::vec4 x;
 	alignas(16) glm::vec4 p;
-	glm::vec4 dp;
+	alignas(16) glm::vec4 dp;
 	alignas(16) glm::vec4 v;
 	alignas(16) glm::uvec4 meta;
-	alignas(4) glm::vec2 temperature;
-	float density;
-	float lambda;
+	alignas(16) glm::uvec4 temperature_density_lambda;
 };
 
 
@@ -118,3 +123,14 @@ struct Settings {
 };
 
 extern Settings settings;
+
+
+/*********** Stats ***********/
+extern double nns_time;
+extern double jacobi_time;
+extern double solver_substep_time;
+extern double solver_total_time;
+extern double render_time;
+extern double render_start_time;
+extern double total_time; 
+extern double total_start_time;

@@ -95,7 +95,7 @@ namespace Merlin {
 			return;
 		}
 
-		extractBlockBindings(m_shaderSrc);
+		
 
 		m_compiled = true;
 		m_shaderID = glCreateShader(GL_COMPUTE_SHADER);
@@ -131,7 +131,10 @@ namespace Merlin {
 		
 		glDetachShader(id(), m_shaderID);
 		glDeleteShader(m_shaderID);
-		if (m_compiled) use();
+		if (m_compiled) {
+			extractBlockBindings(m_shaderSrc);
+			use();
+		}
 	}
 
 	void ComputeShader::compileFromFile(const std::string& file_path) {

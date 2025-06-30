@@ -99,10 +99,6 @@ namespace Merlin {
 		FragmentShaderSrc = fSrc;
 		GeomShaderSrc = gSrc;
 
-		extractBlockBindings(VertexShaderSrc);
-		extractBlockBindings(FragmentShaderSrc);
-		extractBlockBindings(GeomShaderSrc);
-
 		precompileSrc(VertexShaderSrc);
 		precompileSrc(FragmentShaderSrc);
 		precompileSrc(GeomShaderSrc);
@@ -153,8 +149,15 @@ namespace Merlin {
 		if (GeomShaderSrc != "")
 			glDeleteShader(geometryShaderID);
 
-		if(m_compiled)
-		use();
+		if (m_compiled) {
+			extractBlockBindings(VertexShaderSrc);
+			extractBlockBindings(FragmentShaderSrc);
+			extractBlockBindings(GeomShaderSrc);
+
+			use();
+
+		}
+		
 	}
 
 }

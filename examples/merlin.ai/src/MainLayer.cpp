@@ -11,6 +11,7 @@ using namespace Merlin;
 
 
 
+
 const float radius = 3;
 
 MainLayer::MainLayer(){
@@ -21,6 +22,8 @@ MainLayer::MainLayer(){
 
 	glm::vec3 viewCenter = glm::vec3(150, 100, 0);
 	camera().setView(CameraView::Top, glm::distance(glm::vec3(0), camera().getPosition()), viewCenter);
+
+	glfwSwapInterval(0);
 
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_LINE_SMOOTH);
@@ -34,47 +37,81 @@ void MainLayer::onAttach() {
 
 	Console::setLevel(ConsoleLevel::_INFO);
 
-	createBuffers();
-	sim.init();
-	createShaders();
-	createScene();
-	createSamples();
-	sim.reset();
+	double buffers_init = 0;
+	double shaders_init = 0;
+	double sim_init = 0;
+	double scene_init = 0;
+	//double samples_init = 0;
+	double scenario_init = 0;
 
+
+
+	GPU_PROFILE(buffers_init,
+		createBuffers();
+	)
+
+	GPU_PROFILE(sim_init,
+		sim.init();
+	)
+
+	GPU_PROFILE(shaders_init,
+		createShaders();
+	)
+
+	GPU_PROFILE(scene_init,
+		createScene();
+	)
+	
+	//createSamples();
+
+	GPU_PROFILE(scenario_init,
+		sim.reset();
+	)
+	
+	Console::printSeparator();
 	Console::print() << "Initialization done." << Console::endl;
+	Console::print() << "Buffer initialization : " << buffers_init  << "s" << Console::endl;
+	Console::print() << "Physics initialization : " << sim_init << "s" << Console::endl;
+	Console::print() << "Shaders initialization : " << shaders_init << "s" << Console::endl;
+	Console::print() << "Graphics scene initialization : " << scene_init << "s" << Console::endl;
+	//Console::print() << "Buffer initialization : " << samples_init << "s" << Console::endl;
+	Console::print() << "Physics scene initialization : " << scenario_init << "s" << Console::endl;
+	Console::printSeparator();
+	
 }
 
 void MainLayer::onUpdate(Timestep ts) {
 	Layer3D::onUpdate(ts);
 
-	scene->clear();
+	GPU_PROFILE(render_time,
+		scene->clear();
 
-	scene->add(ps);
-	scene->add(bs);
-	nozzle->setPosition(sim.getNozzlePosition());
-	scene->add(nozzle);
-	scene->add(isosurface);
+		scene->add(ps);
+		scene->add(bs);
+		nozzle->setPosition(sim.getNozzlePosition());
+		scene->add(nozzle);
+		scene->add(isosurface);
 
-	scene->add(bed);
-	scene->add(origin);
-	scene->add(toolpath);
+		scene->add(bed);
+		scene->add(origin);
+		scene->add(toolpath);
 
-	for (auto& s : samples) {
-		if (!s.enabled) continue;
-		scene->add(s.getMesh());
-	}
+		for (auto& s : samples) {
+			if (!s.enabled) continue;
+			scene->add(s.getMesh());
+		}
 
-	syncUniform();
+		syncUniform();
 
-	if (sim.isRunning()) {
-		plotCutView();
-		plotIsoSurface();
-	}
+		if (sim.isRunning()) {
+			plotCutView();
+			plotIsoSurface();
+		}
 
-	renderer.clear();
-	renderer.render(scene, camera());
-	renderer.reset();
-
+		renderer.clear();
+		renderer.render(scene, camera());
+		renderer.reset();
+	)
 
 	sim.step(settings.timestep);
 }
@@ -117,16 +154,16 @@ void MainLayer::createSample(SampleProperty props) {
 void MainLayer::createBuffers(){
 	auto& memory = MemoryManager::instance();
 	//Particle buffers
-	memory.createBuffer<glm::vec4>("last_position_buffer", 1);
-	memory.createBuffer<glm::vec4>("position_buffer", 1);
-	memory.createBuffer<glm::vec4>("predicted_position_buffer", 1);
-	memory.createBuffer<glm::vec4>("correction_buffer", 1);
-	memory.createBuffer<glm::vec4>("velocity_buffer", 1);
-	memory.createBuffer<glm::vec2>("temperature_buffer", 1);
-	memory.createBuffer<float>("density_buffer", 1);
-	memory.createBuffer<float>("lambda_buffer", 1);
-	memory.createBuffer<glm::uvec4>("meta_buffer", 1);
-	memory.createBuffer<CopyContent>("copy_buffer", 1);
+	memory.createBuffer<glm::vec4>("last_position_buffer", settings.max_pThread);
+	memory.createBuffer<glm::vec4>("position_buffer", settings.max_pThread);
+	memory.createBuffer<glm::vec4>("predicted_position_buffer", settings.max_pThread);
+	memory.createBuffer<glm::vec4>("correction_buffer", settings.max_pThread);
+	memory.createBuffer<glm::vec4>("velocity_buffer", settings.max_pThread);
+	memory.createBuffer<glm::vec2>("temperature_buffer", settings.max_pThread);
+	memory.createBuffer<float>("density_buffer", settings.max_pThread);
+	memory.createBuffer<float>("lambda_buffer", settings.max_pThread);
+	memory.createBuffer<glm::uvec4>("meta_buffer", settings.max_pThread);
+	memory.createBuffer<CopyContent>("copy_buffer", settings.max_pThread);
 
 	//Particle Emitter buffers
 	memory.createBuffer<glm::vec4>("emitter_position_buffer", 1);
@@ -434,6 +471,18 @@ void MainLayer::onImGuiRender() {
 	ImGui::LabelText(std::to_string(settings.numParticles()).c_str(), "particles");
 	ImGui::LabelText(std::to_string(settings.bThread).c_str(), "bins");
 	
+	if (ImGui::TreeNode("Statistics")) {
+		ImGui::LabelText("FPS", std::to_string(fps()).c_str());
+
+		ImGui::Text("Nearest Neighbor Search %.1f ms", nns_time);
+		ImGui::Text("Substep solver %.1f ms", solver_substep_time - nns_time);
+		ImGui::Text("Jacobi iteration %.1f ms", jacobi_time);
+		ImGui::Text("Total physics time %.1f ms", solver_total_time);
+		ImGui::Text("Render time %.1f ms", render_time);
+		ImGui::Text("Total frame time %.1f ms", total_time);
+		ImGui::TreePop();
+	}
+
 	ImGui::End();
 
 

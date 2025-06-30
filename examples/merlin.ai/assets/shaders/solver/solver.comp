@@ -51,7 +51,7 @@ void spawnParticle(uint i){
 		b_Ti = 275.15 + 220;
 		b_dTi = 0.0;
 
-		ssbo_meta[i] = uvec4(FLUID, 0, i, 0); //phase, binindex, id , sortedID
+		ssbo_meta[i] = uvec4(FLUID, getBinIndex(ssbo_position[i].xyz), i, 0); //phase, binindex, id , sortedID
 	}
 }
 

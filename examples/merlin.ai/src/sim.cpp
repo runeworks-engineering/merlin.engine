@@ -1,5 +1,6 @@
 #include "sim.h"
 #include "settings.h"
+#include <GLFW/glfw3.h>
 
 Sim::Sim(){}
 Sim::~Sim() {}
@@ -187,6 +188,7 @@ void Sim::reset(){
 	bs->setInstancesCount(settings.bThread);
 
 
+
 	//SyncUniforms();
 	Console::info() << "Uploading buffer on device..." << Console::endl;
 	memory.writeBuffer("position_buffer", cpu_position);
@@ -243,87 +245,91 @@ void Sim::spawn(){
 }
 
 void Sim::nns(){
-	prefixSum->use();
-	prefixSum->setUInt("dataSize", settings.bThread); //data size
-	prefixSum->setUInt("blockSize", settings.blockSize); //block size
-	prefixSum->execute(4);// clear bins
+	GPU_PROFILE(nns_time,
+		prefixSum->use();
+		prefixSum->setUInt("dataSize", settings.bThread); //data size
+		prefixSum->setUInt("blockSize", settings.blockSize); //block size
+		prefixSum->execute(4);// clear bins
 
-	solver->use();
-	solver->execute(0); //Place particles in bins
+		solver->use();
+		solver->execute(0); //Place particles in bins
 
-	prefixSum->use();
-	prefixSum->execute(0);// local prefix sum
+		prefixSum->use();
+		prefixSum->execute(0);// local prefix sum
 
-	//Binary tree on rightmost element of blocks
-	GLuint steps = settings.blockSize;
-	UniformObject<GLuint> space("space");
-	space.value() = 1;
+		//Binary tree on rightmost element of blocks
+		GLuint steps = settings.blockSize;
+		UniformObject<GLuint> space("space");
+		space.value() = 1;
 
-	for (GLuint step = 0; step < steps; step++) {
-		// Calls the parallel operation
+		for (GLuint step = 0; step < steps; step++) {
+			// Calls the parallel operation
 
-		space.sync(*prefixSum);
-		prefixSum->execute(1);
-		prefixSum->execute(2);
+			space.sync(*prefixSum);
+			prefixSum->execute(1);
+			prefixSum->execute(2);
 
-		space.value() *= 2;
-	}
-	prefixSum->execute(3);
+			space.value() *= 2;
+		}
+		prefixSum->execute(3);
 
-	solver->use();
-	solver->execute(1); //Sort
+		solver->use();
+		solver->execute(1); //Sort
+	)
 }
 
 void Sim::step(Timestep ts){
 	if (running) {
-		elapsedTime += ts.getSeconds();
-		settings.setTimestep(ts.getSeconds());
+		GPU_PROFILE(solver_total_time,
+			elapsedTime += ts.getSeconds();
+			settings.setTimestep(ts.getSeconds());
 
-		//ps->clearField("correction_buffer");
+			//ps->clearField("correction_buffer");
 
-		syncUniform();
+			syncUniform();
 
-		solver->use();
-		settings.dt.sync(*solver);
+			solver->use();
+			settings.dt.sync(*solver);
 
-		for (int i = 0; i < settings.solver_substep; i++) {
+			for (int i = 0; i < settings.solver_substep; i++) {
 
 
-			for (int i = 0; i < 10; i++)
-				simulator.update(ts.getSeconds() / (settings.solver_substep * 10));
+				for (int i = 0; i < 10; i++)
+					simulator.update(ts.getSeconds() / (settings.solver_substep * 10));
 
-			nozzle_position = simulator.getNozzlePosition();
-			
+				nozzle_position = simulator.getNozzlePosition();
 
-			settings.emitter_transform = glm::mat4(1);
-			settings.emitter_transform = glm::translate(settings.emitter_transform(), glm::vec3(nozzle_position));
-			settings.emitter_transform.sync(*solver);
 
-			float e_speed = simulator.getExtruderDistance();
-			float emitterDelay = 1000.0 / (settings.particleVolume * 1.0) / e_speed;
-			if (use_emitter && simulator.getExtruderDistance() > 0.01)
-				if (elapsedTime - lastSpawTime > (emitterDelay / 1000.0)) {
-					spawn();
-					lastSpawTime = elapsedTime;
+				settings.emitter_transform = glm::mat4(1);
+				settings.emitter_transform = glm::translate(settings.emitter_transform(), glm::vec3(nozzle_position));
+				settings.emitter_transform.sync(*solver);
+
+				float e_speed = simulator.getExtruderDistance();
+				float emitterDelay = 1000.0 / (settings.particleVolume * 1.0) / e_speed;
+				if (use_emitter && simulator.getExtruderDistance() > 0.01)
+					if (elapsedTime - lastSpawTime > (emitterDelay / 1000.0)) {
+						spawn();
+						lastSpawTime = elapsedTime;
+					}
+
+				solver->execute(2);
+
+				nns();
+
+
+				if (integrate) {
+					for (int j = 0; j < settings.solver_iteration; j++) {
+						solver->execute(3);
+						solver->execute(4);
+						solver->execute(5);
+					}
+
+
+					solver->execute(6);
+					solver->execute(7);
 				}
-
-			solver->execute(2);
-
-			nns();
-
-
-			if (integrate) {
-				for (int j = 0; j < settings.solver_iteration; j++) {
-					solver->execute(3);
-					solver->execute(4);
-					solver->execute(5);
-				}
-
-
-				solver->execute(6);
-				solver->execute(7);
 			}
-		}
+		)
 	}
 	if (simulator.lastCommandReached()) paused = true;
 }

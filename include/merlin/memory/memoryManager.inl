@@ -15,9 +15,9 @@ namespace Merlin {
         if (hasBuffer(name)) {
             if (m_buffers[name]->elements() < data.size()) {
                 //Console::error("ParticleSystem") << "Field hasn't been allocated" << Console::endl;
-                m_buffers[name]->allocateBuffer(data.size() * sizeof(T), data.data(), BufferUsage::StaticDraw);
+                m_buffers[name]->resizeBuffer(data.size() * sizeof(T));
             }
-            else m_buffers[name]->writeBuffer(data.size() * sizeof(T), data.data());
+            m_buffers[name]->writeBuffer(data.size() * sizeof(T), data.data());
         }
         else Console::error("Sim") << name << " is not registered in the particle system." << Console::endl;
     }
