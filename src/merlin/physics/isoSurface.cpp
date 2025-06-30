@@ -12,6 +12,7 @@ namespace Merlin {
 	}
 
     IsoSurface::IsoSurface(const std::string& name, Texture3D_Ptr volume) {
+        m_name = name;
         m_volume = volume;
         volume_size = glm::ivec3(m_volume->width(), m_volume->height(), m_volume->depth());
 

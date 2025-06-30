@@ -95,6 +95,10 @@ private:
 	ComputeShader_Ptr texPlot;
 
 
+	GLsizeiptr last_numParticle = 0;
+	bool need_sync = true;
+
+
 	/*********** Rendering ***********/
 
 	bool use_isosurface = false;

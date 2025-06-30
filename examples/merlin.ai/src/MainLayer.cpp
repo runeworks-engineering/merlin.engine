@@ -58,11 +58,13 @@ void MainLayer::onAttach() {
 		createShaders();
 	)
 
+	//createSamples();
+
 	GPU_PROFILE(scene_init,
 		createScene();
 	)
 	
-	//createSamples();
+	
 
 	GPU_PROFILE(scenario_init,
 		sim.reset();
@@ -70,12 +72,12 @@ void MainLayer::onAttach() {
 	
 	Console::printSeparator();
 	Console::print() << "Initialization done." << Console::endl;
-	Console::print() << "Buffer initialization : " << buffers_init  << "s" << Console::endl;
-	Console::print() << "Physics initialization : " << sim_init << "s" << Console::endl;
-	Console::print() << "Shaders initialization : " << shaders_init << "s" << Console::endl;
-	Console::print() << "Graphics scene initialization : " << scene_init << "s" << Console::endl;
+	Console::print() << "Buffer initialization : " << buffers_init  << "ms" << Console::endl;
+	Console::print() << "Physics initialization : " << sim_init << "ms" << Console::endl;
+	Console::print() << "Shaders initialization : " << shaders_init << "ms" << Console::endl;
+	Console::print() << "Graphics scene initialization : " << scene_init << "ms" << Console::endl;
 	//Console::print() << "Buffer initialization : " << samples_init << "s" << Console::endl;
-	Console::print() << "Physics scene initialization : " << scenario_init << "s" << Console::endl;
+	Console::print() << "Physics scene initialization : " << scenario_init << "ms" << Console::endl;
 	Console::printSeparator();
 	
 }
@@ -84,22 +86,8 @@ void MainLayer::onUpdate(Timestep ts) {
 	Layer3D::onUpdate(ts);
 
 	GPU_PROFILE(render_time,
-		scene->clear();
 
-		scene->add(ps);
-		scene->add(bs);
 		nozzle->setPosition(sim.getNozzlePosition());
-		scene->add(nozzle);
-		scene->add(isosurface);
-
-		scene->add(bed);
-		scene->add(origin);
-		scene->add(toolpath);
-
-		for (auto& s : samples) {
-			if (!s.enabled) continue;
-			scene->add(s.getMesh());
-		}
 
 		syncUniform();
 
@@ -108,21 +96,30 @@ void MainLayer::onUpdate(Timestep ts) {
 			plotIsoSurface();
 		}
 
+		//MemoryManager::instance().resetBindings();
+
+		if(!ps->isHidden()) particle_shader->bindBuffer();
+		if(!bs->isHidden()) bin_shader->bindBuffer();
+		if(!isosurface->isHidden()) isosurface_shader->bindBuffer();
+
 		renderer.clear();
 		renderer.render(scene, camera());
 		renderer.reset();
+
+		//MemoryManager::instance().resetBindings();
 	)
 
+
 	sim.step(settings.timestep);
+
+	
+
+	need_sync = false;
+
+	if (last_numParticle != settings.numParticles()) need_sync = true;
+
+	MemoryManager::instance().resetBindings();
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -149,6 +146,7 @@ void MainLayer::slice(){
 
 void MainLayer::createSample(SampleProperty props) {
 	samples.emplace_back(props);
+	scene->add(samples[samples.size()-1].getMesh());
 }
 
 void MainLayer::createBuffers(){
@@ -288,7 +286,31 @@ void MainLayer::createScene() {
 
 	ps->setPositionBuffer(memory.getBuffer("position_buffer"));
 
+
+
+
+	/****************************
+		Scene assembly
+	*****************************/
+
+	scene->add(ps);
+	scene->add(bs);
+	
+	scene->add(nozzle);
+	scene->add(isosurface);
+
+	scene->add(bed);
+	scene->add(origin);
+	scene->add(toolpath);
+
 	bs->hide();
+	toolpath->hide();
+	isosurface->hide();
+
+	for (auto& s : samples) {
+		if (!s.enabled) continue;
+		scene->add(s.getMesh());
+	}
 }
 
 void MainLayer::createSamples() {
@@ -362,7 +384,7 @@ void MainLayer::onImGuiRender() {
 
 			if (ImGui::BeginMenu("Export")) {
 
-				if(ImGui::MenuItem("Export G-Code..", "Ctrl+G", false)){
+				if (ImGui::MenuItem("Export G-Code..", "Ctrl+G", false)) {
 					std::string gcode_path = Dialog::saveFileDialog(Dialog::FileType::DATA);
 					if (gcode_path.size() != 0)
 						slicer.export_gcode(gcode_path);
@@ -380,7 +402,7 @@ void MainLayer::onImGuiRender() {
 
 				ImGui::EndMenu();
 			}
-			
+
 			ImGui::Separator();
 			/*
 			if (ImGui::BeginMenu("Convert")) {
@@ -424,7 +446,7 @@ void MainLayer::onImGuiRender() {
 		}*/
 
 		if (ImGui::BeginMenu("View")) {
-			glm::vec3 viewCenter = glm::vec3(150,100,0);
+			glm::vec3 viewCenter = glm::vec3(150, 100, 0);
 
 			if (ImGui::MenuItem("Iso", "0", false)) camera().setView(CameraView::Iso, glm::distance(origin->position(), camera().getPosition()), viewCenter);
 
@@ -470,7 +492,7 @@ void MainLayer::onImGuiRender() {
 	ImGui::LabelText("FPS", std::to_string(fps()).c_str());
 	ImGui::LabelText(std::to_string(settings.numParticles()).c_str(), "particles");
 	ImGui::LabelText(std::to_string(settings.bThread).c_str(), "bins");
-	
+
 	if (ImGui::TreeNode("Statistics")) {
 		ImGui::LabelText("FPS", std::to_string(fps()).c_str());
 
@@ -495,7 +517,7 @@ void MainLayer::onImGuiRender() {
 		}
 	}
 	else {
-		if (ImGui::ArrowButton("Pause simulation",1)) {
+		if (ImGui::ArrowButton("Pause simulation", 1)) {
 			sim.start();
 		}
 	}
@@ -505,7 +527,7 @@ void MainLayer::onImGuiRender() {
 	}
 
 	ImGui::DragFloat("Flow override", &settings.flow_override, 1.0, 0.0f, 100.0f);
-	
+
 	if (ImGui::TreeNode("Graphics"))
 	{
 		static bool transparency = true;
@@ -664,7 +686,11 @@ void MainLayer::onImGuiRender() {
 		slice();
 	}
 
-	ImGui::Checkbox("Show Rapid Toolpath", &showG0);
+
+	if (ImGui::Checkbox("Show Rapid Toolpath", &showG0)) {
+		toolpath_shader->use();
+		toolpath_shader->setInt("showG0", showG0);
+	}
 
 	static int colorMode = 1;
 	static const char* options[] = { "Tool index", "Feedrate", "Temperature" };
@@ -674,9 +700,9 @@ void MainLayer::onImGuiRender() {
 	}
 
 	ImGui::End();
-	
-	
-	
+
+
+
 
 	if (use_2Dplot) {
 		static bool first_frame = true;
@@ -708,7 +734,7 @@ void MainLayer::onImGuiRender() {
 		ImGui::End();
 	}
 
-	
+
 
 
 
@@ -782,7 +808,7 @@ void MainLayer::onImGuiRender() {
 				ImGui::TreePop();
 			}
 		}
-	};
+		};
 
 	// Draw the scene graph starting from the root node
 	ImGui::Begin("3D Scene Graph");
@@ -790,7 +816,11 @@ void MainLayer::onImGuiRender() {
 	ImGui::End();
 
 	ImGui::Begin("Layers");
-	ImGui::VSliderInt("layer", ImVec2(30, 1000), &current_layer, 0, slicer.getLayer());
+
+	if (ImGui::VSliderInt("layer", ImVec2(30, 1000), &current_layer, 0, slicer.getLayer())) {
+		toolpath_shader->use();
+		toolpath_shader->setInt("layer", current_layer);
+	}
 	ImGui::End();
 
 	// Properties panel (shows either physics or graphics properties)
@@ -952,30 +982,16 @@ void MainLayer::attachBuffers(){
 
 
 void MainLayer::syncUniform(){
+	if (need_sync) {
+		
+		particle_shader->use();
+		settings.numParticles.sync(*particle_shader);
+		settings.restDensity.sync(*particle_shader);
 
-	//Todo automate sync uniforms like binding points
-
-	particle_shader->use();
-	settings.numParticles.sync(*particle_shader);
-	settings.restDensity.sync(*particle_shader);
-
-	isoGen->use();
-	settings.numParticles.sync(*isoGen);
-	settings.particleMass.sync(*isoGen);
-
-	texPlot->use();
-	settings.numParticles.sync(*texPlot);
-	settings.particleMass.sync(*texPlot);
-
-
-	isosurface_shader->use();
-	settings.numParticles.sync(*isosurface_shader);
-	settings.particleMass.sync(*isosurface_shader);
-
-
-	toolpath_shader->use();
-	toolpath_shader->setInt("layer", current_layer);
-	toolpath_shader->setInt("showG0", showG0);
+		isosurface_shader->use();
+		settings.numParticles.sync(*isosurface_shader);
+		settings.particleMass.sync(*isosurface_shader);
+	}
 }
 
 void MainLayer::newProject() {
@@ -991,20 +1007,36 @@ void MainLayer::newProject() {
 }
 
 void MainLayer::plotIsoSurface(){
+
 	if (use_isosurface) {
+		if (isosurface->isHidden()) isosurface->show();
+		isoGen->bindBuffer();
 		volume->bindImage(0);
 		isoGen->use();
+		
+		if (need_sync) {
+			settings.numParticles.sync(*isoGen);
+			settings.particleMass.sync(*isoGen);
+		}
+
 		isoGen->dispatch();
 		isoGen->barrier(GL_ALL_BARRIER_BITS);
-
 		isosurface->setIsoLevel(0.5);
 		isosurface->compute();
-	}
+	}else if (!isosurface->isHidden()) 
+		isosurface->hide();
+
 }
 
 void MainLayer::plotCutView(){
+		
 	if (use_2Dplot) {
+		texPlot->bindBuffer();
 		texPlot->use();
+
+		settings.numParticles.sync(*texPlot);
+		settings.particleMass.sync(*texPlot);
+
 		plotXY();
 		plotXZ();
 		plotYZ();

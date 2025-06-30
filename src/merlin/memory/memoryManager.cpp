@@ -56,10 +56,11 @@ namespace Merlin {
     }
 
     void MemoryManager::resetBindings(){
-        availableBindingPoints.clear();
-        initializeAvailableBindingPoints();
         usedBindingPoints.clear();
         bufferToBindingPoint.clear();
+        availableBindingPoints.clear();
+        initializeAvailableBindingPoints();
+
     }
 
     void MemoryManager::printLimits(){

@@ -188,8 +188,8 @@ void Sim::reset(){
 	bs->setInstancesCount(settings.bThread);
 
 
+	syncUniform();
 
-	//SyncUniforms();
 	Console::info() << "Uploading buffer on device..." << Console::endl;
 	memory.writeBuffer("position_buffer", cpu_position);
 	memory.writeBuffer("predicted_position_buffer", cpu_position);
@@ -242,57 +242,61 @@ void Sim::spawn(){
 	settings.pWkgCount = (settings.pThread + settings.pWkgSize - 1) / settings.pWkgSize; //Total number of workgroup needed
 	solver->setWorkgroupLayout(settings.pWkgCount);
 	ps->setActiveInstancesCount(settings.pThread);
+	
 }
 
 void Sim::nns(){
-	GPU_PROFILE(nns_time,
-		prefixSum->use();
-		prefixSum->setUInt("dataSize", settings.bThread); //data size
-		prefixSum->setUInt("blockSize", settings.blockSize); //block size
-		prefixSum->execute(4);// clear bins
+	
+	prefixSum->use();
 
-		solver->use();
-		solver->execute(0); //Place particles in bins
+	prefixSum->setUInt("dataSize", settings.bThread); //data size
+	prefixSum->setUInt("blockSize", settings.blockSize); //block size
+	prefixSum->execute(4);// clear bins
 
-		prefixSum->use();
-		prefixSum->execute(0);// local prefix sum
+	solver->use();
+	solver->execute(0); //Place particles in bins
 
-		//Binary tree on rightmost element of blocks
-		GLuint steps = settings.blockSize;
-		UniformObject<GLuint> space("space");
-		space.value() = 1;
+	prefixSum->use();
+	prefixSum->execute(0);// local prefix sum
 
-		for (GLuint step = 0; step < steps; step++) {
-			// Calls the parallel operation
+	//Binary tree on rightmost element of blocks
+	GLuint steps = settings.blockSize;
+	UniformObject<GLuint> space("space");
+	space.value() = 1;
 
-			space.sync(*prefixSum);
-			prefixSum->execute(1);
-			prefixSum->execute(2);
+	for (GLuint step = 0; step < steps; step++) {
+		// Calls the parallel operation
 
-			space.value() *= 2;
-		}
-		prefixSum->execute(3);
+		space.sync(*prefixSum);
+		prefixSum->execute(1);
+		prefixSum->execute(2);
 
-		solver->use();
-		solver->execute(1); //Sort
-	)
+		space.value() *= 2;
+	}
+	prefixSum->execute(3);
+
+	solver->use();
+	solver->execute(1); //Sort
+	
 }
 
 void Sim::step(Timestep ts){
 	if (running) {
+		solver->bindBuffer();
+		prefixSum->bindBuffer();
+	
 		GPU_PROFILE(solver_total_time,
 			elapsedTime += ts.getSeconds();
 			settings.setTimestep(ts.getSeconds());
 
 			//ps->clearField("correction_buffer");
 
-			syncUniform();
-
+			
+			
 			solver->use();
 			settings.dt.sync(*solver);
-
+			
 			for (int i = 0; i < settings.solver_substep; i++) {
-
 
 				for (int i = 0; i < 10; i++)
 					simulator.update(ts.getSeconds() / (settings.solver_substep * 10));
@@ -313,18 +317,19 @@ void Sim::step(Timestep ts){
 					}
 
 				solver->execute(2);
-
-				nns();
-
+				
+				GPU_PROFILE(nns_time,
+					nns();
+				)
 
 				if (integrate) {
+					
 					for (int j = 0; j < settings.solver_iteration; j++) {
 						solver->execute(3);
 						solver->execute(4);
 						solver->execute(5);
 					}
-
-
+	
 					solver->execute(6);
 					solver->execute(7);
 				}
