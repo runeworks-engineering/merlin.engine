@@ -10,7 +10,7 @@ using namespace Merlin;
 #include <GLFW/glfw3.h>
 
 
-
+const bool real_scale = false;
 
 const float radius = 3;
 
@@ -87,7 +87,8 @@ void MainLayer::onUpdate(Timestep ts) {
 
 	GPU_PROFILE(render_time,
 
-		nozzle->setPosition(sim.getNozzlePosition());
+	if(real_scale) 	nozzle->setPosition(sim.getNozzlePosition()*0.1f);
+	else nozzle->setPosition(sim.getNozzlePosition());
 
 		syncUniform();
 
@@ -246,10 +247,13 @@ void MainLayer::createScene() {
 	//nozzle->smoothNormals();
 	//nozzle->translate(glm::vec3(0, 0, 20*6));
 	//nozzle->rotate(glm::vec3(180*DEG_TO_RAD, 0, 0));
-	nozzle->scale(10);
-	nozzle->applyMeshTransform();
+	if(!real_scale) nozzle->scale(10);
+	//nozzle->applyMeshTransform();
 	//nozzle->enableWireFrameMode();
-
+	if (real_scale) {
+		nozzle->translate(glm::vec3(0, 0, -0.13));
+	}
+	nozzle->applyMeshTransform();
 
 	texture_debugXZ = Texture2D::create(settings.tex_size.x, settings.tex_size.z, 4, 16);
 	texture_debugXZ->setUnit(0);
@@ -269,10 +273,13 @@ void MainLayer::createScene() {
 	volume->setUnit(0);
 	isosurface = IsoSurface::create("isosurface", volume);
 	isosurface->mesh()->setShader(isosurface_shader);
-	isosurface->mesh()->translate(settings.bb * glm::vec3(0, 0, 0.5));
+	isosurface->mesh()->translate(settings.bb * glm::vec3(0, 0, 0.5) + glm::vec3(150,100,0));
 	isosurface->mesh()->scale(settings.bb * glm::vec3(1.0, 1.0, 0.5));
-
-
+	if (real_scale) {
+		isosurface->mesh()->scale(0.1);
+		
+	}
+	
 
 	/****************************
 		Setup Particle System
@@ -286,7 +293,10 @@ void MainLayer::createScene() {
 
 	ps->setPositionBuffer(memory.getBuffer("position_buffer"));
 
-
+	if (real_scale) {
+		ps->scale(0.1);
+		bs->scale(0.1);
+	}
 
 
 	/****************************

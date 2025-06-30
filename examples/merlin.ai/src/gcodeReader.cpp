@@ -41,7 +41,7 @@ GcodeSimulator::GcodeSimulator() : m_current_position(0.0f), m_current_target(0.
     float height = 20.0f;
     int num_turns = 5;
     int segments_per_turn = 100;
-    m_commands.push_back({ glm::vec4(radius, 0, 2, 0) - glm::vec4(m_origin_offset, 0), 200 });
+    m_commands.push_back({ glm::vec4(radius, 0, 2, 0) - glm::vec4(m_origin_offset, 0) + glm::vec4(150,100,0,0), 200});
     for (int i = 0; i <= num_turns * segments_per_turn; ++i) {
         float t = static_cast<float>(i) / segments_per_turn;
         float angle = t * 2.0f * glm::pi<float>();
@@ -53,9 +53,9 @@ GcodeSimulator::GcodeSimulator() : m_current_position(0.0f), m_current_target(0.
         float speed = 200.0f;
 
         glm::vec4 position = glm::vec4(x, y, z, extrusion);
-        m_commands.push_back({ position - glm::vec4(m_origin_offset, 0), speed });
+        m_commands.push_back({ position - glm::vec4(m_origin_offset, 0) + glm::vec4(150,100,0,0), speed });
     }
-    m_commands.push_back({ glm::vec4(radius, 0, 30, 500) - glm::vec4(m_origin_offset, 0), 200 });
+    m_commands.push_back({ glm::vec4(radius, 0, 30, 500) - glm::vec4(m_origin_offset, 0) + glm::vec4(150,100,0,0), 200 });
     /**/
 
 
@@ -192,7 +192,7 @@ float GcodeSimulator::getExtruderDistance() {
 }
 
 bool GcodeSimulator::lastCommandReached(){
-	if (currentIndex == m_commands.size() - 1)
+	if (currentIndex >= m_commands.size() - 1)
 		return true;
     else
 		return false;

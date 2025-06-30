@@ -65,8 +65,5 @@ private:
 
 	//Settings
 	bool use_real_time = false;
-	bool use_emitter = true;
-	bool use_emitter_init = true;
-
 
 };

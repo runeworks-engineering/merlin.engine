@@ -123,7 +123,7 @@ void Sim::reset(){
 	/**/
 
 
-	if (use_emitter_init) {
+	if (settings.use_emitter_init) {
 		Mesh_Ptr init_fluid = Primitives::createCylinder(4.5, 18, 10);
 		init_fluid->setPosition(glm::vec3(0, 0, 23));
 		init_fluid->rotate(glm::vec3(0, 90.0f * DEG_TO_RAD, 0));
@@ -310,7 +310,7 @@ void Sim::step(Timestep ts){
 
 				float e_speed = simulator.getExtruderDistance();
 				float emitterDelay = 1000.0 / (settings.particleVolume * 1.0) / e_speed;
-				if (use_emitter && simulator.getExtruderDistance() > 0.01)
+				if (settings.use_emitter && simulator.getExtruderDistance() > 0.01)
 					if (elapsedTime - lastSpawTime > (emitterDelay / 1000.0)) {
 						spawn();
 						lastSpawTime = elapsedTime;

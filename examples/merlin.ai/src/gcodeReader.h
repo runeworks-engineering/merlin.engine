@@ -29,7 +29,7 @@ private:
 	
     glm::vec4 m_current_position;
     glm::vec4 m_current_target;
-    glm::vec3 m_origin_offset = glm::vec3(-50,-50,5);
+    glm::vec3 m_origin_offset = glm::vec3(0,0,5);
     //glm::vec3 m_origin_offset = glm::vec3(0,0,1);
 };
 

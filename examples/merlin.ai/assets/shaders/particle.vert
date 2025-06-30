@@ -126,6 +126,7 @@ void main() {
 		mv = projection * view;
 		
 		gl_Position = screen_position;
+		//gl_PointSize = 0.3*cst_particleRadius*600.0/(gl_Position.w); //real scale
 		gl_PointSize = 3.0*cst_particleRadius*600.0/(gl_Position.w);
 		if(colorCycle == 5 && !hTest && !(gl_InstanceID == particleTest)) gl_PointSize = 600.0/(gl_Position.w);
 		

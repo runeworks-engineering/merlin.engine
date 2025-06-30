@@ -105,8 +105,8 @@ struct Settings {
 	inline void setConstants(ShaderBase& shader) {
 		shader.setConstVec3("cst_domain", bb);
 		shader.setConstVec3("cst_halfdomain", bb*glm::vec3(0.5));
-		shader.setConstVec3("cst_boundaryMin", bb*glm::vec3(-0.5, -0.5, -0.01));
-		shader.setConstVec3("cst_boundaryMax", bb*glm::vec3(0.5, 0.5, 0.99));
+		shader.setConstVec3("cst_boundaryMin", bb*glm::vec3(-0.5, -0.5, -0.01) + glm::vec3(150, 100, 0.0));
+		shader.setConstVec3("cst_boundaryMax", bb*glm::vec3(0.5, 0.5, 0.99) + glm::vec3(150, 100, 0.0));
 
 		shader.setConstFloat("cst_particleRadius", particleRadius);
 		shader.setConstFloat("cst_smoothingRadius", smoothingRadius);
