@@ -12,6 +12,7 @@ struct SampleProperty {
     float y_offset = 0;
 
     float radius = 6;
+    float length = 20;
     float height = 0.15;
     float resolution = 0.01;
 
@@ -23,8 +24,8 @@ struct SampleProperty {
     float retract = 0.8;
     float feedrate = 600;
 
+    int sample_type = 0;
     bool use_outline = false;
-    bool use_concentric = false;
 };
 
 class SampleObject {
@@ -33,14 +34,14 @@ public:
 
 	void renderMenu();
 	const SampleProperty& getProperties() const { return props; }
-	const Mesh_Ptr& getMesh() const { return mesh; }
+	const Model_Ptr& getModel() const { return model; }
 
     static SampleProperty fromXML(const tinyxml2::XMLElement* elem);
     std::string toXML() const;
 	bool enabled = true;
 private:
     SampleProperty props;
-	Mesh_Ptr mesh;
+	Model_Ptr model;
 
 	bool show_toolpath = false;
 	bool show_mesh = true;

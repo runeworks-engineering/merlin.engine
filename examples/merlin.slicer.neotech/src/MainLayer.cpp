@@ -32,11 +32,9 @@ MainLayer::~MainLayer(){}
 void MainLayer::createScene() {
 	renderer.initialize();
 	renderer.enableSampleShading();
-	//renderer.setEnvironmentGradientColor(1.0, 1.0, 1.0);
 	renderer.setEnvironmentGradientColor(0.9, 0.9, 0.9);
 	renderer.enableEnvironment();
 	renderer.disableShadows();
-	//renderer.showLights();
 	renderer.disableFaceCulling();
 	renderer.enableTransparency();
 
@@ -47,52 +45,52 @@ void MainLayer::createScene() {
 	default_props.x_offset = 0;
 	default_props.y_offset = 0;
 	default_props.radius = 6;
-	default_props.height = 0.15f;
-	default_props.layer_height = 0.2;
-	default_props.line_width = 0.4;
-	default_props.tool = 0;
+	default_props.length = 20;
+	default_props.height = 5;
+	//default_props.height = 0.15f;
+	default_props.layer_height = 0.15;
+	default_props.line_width = 0.7;
+	default_props.tool = 15;
 	default_props.flow = 1.0f;
-	default_props.retract = 1.0f;
+	default_props.retract = 0.0f;
 	default_props.feedrate = 1050;
+	default_props.sample_type = 2;
+	default_props.resolution = 1;
 
+	float x = 26, y = -46;
 
-	default_props.name = "Sample 0";
-	default_props.comment = "Specimen 0";
-	default_props.x_offset = 0;
-	default_props.y_offset = 0;
-	default_props.feedrate = 600;
+	for (int i = 1; i <= 3; i++) {	//QV
+		for (float j = 1; j <= 4; j++){ //speed
+			default_props.name = "Sample" + std::to_string(i) + "." + std::to_string(j);
+			default_props.comment = "Specimen " + std::to_string(i) + "." + std::to_string(j);;
+			default_props.x_offset = x + -j*3 - i*15;
+			default_props.y_offset = y + j*3 + i*20;
+			default_props.feedrate = (j)*60.0*1.8;
+			default_props.flow = i*10;
 
-	createSample(default_props);
+			createSample(default_props);
+		}
+	}
 
-	default_props.name = "Sample 1";
-	default_props.comment = "Specimen 1";
-	default_props.x_offset += -20;
-	default_props.y_offset += -20;
-	default_props.feedrate = 300;
-
-	createSample(default_props);
-
-	default_props.name = "Sample 2";
-	default_props.comment = "Specimen 2";
-	default_props.x_offset += +40;
-	default_props.y_offset += 0;
-	default_props.feedrate = 900;
-
-	createSample(default_props);
-
-	default_props.name = "Sample 3";
-	default_props.comment = "Specimen 3";
-	default_props.x_offset += 0;
-	default_props.y_offset += 40;
-	default_props.feedrate = 900;
+	default_props.name = "Sample Spiral";
+	default_props.comment = "Specimen Spiral";
+	default_props.x_offset = 18;
+	default_props.y_offset = 18;
+	default_props.feedrate = 2 * 60.0 * 1.8;
+	default_props.flow = 20;
+	default_props.height = 0.15;
+	default_props.sample_type = 0;
 
 	createSample(default_props);
 
-	default_props.name = "Sample 4";
-	default_props.comment = "Specimen 4";
-	default_props.x_offset += -40;
-	default_props.y_offset += 0;
-	default_props.feedrate = 300;
+	default_props.name = "Sample Concentric";
+	default_props.comment = "Specimen Concentric";
+	default_props.x_offset = -18;
+	default_props.y_offset = -18;
+	default_props.feedrate = 2 * 60.0 * 1.8;
+	default_props.flow = 20;
+	default_props.height = 0.15;
+	default_props.sample_type = 1;
 
 	createSample(default_props);
 
@@ -211,7 +209,7 @@ void MainLayer::onUpdate(Timestep ts) {
 
 	for (auto& s : samples) {
 		if (!s.enabled) continue;
-		scene->add(s.getMesh());
+		scene->add(s.getModel());
 	}
 
 	toolpath_shader->use();
@@ -269,7 +267,7 @@ void MainLayer::onImGuiRender() {
 			if (ImGui::BeginMenu("Export")) {
 
 				if(ImGui::MenuItem("Export G-Code..", "Ctrl+G", false)){
-					std::string gcode_path = Dialog::saveFileDialog(Dialog::FileType::DATA);
+					std::string gcode_path = Dialog::saveFileDialog(Dialog::FileType::GCODE);
 					if (gcode_path.size() != 0)
 						slicer.export_gcode(gcode_path);
 				}
@@ -403,6 +401,11 @@ void MainLayer::onImGuiRender() {
 		toolpath_shader->setInt("colorMode", colorMode);
 	}
 
+	ImGui::End();
+
+
+	ImGui::Begin("GCode");
+	//ImGui::
 	ImGui::End();
 
 	static int selected_sample_index = -1;

@@ -31,6 +31,7 @@ public:
     int getLayer() const;
 
     void generateSample(SampleProperty props);
+    void generateLineTest(SampleProperty props);
     void generateSpiral(SampleProperty props);
     void generateConcentric(SampleProperty props);
 
@@ -70,6 +71,8 @@ private:
     const Tool noTool;
     Tool m_last_tool = noTool;
     Tool m_active_tool = noTool;
+
+    float z_offset = 5.944;
 
     bool use_relative_extrusion = true;
 

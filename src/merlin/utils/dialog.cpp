@@ -17,6 +17,12 @@ namespace Merlin {
 			aFilterPatterns[1] = "*.jpg";
 			aSingleFilterDescription = "Image files";
 			break;
+		case FileType::GCODE:
+			aNumOfFilterPatterns = 2;
+			aFilterPatterns[0] = "*.gcode";
+			aFilterPatterns[1] = "*.prg";
+			aSingleFilterDescription = "GCode files";
+			break;
 		case FileType::MESH:
 			aNumOfFilterPatterns = 3;
 			aFilterPatterns[0] = "*.obj";
@@ -66,6 +72,12 @@ namespace Merlin {
 			aFilterPatterns[1] = "*.jpg";
 			aSingleFilterDescription = "Image files (.png, .jpg)";
 			break;
+		case FileType::GCODE:
+			aNumOfFilterPatterns = 2;
+			aFilterPatterns[0] = "*.gcode";
+			aFilterPatterns[1] = "*.prg";
+			aSingleFilterDescription = "GCode files";
+			break;
 		case FileType::MESH:
 			aNumOfFilterPatterns = 3;
 			aFilterPatterns[0] = "*.obj";
@@ -112,7 +124,6 @@ namespace Merlin {
 	int Dialog::alert(	const std::string& message,
 						const std::string& title,
 						IconType icon) {
-
 
 		std::string iconStr = "";
 		switch (icon) {

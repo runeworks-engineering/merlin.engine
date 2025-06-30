@@ -34,7 +34,7 @@ void main() {
 		else offset = ssbo_toolpath[i].end.xyz;
 	}
 
-	vout.position = model * (vec4(_position + vec3(offset),1));
+	vout.position = model * (vec4(offset,1));
 	vout.screen_position = projection * view * vout.position;
 	
 

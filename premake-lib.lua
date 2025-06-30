@@ -25,6 +25,7 @@ IncludeDir["glm"] = "vendor/glm"
 IncludeDir["stb_image"] = "vendor/stb_image"
 IncludeDir["tinyfiledialogs"] = "vendor/tinyfiledialogs"
 IncludeDir["tinyxml2"] = "vendor/tinyxml2"
+IncludeDir["ImGuiTextEditor"] = "vendor/ImGuiTextEditor"
 IncludeDir["assimp"] = "vendor/assimp/include"
 
 -- Projects
@@ -35,6 +36,7 @@ group "Dependencies"
 	include "vendor/stb_image"
 	include "vendor/tinyfiledialogs"
 	include "vendor/tinyxml2"
+	include "vendor/ImGuiTextEditor"
 	include "vendor/assimp"
 	
 group "Library"
@@ -81,6 +83,7 @@ group "Library"
 		"%{IncludeDir.stb_image}",
 		"%{IncludeDir.tinyfiledialogs}",
 		"%{IncludeDir.tinyxml2}",
+		"%{IncludeDir.ImGuiTextEditor}",
 		"%{IncludeDir.assimp}"
 	}
 
@@ -92,6 +95,7 @@ group "Library"
 		"stb_image",
 		"tinyfiledialogs",
 		"tinyxml2",
+		"ImGuiTextEditor",
 		"assimp",
 		"opengl32.lib"
 	}

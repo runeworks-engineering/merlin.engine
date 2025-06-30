@@ -5,48 +5,38 @@
 #include <ctime>
 #include <fstream>
 
-
-
-
-
 Slicer::Slicer()
-    : toolpath(0), noTool({ -1,0,10000,0 }) {
+    : toolpath(0), noTool({ -1,0,2400,0 }) {
 
     start_gcode = {
-        "T-1",
-        "G28",
-        "G29",
-        "G29 S1",
-        "G1 Z5 F5000",
-        "G10 S220 R215 P0",
-        "G10 S230 R235 P1",
-        "M190 S60",
-        "T1 P0",
-        "M116",
-        "T0 P0",
-        "M116",
-        "T-1",
-        "T0",
-        "G21",
+        "%1000",
         "G90",
-        "M83",
-        "G92 E0",
-        "M107"
+        "G17",
+        "HOME_EXTRUDER_AXES",
+        "SHIFT_MOVING_FRAME[102.043,119.692,-15.062]",
+        "PS2 F1000",
+        "G04 0.5",
+        "BED_LEVELING[22, 80.0, 0.0, 0.0, 5.944]",
+        "G0 Z30",
+        "TOOLID[15]",
+        "G0 QA=0 QB=0",
+        "G0 X0 Y0",
+        "G90",
+        "M82",
+        "SET_EXTRUDER_AXES[0.0,0.0,0.0,0.0]"
     };
 
     end_gcode = {
-        "G1 E-0.8 F2400",
-        "M107",
-        "G91",
-        "G1 Z2 F1000",
+        "SET_EXTRUDER_AXES[0.0,0.0,0.0,0.0]",
         "G90",
-        "T-1",
-        "G29 S2",
-        "G28 X0",
-        "M0",
-        "M84",
-        "M73 P100 R0"
+        "G17",
+        "PS2 F1000"
+        "HOME_EXTRUDER_AXES"
     };
+
+
+
+
     clear();
 }
 
@@ -140,6 +130,12 @@ void Slicer::generateSample(SampleProperty props) {
     tool.retract_length = props.retract;
     tool.feedrate = props.feedrate;
 
+    if (props.sample_type < 2) numLayers = int(std::ceil(props.height / props.layer_height));
+    else numLayers = 1;
+
+    m_active_tool = tool;
+    m_current_feedrate = props.feedrate;
+
     add_gcode("\n");
     comment("-----------------------");
     comment("Start of Sample");
@@ -158,7 +154,7 @@ void Slicer::generateSample(SampleProperty props) {
     comment("Flow: " + std::to_string(props.flow));
     comment("Retract: " + std::to_string(props.retract));
     comment("Feedrate: " + std::to_string(props.feedrate));
-    comment("Use concentric: " + std::to_string(props.use_concentric));
+    comment("Sample Type: " + std::to_string(props.sample_type));
     comment("Use outline: " + std::to_string(props.use_outline));
     comment("-----------------------");
     add_gcode("\n");
@@ -166,62 +162,80 @@ void Slicer::generateSample(SampleProperty props) {
     for (int layer = 0; layer < numLayers; ++layer) {
         float z = props.layer_height * (layer + 1);
 
-        retract(1, 2400);
-        new_layer(z);
+        //retract(1, 2400);
+        
 
-        retract(1.4, 2400);
-        move(glm::vec4(props.x_offset, props.y_offset, actual_max_z + 5, 0), 0, 30000);
-        move(glm::vec4(m_current_position.x, m_current_position.y, z, 0), 17800);
+        //retract(1.4, 2400);
         extrude(1.4, 2400);
+        move(glm::vec4(props.x_offset, props.y_offset, actual_max_z + 5, 0), 0, 7800);
+        new_layer(z);
+        move(glm::vec4(m_current_position.x, m_current_position.y, z, 0), 1, 17800);
+        
 
-        if (props.use_concentric) generateConcentric(props);
-        else generateSpiral(props);
+        if (props.sample_type == 0) generateConcentric(props);
+        else if (props.sample_type == 1) generateSpiral(props);
+        else generateLineTest(props);
 
         // PLA Section
-        retract(1, 2400);
+        //retract(1, 2400);
     }
-
-    retract(1, 2400);
+    move_Z(actual_max_z + 5, 0, 7800);
+    //retract(1, 2400);
     comment("End of Sample");
 }
 
-void Slicer::generateSpiral(SampleProperty props){
-    float a = 0.0f;
-    float pi = glm::pi<float>();
-    float b = props.line_width / (2.0f * pi);
-    float theta = 0.0f;
+void Slicer::generateLineTest(SampleProperty props){
+    float x = props.length, y = 0;
+    glm::vec3 next = glm::vec3(props.x_offset, props.y_offset, 0) + glm::vec3(x, y, m_current_position.z);
+    float e = compute_e(glm::distance(glm::vec3(m_current_position), next), props.flow, props.line_width, props.layer_height);
+    move(glm::vec4(next, e));
+
+    x = props.length, y = props.height;
+    next = glm::vec3(props.x_offset, props.y_offset, 0) + glm::vec3(x, y, m_current_position.z);
+    e = compute_e(glm::distance(glm::vec3(m_current_position), next), props.flow, props.line_width, props.layer_height);
+    move(glm::vec4(next, e));
+}
+
+void Slicer::generateSpiral(SampleProperty props) {
+    const float pi = glm::pi<float>();
+    float a = 0; // starting radius
+    float b = props.line_width / (2 * pi); // spiral growth rate so spacing is correct
+    
+    float theta = 0;
+    float x0 = 0;
+    float y0 = 0;
+    
     float r = pi / 12.0f;
-
-
-    // First spiral arm
     while (true) {
-        float dTheta = props.resolution * (r / props.radius) / std::sqrt(b * b + std::pow(b * theta, 2));
+        // Compute next theta based on arc length spacing
+        float dTheta = props.resolution * (r / props.radius) / sqrt(b*b + (b * theta)*(b * theta));
         theta += dTheta;
+
         r = a + b * theta;
+        float x = r * cos(theta);
+        float y = r * sin(theta);
 
-        if (props.use_outline) {
+        // Stop if we go beyond a certain radius
+        if (props.use_outline)
             if (r + props.line_width > props.radius) break;
-        }
-        else {
-            if (r > props.radius) break;
-        }
 
-        glm::vec3 next = glm::vec3(r * std::cos(theta), r * std::sin(theta), m_current_position.z);
+        if (!props.use_outline)
+            if (r > props.radius) break;
+
+        glm::vec3 next = glm::vec3(props.x_offset, props.y_offset, 0) + glm::vec3(x, y, m_current_position.z);
         float e = compute_e(glm::distance(glm::vec3(m_current_position), next), props.flow, props.line_width, props.layer_height);
         move(glm::vec4(next, e));
+        //points.add(new PVector(x, y));
     }
 
-    // Outer ring if outline is used
-    if (props.use_outline) {
-        float dTheta = props.resolution / (4.0f * props.radius) / std::sqrt(b * b + std::pow(b * theta, 2));
-        float ring_radius = props.radius - props.line_width * 0.2f;
+    float dTheta = props.resolution / 4.0 * props.radius / sqrt(b * b + (b * theta) * (b * theta));
+    if (props.use_outline){
+        for (float gamma = theta; gamma < theta + pi * 2.0; gamma += dTheta) {
 
-        for (float gamma = theta; gamma < theta + 2.0f * pi; gamma += dTheta) {
-            float x = ring_radius * std::cos(gamma);
-            float y = ring_radius * std::sin(gamma);
-            
+            float x = (props.radius - props.line_width * 0.2) * cos(gamma);
+            float y = (props.radius - props.line_width * 0.2) * sin(gamma);
 
-            glm::vec3 next = glm::vec3(x, y, m_current_position.z);
+            glm::vec3 next = glm::vec3(props.x_offset, props.y_offset, 0) + glm::vec3(x, y, m_current_position.z);
             float e = compute_e(glm::distance(glm::vec3(m_current_position), next), props.flow, props.line_width, props.layer_height);
             move(glm::vec4(next, e));
         }
@@ -233,23 +247,35 @@ void Slicer::generateConcentric(SampleProperty props){
     int n = static_cast<int>(props.radius / props.line_width);
     float alpha = 0.0f;
     float pi = glm::pi<float>();
+    float x = 0;
+    float y = 0;
+
     for (int i = 0; i < n; ++i) {
         if (alpha == 0.0f) {
             alpha += props.line_width;
             continue;
         }
 
-        float inc = std::asin(props.resolution * 0.5f / alpha);
-        for (float theta = 0.0f; theta < 2.0f * pi; theta += inc) {
-            float x = std::cos(theta) * alpha;
-            float y = std::sin(theta) * alpha;
+        float inc = std::asin(std::min(1.0f, props.resolution * 0.5f / alpha));
 
-            glm::vec3 next = glm::vec3(x, y, m_current_position.z);
+        for (float theta = 0.0f; theta < 2.0f * pi; theta += inc) {
+            x = std::cos(theta) * alpha;
+            y = std::sin(theta) * alpha;
+
+            glm::vec3 next = glm::vec3(props.x_offset, props.y_offset, 0) + glm::vec3(x, y, m_current_position.z);
             float e = compute_e(glm::distance(glm::vec3(m_current_position), next), props.flow, props.line_width, props.layer_height);
             move(glm::vec4(next, e));
         }
 
+        glm::vec3 next = glm::vec3(props.x_offset, props.y_offset, 0) + glm::vec3(x, y, m_current_position.z + 1);
+        move(glm::vec4(next, 0));
+
         alpha += props.line_width;
+        x = alpha;
+        next = glm::vec3(props.x_offset, props.y_offset, 0) + glm::vec3(x, y, m_current_position.z);
+        move(glm::vec4(next, 0));
+        next = glm::vec3(props.x_offset, props.y_offset, 0) + glm::vec3(x, y, m_current_position.z - 1);
+        move(glm::vec4(next, 0));
     }  
 }
 
@@ -268,7 +294,7 @@ std::string Slicer::time() const {
 }
 
 void Slicer::comment(const std::string& comment) {
-    gcode.push_back("; " + comment);
+    gcode.push_back("(" + comment + ")");
 }
 
 void Slicer::add_gcode(const std::string& cmd) {
@@ -313,11 +339,11 @@ void Slicer::tool_change(Tool tool) {
 
     m_active_tool = tool;
     retract(1.4, 2400);
-    move_Z(actual_max_z + 5, 0, 30000);
-    add_gcode("T" + std::to_string(tool.id));
-    brush();
-    ToolPath tpa = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z, 0), m_active_tool, 30000);
-    ToolPath tpb = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z, 0), m_active_tool, 30000);
+    move_Z(actual_max_z + 5, 0, 7800);
+    add_gcode("TOOLID[" + std::to_string(tool.id) + "]");
+    //brush();
+    ToolPath tpa = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z, 0), m_active_tool, 7800);
+    ToolPath tpb = gen_toolpath(m_current_position, glm::vec4(330, 240, m_current_position.z, 0), m_active_tool, 7800);
     m_current_position = glm::vec4(330, 240, m_current_position.z, 0);
     toolpath.push_back(tpa);
     toolpath.push_back(tpb);
@@ -352,9 +378,13 @@ void Slicer::new_layer(float z) {
     actual_max_z = z > actual_max_z ? z : actual_max_z;
 
     m_current_layer++;
+    
     ToolPath tp = gen_toolpath(start, end, m_active_tool, m_current_feedrate, 0);
     add_gcode(tp);
 
+    add_gcode("SET_EXTRUDER_AXES[0.0,0.0,0.0,0.0]");
+    m_current_position.w = 0;
+    
     //m_sliced_object.push_back(m_current_layer);
     //m_current_layer.clear();
 }
@@ -362,8 +392,8 @@ void Slicer::new_layer(float z) {
 void Slicer::brush() {
     move_Z(actual_max_z + 5, 0);
     add_gcode("M98 Pbrush.g");
-    ToolPath tp2 = gen_toolpath(m_current_position, glm::vec4(335, 100, m_current_position.z, 0), m_active_tool, 10000, 0);
-    ToolPath tp3 = gen_toolpath(m_current_position, glm::vec4(335, 180, m_current_position.z, 0), m_active_tool, 10000, 0);
+    ToolPath tp2 = gen_toolpath(m_current_position, glm::vec4(335, 100, m_current_position.z, 0), m_active_tool, 2400, 0);
+    ToolPath tp3 = gen_toolpath(m_current_position, glm::vec4(335, 180, m_current_position.z, 0), m_active_tool, 2400, 0);
     toolpath.push_back(tp2);
     toolpath.push_back(tp3);
     m_current_position = glm::vec4(330, 180, m_current_position.z, 0);
@@ -389,13 +419,12 @@ void Slicer::add_gcode(ToolPath tp, const std::string& command) {
 
     if (tp.end.x != m_current_position.x) line << "X" << std::fixed << std::setprecision(3) << tp.end.x << " ";
     if (tp.end.y != m_current_position.y) line << "Y" << std::fixed << std::setprecision(3) << std::to_string(tp.end.y) + " ";
-    if (tp.end.z != m_current_position.z) line << "Z" << std::fixed << std::setprecision(3) << std::to_string(tp.end.z) + " ";
-    if (tp.end.w != 0) line << "E" << std::fixed << std::setprecision(5) << std::to_string(tp.end.w) + " ";
+    if (tp.end.z != m_current_position.z) line << "Z" << std::fixed << std::setprecision(3) << std::to_string(tp.end.z + z_offset) + " ";
+    if (tp.end.w != 0) line << "QV=" << std::fixed << std::setprecision(5) << std::to_string(m_current_position.w + tp.end.w) + " ";
     if (tp.meta.x != m_current_feedrate) line << "F" << std::to_string(int(tp.meta.x)) + " ";
 
     if (line.str() == command + " ") return;
-    m_current_position = tp.end;
-    m_current_position.w = 0;
+    m_current_position = tp.end + glm::vec4(0,0,0,m_current_position.w);
     m_current_feedrate = tp.meta.x;
     gcode.push_back(line.str());
     toolpath.push_back(tp);
