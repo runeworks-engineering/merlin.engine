@@ -259,8 +259,11 @@ namespace Merlin {
 		shader->setMat4("view", camera.getViewMatrix()); //sync model matrix with GPU
 		if(shader->supportLights()) shader->setInt("use_flat_shading", mesh.useFlatShading());
 		if(shader->supportShadows()) shader->setInt("useShadows", use_shadows);
-		shader->setInt("swap_normals", mesh.hasInvertedNormals());
-		shader->setInt("use_normal_map", mesh.useNormalMap());
+		
+		
+
+		if (shader->supportShadows()) shader->setInt("swap_normals", mesh.hasInvertedNormals());
+		if (shader->supportMaterial()) shader->setInt("use_normal_map", mesh.useNormalMap());
 
 		shader->setMat4("projection", camera.getProjectionMatrix()); //sync model matrix with GPU
 		if (shader->supportLights()) shader->setInt("numLights", m_activeLights.size());

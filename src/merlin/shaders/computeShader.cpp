@@ -95,6 +95,8 @@ namespace Merlin {
 			return;
 		}
 
+		extractBlockBindings(m_shaderSrc);
+
 		m_compiled = true;
 		m_shaderID = glCreateShader(GL_COMPUTE_SHADER);
 

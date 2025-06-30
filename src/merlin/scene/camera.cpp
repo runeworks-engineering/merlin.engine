@@ -89,7 +89,7 @@ namespace Merlin {
 		recalculateViewMatrix();
 	}
 
-	void Camera::setView(CameraView view, glm::vec3 center, float distance) {
+	void Camera::setView(CameraView view, float distance, glm::vec3 center ) {
 		glm::vec3 offset;
 
 		switch (view) {

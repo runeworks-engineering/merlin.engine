@@ -13,7 +13,7 @@ AppLayer::~AppLayer(){}
 
 void AppLayer::setupScene() {
 	camera().setPosition(glm::vec3(0.7, -35, 7.4));
-	camera().setRotation(glm::vec3(70, 0, +90));
+	camera().setView(CameraView::Iso, 30);
 	/*
 	shared<Model> bunny = ModelLoader::loadModel("./assets/common/models/bunny.stl");
 	//bunny->children().front()->smoothNormals();
@@ -75,17 +75,14 @@ void AppLayer::setupPhysics() {
 	pos = SSBO<glm::vec4>::create("position_buffer", position, BufferUsage::StaticDraw);
 	vel = SSBO<glm::vec4>::create("velocity_buffer", velocity, BufferUsage::StaticDraw);
 
+	MemoryManager::instance().registerBuffer(pos);
+	MemoryManager::instance().registerBuffer(vel);
+
 
 	solver = ComputeShader::create("solver", "assets/shaders/solver.comp");
 	ps->setShader(Shader::create("particle", "./assets/shaders/particle.vert", "./assets/shaders/particle.frag"));
 	ps->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE_SHADED);
 	ps->setPositionBuffer(pos);
-
-	ps->getShader()->attach(pos);
-	ps->getShader()->attach(vel);
-
-	solver->attach(pos);
-	solver->attach(vel);
 
 	solver->use();
 	solver->setUInt("numParticles", position.size());

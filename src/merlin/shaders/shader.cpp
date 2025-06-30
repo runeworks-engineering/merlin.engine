@@ -99,6 +99,10 @@ namespace Merlin {
 		FragmentShaderSrc = fSrc;
 		GeomShaderSrc = gSrc;
 
+		extractBlockBindings(VertexShaderSrc);
+		extractBlockBindings(FragmentShaderSrc);
+		extractBlockBindings(GeomShaderSrc);
+
 		precompileSrc(VertexShaderSrc);
 		precompileSrc(FragmentShaderSrc);
 		precompileSrc(GeomShaderSrc);

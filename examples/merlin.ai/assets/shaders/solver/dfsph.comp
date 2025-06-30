@@ -1,0 +1,157 @@
+//?#version 430
+
+#pragma once
+//?#include "../common/uniforms.comp"
+//?#include "../common/constants.comp"
+//?#include "../common/buffers.comp"
+//?#include "../common/colors.comp"
+//?#include "../common/nns.comp"
+//?#include "sph.kernels.comp" 
+//?#include "boundary.comp" 
+
+float pbf_computeLambda(uint i);
+vec3 pbf_computePositionDelta(uint i);
+vec3 pbf_computeXPSH(uint i);
+vec3 computeLavaViscosity(uint i);
+
+//#define USE_ONLY_POSITIVE_PRESSURE
+float df_sph_computeDensityRate(uint i) {
+    float drho = 0.0;
+	vec3 position = b_xi.xyz;
+    OVERNNS
+        if(j == i) continue;
+        if(c_Dij > H || c_Dij < EPSILON) continue;
+
+        vec3 gradW = spiky_grad(c_Rij);
+        vec3 vij = b_vi.xyz - b_vj.xyz;  // You may already have this
+
+        drho += mj * dot(vij, gradW);
+    OVERNNS_END
+    return drho;
+}
+
+
+vec3 df_sph_solveDivergenceCorrection(uint i) {
+    float rho0 = u_rho0;
+    float drho = b_lambda_i; // already computed
+    if(abs(drho) < 1e-4) return vec3(0);
+
+    float denom = 0.0;
+    vec3 correction = vec3(0);
+	vec3 position = b_xi.xyz;
+    OVERNNS
+        if(j == i) continue;
+        if(c_Dij > H || c_Dij < EPSILON) continue;
+
+        vec3 gradW = spiky_grad(c_Rij);
+        float term = (mj / rho0) * dot(gradW, gradW);
+        denom += term;
+    OVERNNS_END
+
+    denom += EPSILON;
+
+    float alpha = -drho / denom;
+    
+    OVERNNS
+        if(j == i) continue;
+        if(c_Dij > H || c_Dij < EPSILON) continue;
+
+        vec3 gradW = spiky_grad(c_Rij);
+        vec3 vij_corr = alpha * gradW;
+        correction += vij_corr;
+    OVERNNS_END
+
+    return correction;
+}
+
+
+void pbf_step(uint i, uint kernel) {
+	if(kernel == 0){
+		b_last_xi = b_xi;
+		b_xi = b_pi;
+		vec3 a = vec3(0, 0, -u_g);
+
+		if(b_xi.z < 3.0*cst_particleRadius) b_vi.xyz *= 0;
+		//semi-implicit Euler integration (or Sympletic scheme)
+		b_vi.xyz += a * u_dt;
+		b_pi.xyz += 0.8*b_vi.xyz * u_dt;
+
+		return;
+	}
+
+	if(kernel == 1){ //compute lagrange multiplier
+		//b_lambda_i = clamp(pbf_computeLambda(i), -0.1*H, 0.1*H);
+		 b_lambda_i = df_sph_computeDensityRate(i); // repurposing lambda_i here for storage
+		return;
+	}
+		
+	if(kernel == 2){//correct density error and update position
+		b_dpi.xyz = df_sph_solveDivergenceCorrection(i);
+		//b_dpi.xyz += solveParticleCollision(i);
+		//b_dpi.xyz += boundary_solveFloorCollision(i);
+		//b_dpi.xyz += boundary_dampFloorCollision(i);
+		//b_dpi.xyz += pbf_computeXPSH(i);
+		//particles[i].pposition = clampToDomain(particles[i].pposition);
+		return;
+	}
+
+	if(kernel == 3){//apply XSPH velocity correction
+		vec3 corr = b_dpi.xyz;
+		if(isnan(corr.x) || isnan(corr.y) || isnan(corr.z)) corr = vec3(0);
+
+		b_vi.xyz += corr;
+		
+		
+		//sigma_i = mat4(visco_computeViscoStress(i));
+		return;
+	}
+
+	if(kernel == 4){//apply XSPH velocity correction
+		b_pi.xyz = b_xi.xyz + b_vi.xyz * u_dt;
+		return;
+	}
+
+	if(kernel == 5){//apply XSPH velocity correction
+
+		//b_pi.xyz += b_vi.xyz * u_dt;
+		return;
+	}
+}
+
+vec3 pbf_computeXPSH(uint i){
+	vec3 xsphSum = vec3(0);
+	vec3 position = b_pi.xyz;
+
+	OVERNNS
+		if(j == i) continue;
+		float dist = c_Dij;
+		if(dist < EPSILON || dist > H) continue;
+		float Wij = poly6(c_Rij);
+
+		if(b_rho_j < EPSILON) continue;
+		vec3 xsph = vec3(0);
+		if(phase(j) == FLUID || phase(j) == SOLID){
+			//xsphSum += (mj/b_rho_j) * c_Vji * Wij;
+			xsph = u_artificialViscosityMultiplier * c_Vji * Wij / b_rho_j;
+		}else if(phase(j) == BOUNDARY){
+			//xsphSum += 0.3*(1.0/b_rho_j) * c_Vji * Wij;
+			//xsph = 0.3* c_Vji * Wij / b_rho_j;
+			xsph = 50.0*50.0*0.001 * c_Vji * Wij / b_rho_j;
+		}else if(phase(j) == BOUNDARY+1){
+			//xsphSum += 0.3*(1.0/b_rho_j) * c_Vji * Wij;
+			//xsph = 0.3* c_Vji * Wij / b_rho_j;
+			//xsph = 5.0*u_artificialViscosityMultiplier * c_Vji * Wij / b_rho_j;
+		}
+		xsphSum += xsph;
+	OVERNNS_END
+
+	//float thermal_visco = u_artificialViscosityMultiplier * ((275 + 400)/b_Ti) + 0.002;
+
+	xsphSum *= u_artificialViscosityMultiplier;
+
+	const float maxValue = 300.0*H;
+	xsphSum.x = clamp(xsphSum.x, -maxValue, maxValue);
+	xsphSum.y = clamp(xsphSum.y, -maxValue, maxValue);
+	xsphSum.z = clamp(xsphSum.z, -maxValue, maxValue);
+	return xsphSum;
+}

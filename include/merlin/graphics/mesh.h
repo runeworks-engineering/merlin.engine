@@ -20,8 +20,11 @@ namespace Merlin {
 		void draw() const;
 		void drawInstanced(GLsizeiptr instanced) const;
 
-		void voxelize(float size);
+		void voxelize(float size, bool sdf = false);
 		void voxelizeSurface(float size, float thickness);
+
+		glm::vec4 sdf(glm::vec3);
+		void computeSDF(int threadCount = 1);
 
 		void computeBoundingBox();
 		void swapNormals();
@@ -54,6 +57,9 @@ namespace Merlin {
 		inline const std::string& getShaderName() const { return m_shaderName; }
 		inline const shared<MaterialBase> getMaterial() const { return m_material; }
 		inline const std::string& getMaterialName() const { return m_materialName; }
+		inline const std::vector<glm::vec3>& getVoxelsPosition() const { return m_voxels_position; }
+		inline const std::vector<glm::vec4>& getVoxelsSDF() const { return m_voxels_sdf; }
+
 
 		inline bool hasBoundingBox() const { return m_hasBoundingBox;  }
 		inline BoundingBox getBoundingBox() const { return m_bbox; }
@@ -70,7 +76,10 @@ namespace Merlin {
 		GLuint m_elementCount = 0;
 		std::vector<Vertex> m_vertices;
 		std::vector<GLuint> m_indices;
+
 		std::vector<int> m_voxels;
+		std::vector<glm::vec3> m_voxels_position;
+		std::vector<glm::vec4> m_voxels_sdf;
 
 		bool m_hasBoundingBox = false;
 		BoundingBox m_bbox = { glm::vec3(), glm::vec3() };

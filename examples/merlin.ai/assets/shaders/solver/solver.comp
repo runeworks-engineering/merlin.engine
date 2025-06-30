@@ -1,0 +1,170 @@
+#version 430
+
+#pragma once
+#include "../common/uniforms.comp"
+#include "../common/constants.comp"
+#include "../common/buffers.comp"
+#include "../common/colors.comp"
+#include "../common/nns.comp"
+#include "sph.kernels.comp"
+#include "boundary.comp"
+//#include "dfsph.comp"
+#include "pbf.comp"
+//#include "elasticity.comp"
+//#include "pbs.comp"
+#include "heat.comp"
+
+layout (local_size_x = PTHREAD) in;
+
+uniform uint stage;
+void exec(uint index, uint kernel);
+
+// XPBD_Main
+void main() {
+	uint index = gl_GlobalInvocationID.x;
+	if (index >= u_numParticles + u_numEmitter) return;
+
+	if(phase(index) == BOUNDARY + 1u && index < u_numParticles && stage >= 2){ //fix copy error see 02/05/2025
+		uint i = index;
+		vec3 newPos = vec3(u_emitterTransform * vec4(b_last_xi.xyz, 1.0));
+		b_vi.xyz = (newPos - b_xi.xyz)/u_dt;
+		b_pi.xyz = b_xi.xyz = newPos; //force boudary
+	}else if (phase(index) == SOLID && index < u_numParticles && stage >= 2){ 
+		uint i = index;
+		b_pi = b_xi = b_last_xi;
+	}
+
+	exec(index, stage);
+
+
+}
+
+void spawnParticle(uint i){
+	if (i >= u_numParticles) {
+		uint emmiterID = i - u_numParticles;
+
+		b_xi.w = b_pi.w = 1;
+		b_xi.xyz = b_pi.xyz = b_last_xi.xyz = vec3(0,0,5) + (u_emitterTransform * vec4(ssbo_emitter_positions[emmiterID].xyz,1.0)).xyz;
+		
+		b_rho_i = u_rho0;
+		b_vi = vec4(0, 0, 0.0, 0);
+		b_Ti = 275.15 + 220;
+		b_dTi = 0.0;
+
+		ssbo_meta[i] = uvec4(FLUID, 0, i, 0); //phase, binindex, id , sortedID
+	}
+}
+
+void copyBuffers(uint i){
+	uint bin = getBinIndex(ssbo_position[i].xyz);
+	atomicAdd(ssbo_bins[bin].count, 1);
+
+	ssbo_copy[i].last_position		= ssbo_last_position[i];
+	ssbo_copy[i].position			= ssbo_position[i];
+	ssbo_copy[i].predicted_position = ssbo_predicted_position[i];
+	ssbo_copy[i].position_correction = ssbo_position_correction[i];
+	ssbo_copy[i].velocity			= ssbo_velocity[i];
+	ssbo_copy[i].density			= ssbo_density[i];
+	ssbo_copy[i].temperature		= ssbo_temperature[i];
+
+	ssbo_copy[i].meta.x = ssbo_meta[i].x;
+	ssbo_copy[i].meta.y = bin;
+	ssbo_copy[i].meta.z = ssbo_meta[i].z;
+	ssbo_copy[i].meta.w = 0;
+	
+}
+
+void sortBuffers(uint i){
+	uint bin = ssbo_copy[i].meta.y;//getBinIndex(ssbo_copy[i].position.xyz);
+	uint newID = atomicAdd(ssbo_bins[bin].index, -1) -1;
+	uvec4 m = ssbo_copy[i].meta;
+	uint   origID = m.z;
+
+	ssbo_last_position[newID]		= ssbo_copy[i].last_position;
+	ssbo_position[newID]			= ssbo_copy[i].position;
+	ssbo_predicted_position[newID]	= ssbo_copy[i].predicted_position;
+	ssbo_position_correction[newID] = ssbo_copy[i].position_correction;
+	ssbo_velocity[newID]			= ssbo_copy[i].velocity;
+	ssbo_density[newID]				= ssbo_copy[i].density;
+	//ssbo_lambda[newID]				= ssbo_copy[i].lambda;
+	ssbo_temperature[newID]			= ssbo_copy[i].temperature;
+	//ssbo_sigma[newID]				= ssbo_copy[i].sigma;
+
+	ssbo_meta[newID].x			= ssbo_copy[i].meta.x;
+	ssbo_meta[newID].y			= bin;
+	ssbo_meta[newID].z			= ssbo_copy[i].meta.z;
+	ssbo_meta[origID].w = newID;
+}
+
+void exec(uint index, uint kernel){
+	uint i = index;
+	if(index < u_numParticles)
+		switch(kernel){
+		case 0: 
+			copyBuffers(index);
+			break;
+		case 1: 
+			sortBuffers(index);
+			break;
+		case 2:
+			if(phase(index) == FLUID)
+				pbf_step(index, 0);
+			else if(phase(index) == SOLID){
+				//pbs_step(index, 0);
+				b_vi *=0;
+				ssbo_density[index] = boundary_computePseudoMass(index);
+			}else if(phase(index) >= BOUNDARY)
+				ssbo_density[index] = boundary_computePseudoMass(index);
+
+			
+			if(phase(index) < BOUNDARY) b_dTi = computeTemperatureDelta(index) * u_dt;
+
+			break;
+		case 3: 
+			if(phase(index) == FLUID)
+				pbf_step(index, 1);
+			//else if(phase(index) == SOLID)
+				//pbs_step(index, 1);
+
+				if(phase(index) < BOUNDARY) {
+					float t = ssbo_temperature[index].x;
+					if(phase(index) < BOUNDARY) t += ssbo_temperature[index].y;
+					if(!isnan(t) && t < 1000 && t > 275) ssbo_temperature[index].x = t;
+					ssbo_temperature[index].y = 0;
+				}
+			break;
+		case 4:
+			if(phase(index) == FLUID)
+				pbf_step(index, 2);
+			//else if(phase(index) == SOLID)
+				//pbs_step(index, 2);
+
+			break;
+		case 5: 
+			if(phase(index) == FLUID)
+				pbf_step(index, 3);
+			//else if(phase(index) == SOLID)
+				//pbs_step(index, 3);
+			break;
+		case 6: 
+			if(phase(index) == FLUID)
+				pbf_step(index, 4);
+			break;
+		case 7: 
+			if(phase(index) == FLUID)
+				pbf_step(index, 5);
+			//else if(phase(index) == SOLID)
+				//pbs_step(index, 3);
+
+			if(phase(index) == FLUID && ssbo_temperature[index].x < 275+80){ 
+				phase(index) = SOLID;
+				ssbo_last_position[index] = ssbo_position[index] = ssbo_predicted_position[index]; // Fix rest position
+				b_vi *=0;
+			}
+			else if(phase(index) == SOLID && ssbo_temperature[index].x > 275+90) phase(index) = FLUID;
+
+			break;
+		}
+	else if(kernel == 8) spawnParticle(index);
+
+}

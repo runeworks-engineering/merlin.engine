@@ -9,7 +9,7 @@ const float radius = 3;
 
 ExampleLayer::ExampleLayer() {
 	camera().setPosition(glm::vec3(0.7, -10, 2.4));
-	camera().setRotation(glm::vec3(30, 0, +90));
+	camera().setView(CameraView::Iso);
 }
 
 
@@ -23,7 +23,6 @@ void ExampleLayer::onAttach(){
 
 
 	shared<Model> bunny = ModelLoader::loadModel("./assets/common/models/bunny.stl");
-	bunny->meshes()[0]->smoothNormals();
 	bunny->setMaterial("pearl");
 	bunny->scale(0.2);
 	bunny->translate(glm::vec3(0,0,-0.5));

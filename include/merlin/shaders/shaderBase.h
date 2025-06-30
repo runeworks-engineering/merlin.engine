@@ -75,10 +75,15 @@ namespace Merlin {
 
 		bool hasConstant(const std::string&) const;
 
-		bool hasBuffer(std::string buf);
+		void extractBlockBindings(const std::string&);
+		void solveBlockBinding();
+		bool hasBinding(const std::string& buf);
+
+		bool hasBuffer(const std::string& buf);
 		void attach(AbstractBufferObject_Ptr buf);
 		void detach(AbstractBufferObject_Ptr buf);
 		void detach(const AbstractBufferObject& buf);
+		
 
 		inline const GLuint id() const { return m_programID; }
 		inline void setID(GLuint _id_) { m_programID = _id_; };
@@ -103,6 +108,7 @@ namespace Merlin {
 		std::unordered_map<std::string, std::string> m_constants;
 		std::unordered_map<std::string, std::string> m_defines;
 		std::unordered_map<std::string, AbstractBufferObject_Ptr> m_buffers;
+		std::unordered_map<std::string, BufferTarget> m_bindings;
 
 		static int shader_instances;
 

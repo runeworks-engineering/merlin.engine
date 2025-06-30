@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "merlin/utils/voxelizer.h"
-#include "merlin/memory/bindingPointManager.h"
+#include "merlin/memory/memoryManager.h"
 #include "merlin/shaders/computeShader.h"
 
 namespace Merlin {

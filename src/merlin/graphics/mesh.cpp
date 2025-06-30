@@ -5,6 +5,9 @@
 
 #include <unordered_map>
 #include <vector>
+#include <thread>
+#include <mutex>
+#include <future>
 
 
 // Helper function to compare glm::vec3 for hashing
@@ -160,13 +163,131 @@ namespace Merlin {
 		updateVAO();
 	}
 
-	void Mesh::voxelize(float size) {
+	void Mesh::voxelize(float size, bool sdf) {
 		m_voxels = Voxelizer::voxelize(*this, size);
+		m_voxels_position = Voxelizer::getVoxelposition(m_voxels, m_bbox, size);
+		m_voxels_sdf = std::vector<glm::vec4>(m_voxels.size(), glm::vec4(0));
+		Console::print() << "Voxelized " << m_voxels.size() << " voxels." << Console::endl;
+
+		if (sdf) {
+			Console::print() << "Computing SDF (this may take a while)" << Console::endl;
+			computeSDF(std::thread::hardware_concurrency());
+		}
 	}
 
-	void Mesh::voxelizeSurface(float size, float thickness){
+	void Mesh::voxelizeSurface(float size, float thickness) {
 		m_voxels = Voxelizer::voxelizeSurface(*this, size, thickness);
 	}
+
+	glm::vec4 pointTriangleDistance(glm::vec3 p, glm::vec3 a, glm::vec3 b, glm::vec3 c) {
+		using namespace glm;
+
+		vec3 ab = b - a;
+		vec3 ac = c - a;
+		vec3 ap = p - a;
+
+		float d1 = dot(ab, ap);
+		float d2 = dot(ac, ap);
+		if (d1 <= 0.0f && d2 <= 0.0f) {
+			return glm::vec4(a, length(p - a));
+		}
+
+		vec3 bp = p - b;
+		float d3 = dot(ab, bp);
+		float d4 = dot(ac, bp);
+		if (d3 >= 0.0f && d4 <= d3) {
+			return glm::vec4(b, length(p - b));
+		}
+
+		vec3 cp = p - c;
+		float d5 = dot(ab, cp);
+		float d6 = dot(ac, cp);
+		if (d6 >= 0.0f && d5 <= d6) {
+			return glm::vec4(c, length(p - c));
+		}
+
+		float vc = d1 * d4 - d3 * d2;
+		if (vc <= 0.0f && d1 >= 0.0f && d3 <= 0.0f) {
+			float v = d1 / (d1 - d3);
+			vec3 closestPoint = a + v * ab;
+			return glm::vec4(closestPoint, length(p - closestPoint));
+		}
+
+		float vb = d5 * d2 - d1 * d6;
+		if (vb <= 0.0f && d2 >= 0.0f && d6 <= 0.0f) {
+			float w = d2 / (d2 - d6);
+			vec3 closestPoint = a + w * ac;
+			return glm::vec4(closestPoint, length(p - closestPoint));
+		}
+
+		float va = d3 * d6 - d5 * d4;
+		if (va <= 0.0f && (d4 - d3) >= 0.0f && (d5 + va) >= 0.0f) {
+			float u = (d4 - d3) / ((d4 - d3) + va);
+			vec3 closestPoint = b + u * (c - b);
+			return glm::vec4(closestPoint, length(p - closestPoint));
+		}
+
+		// Inside face region
+		vec3 normal = normalize(cross(ab, ac));
+		float distToPlane = dot(ap, normal);
+		vec3 closestPoint = p - distToPlane * normal;
+		return glm::vec4(closestPoint, fabs(distToPlane));
+	}
+
+
+	//return the SDF and gradient of the given point according to the mesh
+	glm::vec4 Mesh::sdf(glm::vec3 pointOfInterest) {
+		float minDistance = std::numeric_limits<float>::max();
+		glm::vec3 closestPoint;
+
+		for (size_t i = 0; i < m_indices.size(); i += 3) {
+			GLuint i0 = m_indices[i];
+			GLuint i1 = m_indices[i + 1];
+			GLuint i2 = m_indices[i + 2];
+			glm::vec3 v0 = m_vertices[i0].position;
+			glm::vec3 v1 = m_vertices[i1].position;
+			glm::vec3 v2 = m_vertices[i2].position;
+
+			glm::vec4 localClosest = pointTriangleDistance(pointOfInterest, v0, v1, v2);
+			float distance = localClosest.w;
+			if (distance < minDistance) {
+				minDistance = distance;
+				closestPoint = glm::vec3(localClosest) + m_vertices[i0].normal * 2.0f;
+			}
+		}
+
+		glm::vec3 gradient = glm::normalize(pointOfInterest - closestPoint);
+		return glm::vec4(gradient, minDistance);
+	}
+
+	void Mesh::computeSDF(int threadCount) {
+		if (threadCount > 1) {
+			const int voxelCount = static_cast<int>(m_voxels_position.size());
+			m_voxels_sdf.resize(voxelCount);
+
+			std::vector<std::future<void>> futures;
+			int batchSize = voxelCount / threadCount;
+
+			for (int t = 0; t < threadCount; ++t) {
+				int start = t * batchSize;
+				int end = (t == threadCount - 1) ? voxelCount : start + batchSize;
+
+				futures.emplace_back(std::async(std::launch::async, [this, start, end]() {
+					for (int i = start; i < end; ++i) {
+						m_voxels_sdf[i] = sdf(m_voxels_position[i]);
+					}
+					}));
+			}
+
+			for (auto& f : futures) {
+				f.get();
+			}
+		}
+		else {
+			//implement here the mono threaded version
+		}
+	}
+
 
 	void Mesh::computeBoundingBox() {
 		glm::mat4 modelMat = globalTransform();

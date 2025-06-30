@@ -1,12 +1,12 @@
 #include "pch.h"
 #include "merlin/memory/bufferObject.h"
-#include "merlin/memory/bindingPointManager.h"
+#include "merlin/memory/memoryManager.h"
 #include "merlin/utils/util.h"
 
 namespace Merlin {
  
     void AbstractBufferObject::releaseBindingPoint() {
-        if(m_bindingPoint < 16) BindingPointManager::instance().releaseBindingPoint(m_target, m_bindingPoint);
+        if(m_bindingPoint < 16) MemoryManager::instance().releaseBindingPoint(m_target, m_bindingPoint);
         m_bindingPoint = -1;
         return;
     }

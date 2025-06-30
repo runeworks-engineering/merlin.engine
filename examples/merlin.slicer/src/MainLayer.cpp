@@ -20,7 +20,7 @@ MainLayer::MainLayer(){
 	if (current_machine == Machine::NEOTECH) viewCenter = glm::vec3(0);
 	else if (current_machine == Machine::TOOLHANGER) viewCenter = glm::vec3(150, 100, 0);
 
-	camera().setView(CameraView::Top, viewCenter, glm::distance(glm::vec3(0), camera().getPosition()));
+	camera().setView(CameraView::Top, glm::distance(glm::vec3(0), camera().getPosition()), viewCenter);
 
 	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	glEnable(GL_LINE_SMOOTH);
@@ -355,20 +355,20 @@ void MainLayer::onImGuiRender() {
 			if (current_machine == Machine::NEOTECH) viewCenter = glm::vec3(0);
 			else if (current_machine == Machine::TOOLHANGER) viewCenter = glm::vec3(150,100,0);
 
-			if (ImGui::MenuItem("Iso", "0", false)) camera().setView(CameraView::Iso, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+			if (ImGui::MenuItem("Iso", "0", false)) camera().setView(CameraView::Iso, glm::distance(origin->position(), camera().getPosition()), viewCenter);
 
 			ImGui::Separator();
-			if (ImGui::MenuItem("Top", "1", false)) camera().setView(CameraView::Top, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+			if (ImGui::MenuItem("Top", "1", false)) camera().setView(CameraView::Top, glm::distance(origin->position(), camera().getPosition()), viewCenter);
 
-			if (ImGui::MenuItem("Bottom", "2", false)) camera().setView(CameraView::Bottom, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+			if (ImGui::MenuItem("Bottom", "2", false)) camera().setView(CameraView::Bottom, glm::distance(origin->position(), camera().getPosition()), viewCenter);
 
-			if (ImGui::MenuItem("Front", "3", false)) camera().setView(CameraView::Front, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+			if (ImGui::MenuItem("Front", "3", false)) camera().setView(CameraView::Front, glm::distance(origin->position(), camera().getPosition()), viewCenter);
 
-			if (ImGui::MenuItem("Rear", "4", false)) camera().setView(CameraView::Rear, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+			if (ImGui::MenuItem("Rear", "4", false)) camera().setView(CameraView::Rear, glm::distance(origin->position(), camera().getPosition()), viewCenter);
 
-			if (ImGui::MenuItem("Left", "5", false)) camera().setView(CameraView::Left, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+			if (ImGui::MenuItem("Left", "5", false)) camera().setView(CameraView::Left, glm::distance(origin->position(), camera().getPosition()), viewCenter);
 
-			if (ImGui::MenuItem("Right", "6", false)) camera().setView(CameraView::Right, viewCenter, glm::distance(origin->position(), camera().getPosition()));
+			if (ImGui::MenuItem("Right", "6", false)) camera().setView(CameraView::Right, glm::distance(origin->position(), camera().getPosition()), viewCenter);
 
 			//ImGui::Separator();
 			//if (ImGui::MenuItem("FullScreen", "F11", false)) camera().setView(CameraView::Iso, viewCenter, glm::distance(origin->position(), camera().getPosition()));

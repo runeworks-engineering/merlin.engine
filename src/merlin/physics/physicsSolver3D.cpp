@@ -3,7 +3,7 @@
 #include "merlin/physics/particleSampler.h"
 #include "merlin/utils/ressourceManager.h"
 #include "merlin/utils/util.h"
-#include "merlin/memory/bindingPointManager.h"
+#include "merlin/memory/memoryManager.h"
 #include "merlin/utils/primitives.h"
 #include "merlin/memory/acb.h"
 
@@ -546,13 +546,13 @@ namespace Merlin {
             m_pipeline->removeAllBuffer();
             m_pipeline->removeAllField();
         }
-        BindingPointManager::instance().resetBindings();
+        MemoryManager::instance().resetBindings();
     }
 
     void PhysicsSolver3D::reset(){
         m_elapsed_time = 0;
         
-        BindingPointManager::instance().resetBindings();
+        MemoryManager::instance().resetBindings();
 
         m_settings.particles_count.value() = m_settings.initial_particles_count;
 
@@ -926,7 +926,7 @@ namespace Merlin {
         AtomicCounterBuffer atomicCounterBuffer;
         atomicCounterBuffer.allocate(sizeof(GLuint), Merlin::BufferUsage::DynamicDraw);
         GLuint bufferID = atomicCounterBuffer.id();
-        GLuint bindingPoint = Merlin::BindingPointManager::instance().allocateBindingPoint(Merlin::BufferTarget::Atomic_Counter_Buffer, bufferID);
+        GLuint bindingPoint = Merlin::MemoryManager::instance().allocateBindingPoint(Merlin::BufferTarget::Atomic_Counter_Buffer, bufferID);
         atomicCounterBuffer.bindBase(bindingPoint);
 
         GLuint initialValue = 0;

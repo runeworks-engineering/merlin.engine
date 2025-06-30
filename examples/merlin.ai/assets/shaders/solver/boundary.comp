@@ -1,0 +1,64 @@
+//? #version 430
+#ifndef INCLUDE_CONSTRAINTS_GLSL
+#define INCLUDE_CONSTRAINTS_GLSL
+
+//?#include "../common/uniforms.comp"
+//?#include "../common/constants.comp"
+//?#include "../common/buffers.comp"
+//?#include "../common/nns.comp"
+//?#include "sph.kernels.comp" 
+
+//#define USE_ONLY_POSITIVE_PRESSURE
+
+vec3 boundary_solveFloorCollision(uint i){
+	vec3 pos = b_xi.xyz;
+	for (int axis  = 0; axis  < 3; axis ++){
+		float minPlane = cst_boundaryMin[axis] + cst_particleRadius;
+        float maxPlane = cst_boundaryMax[axis] - cst_particleRadius;
+
+		if (pos[axis] - cst_particleRadius <= minPlane){
+			pos[axis] = minPlane + cst_particleRadius + 1e-2;
+		}
+		else if (pos[axis] + cst_particleRadius >= maxPlane)
+		{
+			pos[axis] =  maxPlane - cst_particleRadius - 1e-2;
+		}
+	}
+
+	return (pos - b_xi.xyz)*0.1;
+}
+
+vec3 boundary_dampFloorCollision(uint i){
+	vec3 pos = b_xi.xyz;
+	vec3 vel = b_vi.xyz;
+	for (int axis  = 0; axis  < 3; axis ++){
+		float minPlane = cst_boundaryMin[axis] + cst_particleRadius;
+        float maxPlane = cst_boundaryMax[axis] - cst_particleRadius;
+
+		if (pos[axis] - cst_particleRadius <= minPlane){
+			vel[axis] *= 0.2;
+		}
+		else if (pos[axis] + cst_particleRadius >= maxPlane)
+		{
+			vel[axis] *= 0.2;
+		}
+	}
+
+	return vel;
+}
+
+float boundary_computePseudoMass(uint i){
+	float pseudomass = 1; //to avoid dividing by zero in compute delta
+	vec3 position = b_xi.xyz;
+	OVERNNS
+		if(c_Dij >= H || c_Dij < 1e-6) continue;
+		if(phase(j) >= BOUNDARY || phase(j) == SOLID)
+			pseudomass += poly6(c_Dij);
+	OVERNNS_END
+	return pseudomass;
+}
+
+
+ 
+
+#endif

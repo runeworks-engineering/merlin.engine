@@ -1,7 +1,8 @@
 #include "pch.h"
 #include "merlin/shaders/shaderBase.h"
 #include "merlin/core/log.h"
-#include "merlin/memory/bindingPointManager.h"
+#include "merlin/memory/memoryManager.h"
+
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -61,7 +62,7 @@ namespace Merlin {
 			int block_index = glGetProgramResourceIndex(m_programID, GL_SHADER_STORAGE_BLOCK, buf.name().c_str());
 			if (block_index == -1) Console::error("ShaderBase") << "Block " << buf.name() << " not found in shader '" << m_name << "'. Did you bind it properly ?" << Console::endl;
 			else {
-				BindingPointManager& manager = BindingPointManager::instance();
+				MemoryManager& manager = MemoryManager::instance();
 				auto bindingPoint = manager.allocateBindingPoint(buf.target(), buf.id());
 				buf.bind();
 				buf.setBindingPoint(bindingPoint);
@@ -72,22 +73,40 @@ namespace Merlin {
 		}
 	}
 
-	bool ShaderBase::hasBuffer(std::string buf)	{
+	bool ShaderBase::hasBuffer(const std::string& buf)	{
 		return m_buffers.find(buf) != m_buffers.end();
 	}
 
 	void ShaderBase::attach(AbstractBufferObject_Ptr buf) {
 		if (buf) {
-			if (hasBuffer(buf->name())) Console::warn("ShaderBase") << "overriding an existing buffer in shader attach points" << Console::endl;
+			if (hasBuffer(buf->name())) Console::trace("ShaderBase") << "overriding an existing buffer in shader attach points" << Console::endl;
 			m_buffers[buf->name()] = buf;
 		}
-		
-		
 	}
 
 	void ShaderBase::detach(const AbstractBufferObject& buf){
 		if(hasBuffer(buf.name()))
 			m_buffers.erase(buf.name());
+	}
+
+	void ShaderBase::solveBlockBinding(){
+		bool fully = true;
+		auto& memory = MemoryManager::instance();
+
+		if(m_bindings.empty()) Console::info("Shader") << "Shader has no block bindings" << Console::endl;
+		for (const auto& key : m_bindings) {
+			if (memory.hasBuffer(key.first)) {
+				attach(memory.getBuffer(key.first));
+			}
+			else fully = false;
+		}
+
+		if (fully) Console::success("Shader") << name() << " : " << "All block bindings are automatically resolved" << Console::endl;
+		else Console::warn("Shader Pipeline") << name() << " : " << "Some block bindings cannot be resolved, please attach them manually" << Console::endl;
+	}
+
+	bool ShaderBase::hasBinding(const std::string& buf){
+		return m_bindings.find(buf) != m_bindings.end();
 	}
 
 	void ShaderBase::detach(AbstractBufferObject_Ptr buf) {
@@ -208,6 +227,46 @@ namespace Merlin {
 	bool ShaderBase::hasConstant(const std::string& name) const{
 		return m_constants.find(name) != m_constants.end();
 	}
+
+	void ShaderBase::extractBlockBindings(const std::string& shaderSrc) {
+		if (shaderSrc.empty()) return;
+
+		
+
+		// Regex for SSBO/UBO buffer blocks, with optional access qualifier and optional binding index in layout
+		std::regex bufferBlockRegex(
+			R"(layout\s*\([^\)]*\)\s*(?:readonly|writeonly)?\s*buffer\s+(\w+))"
+		);
+
+		// Regex for UBO blocks (Uniform Buffer Objects)
+		std::regex uniformBlockRegex(
+			R"(layout\s*\([^\)]*\)\s*uniform\s+(\w+))"
+		);
+
+		// Now search for all buffer blocks
+		for (auto it = std::sregex_iterator(shaderSrc.begin(), shaderSrc.end(), bufferBlockRegex);
+			it != std::sregex_iterator(); ++it) {
+			std::smatch match = *it;
+			std::string name = match[1].str();
+			BufferTarget target = BufferTarget::Shader_Storage_Buffer; // buffer blocks = SSBO
+			m_bindings.emplace(name, target);
+		}
+
+		// Now search for all uniform blocks (UBO)
+		for (auto it = std::sregex_iterator(shaderSrc.begin(), shaderSrc.end(), uniformBlockRegex);
+			it != std::sregex_iterator(); ++it) {
+			std::smatch match = *it;
+			std::string name = match[1].str();
+			BufferTarget target = BufferTarget::Uniform_Buffer;
+			m_bindings.emplace(name, target);
+		}
+
+		// All other buffer types (VBO, EBO, etc.) are not declared as named blocks in GLSL and can't be parsed here.
+
+		solveBlockBinding();
+	}
+
+
 
 	void ShaderBase::setConstUInt(const std::string name, GLuint value) {
 		m_constants[name] = "const uint " + name + " = " + std::to_string(value);
@@ -440,7 +499,7 @@ namespace Merlin {
 			return content;
 		}
 		else {
-			std::cerr << "Can't read file " << filename << std::endl;
+			Console::error("ShaderBase") << "Can't read file " << filename << Console::endl;
 			return "error";
 		}
 	}

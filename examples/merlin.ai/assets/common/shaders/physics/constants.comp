@@ -1,0 +1,64 @@
+//? #version 430
+#ifndef INCLUDE_CONSTANTS_GLSL
+#define INCLUDE_CONSTANTS_GLSL
+
+#define BTHREAD 1
+#define PTHREAD 1
+
+#define MATERIAL_UNUSED 0
+#define MATERIAL_FLUID 1
+#define MATERIAL_GRANULAR 2
+#define MATERIAL_RIGID 3
+#define MATERIAL_SOFT 4
+#define MATERIAL_FLUID_EMITTER 5
+#define MATERIAL_GRANULAR_EMITTER 6
+#define MATERIAL_RIGID_EMITTER 7
+#define MATERIAL_SOFT_EMITTER 8
+#define MATERIAL_BOUNDARY 9
+
+#define FIELD_POSITION 0
+#define FIELD_VELOCITY 1
+#define FIELD_DENSITY 2
+#define FIELD_PRESSURE 3
+#define FIELD_TEMPERATURE 4
+#define FIELD_STRESS 5
+#define FIELD_PLASTICITY 6
+
+#define COLORMAP_INFERNO 0
+#define COLORMAP_BLACKBODY1
+#define COLORMAP_PLASMA 2
+#define COLORMAP_VIRIDIS 3
+#define COLORMAP_WARMCOOL 4
+#define COLORMAP_PARULA 5
+#define COLORMAP_JET 6
+#define COLORMAP_BLUE 7
+
+#define STAGE_INIT 0
+#define STAGE_COPY 1
+#define STAGE_BIN 2
+#define STAGE_SORT 3
+#define STAGE_SPAWN 4
+#define STAGE_SOLVER_STEP_1 5
+#define STAGE_SOLVER_STEP_2 6
+#define STAGE_SOLVER_STEP_3 7
+#define STAGE_SOLVER_STEP_4 8
+#define STAGE_SOLVER_STEP_5 9
+#define STAGE_SOLVER_STEP_6 10
+
+#define MAXNN 64
+#define EPSILON 1e-6
+#define MAX_DELTA_PI 0.1
+
+
+// --- Domain ---
+const vec3 cst_domain = vec3(0);
+const vec3 cst_halfdomain = vec3(0);
+const vec3 cst_boundaryMin = vec3(0);
+const vec3 cst_boundaryMax = vec3(0);
+
+const float cst_particleRadius = 0;
+const float cst_smoothingRadius = 0;
+const float cst_binSize = 0;
+const uvec3 cst_binMax = uvec3(0);
+const uint cst_binCount = 0;
+#endif

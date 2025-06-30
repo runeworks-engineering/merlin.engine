@@ -40,7 +40,7 @@ namespace Merlin {
 		bool isOrthoGraphic() const { return _projection == Projection::Orthographic; }
 		//bool () const { return _projection == Projection::Orthographic; }
 
-		void setView(CameraView, glm::vec3 center, float distance);
+		void setView(CameraView, float distance = 100, glm::vec3 center = glm::vec3(0));
 
 		void reset();
 		void resetProjection();
