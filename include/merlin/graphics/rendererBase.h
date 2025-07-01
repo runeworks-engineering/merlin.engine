@@ -3,6 +3,7 @@
 #include "merlin/scene/scene.h"
 #include "merlin/scene/camera.h"
 #include "merlin/scene/light.h"
+#include "merlin/memory/frameBuffer.h"
 
 #include <vector>
 #include <stack>
@@ -79,6 +80,9 @@ namespace Merlin {
 
 		void setRenderModeOveride(RenderMode mode);
 
+		void renderTo(FBO_Ptr target);
+		void renderToDefault();
+		void activateTarget();
 
 	protected:
 		bool debug = false;
@@ -111,5 +115,7 @@ namespace Merlin {
 		glm::vec4 backgroundColor;
 		shared<Environment> m_defaultEnvironment = nullptr;
 		shared<Environment> m_currentEnvironment = nullptr;
+
+		FBO_Ptr m_target = nullptr;
 	};
 }

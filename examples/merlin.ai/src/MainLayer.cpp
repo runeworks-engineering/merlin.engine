@@ -44,41 +44,37 @@ void MainLayer::onAttach() {
 	//double samples_init = 0;
 	double scenario_init = 0;
 
+	createBuffers();
+	sim.init();
+	createShaders();
+	sim.reset();
+	createScene();
 
+	camera_fbo = FBO::create(512, 512);
 
-	GPU_PROFILE(buffers_init,
-		createBuffers();
-	)
+	camera_rbo = RBO::create();
+	camera_rbo->reserve(512,512,GL_DEPTH24_STENCIL8);
 
-	GPU_PROFILE(sim_init,
-		sim.init();
-	)
-
-	GPU_PROFILE(shaders_init,
-		createShaders();
-	)
-
-	//createSamples();
-
-	GPU_PROFILE(scene_init,
-		createScene();
-	)
+	camera_texture = Texture2D::create(512,512, 4, 8, TextureType::ALBEDO);
+	camera_texture->bind();
+	camera_texture->setInterpolationMode(GL_LINEAR, GL_LINEAR);
+	camera_texture->setRepeatMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
+	camera_texture->setBorderColor4f(1, 1, 1, 1);
+	camera_texture->unbind();
 	
-	
+	camera_fbo->bind();
+	camera_texture->bind();
+	camera_fbo->attachColorTexture(camera_texture);
+	camera_rbo->bind();
+	camera_fbo->attachDepthStencilRBO(camera_rbo);
+	glDrawBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
+	camera_fbo->unbind();
+	camera_rbo->unbind();
+	camera_texture->unbind();
 
-	GPU_PROFILE(scenario_init,
-		sim.reset();
-	)
-	
-	Console::printSeparator();
-	Console::print() << "Initialization done." << Console::endl;
-	Console::print() << "Buffer initialization : " << buffers_init  << "ms" << Console::endl;
-	Console::print() << "Physics initialization : " << sim_init << "ms" << Console::endl;
-	Console::print() << "Shaders initialization : " << shaders_init << "ms" << Console::endl;
-	Console::print() << "Graphics scene initialization : " << scene_init << "ms" << Console::endl;
-	//Console::print() << "Buffer initialization : " << samples_init << "s" << Console::endl;
-	Console::print() << "Physics scene initialization : " << scenario_init << "ms" << Console::endl;
-	Console::printSeparator();
+
+	camera_output.setView(CameraView::Top, 200, glm::vec3(150, 100, 0));
 	
 }
 
@@ -105,6 +101,12 @@ void MainLayer::onUpdate(Timestep ts) {
 
 		renderer.clear();
 		renderer.render(scene, camera());
+		renderer.reset();
+
+
+		renderer.renderTo(camera_fbo);
+		renderer.clear();
+		renderer.render(scene, camera_output);
 		renderer.reset();
 
 		//MemoryManager::instance().resetBindings();
@@ -739,13 +741,19 @@ void MainLayer::onImGuiRender() {
 			}
 		}
 
+
+
+
+
 		ImGui::Image((void*)(intptr_t)texture_debugYZ->id(), ImVec2(settings.tex_size.y * scale, settings.tex_size.z * scale), ImVec2(1, 1), ImVec2(0, 0));
 
 		ImGui::End();
 	}
 
 
-
+	ImGui::Begin("Camera");
+	ImGui::Image((void*)(intptr_t)camera_texture->id(), ImVec2(512,512), ImVec2(1, 1), ImVec2(0, 0));
+	ImGui::End();
 
 
 

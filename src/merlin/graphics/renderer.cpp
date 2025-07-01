@@ -67,7 +67,7 @@ namespace Merlin {
 		}
 		
 		camera.restoreViewport();
-
+		activateTarget();
 
 		//Render the scene
 		if (debug)Console::info() << "Rendering scene objects" << Console::endl;

@@ -80,6 +80,13 @@ private:
 	Texture2D_Ptr texture_debugYZ;
 
 
+	Camera camera_output;
+	FBO_Ptr camera_fbo;
+	RBO_Ptr camera_rbo;
+	Texture2D_Ptr camera_texture;
+
+
+
 
 
 	/*********** Shaders ***********/

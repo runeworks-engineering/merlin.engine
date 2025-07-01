@@ -141,11 +141,11 @@ void Slicer::generateSample(SampleProperty props) {
     float xEnd = props.x_offset - props.line_width * 0.5 + props.width / 2.0f;
     float yMin = props.y_offset - fill_height + props.line_width*0.5f;
     float yMax = props.y_offset + fill_height - props.line_width*0.5f;
-    float yOverlapMin = props.y_offset - (props.overlap * props.line_width);
-    float yOverlapMax = props.y_offset + props.overlap * props.line_width(/ 2.0f);
+    float yOverlapMin = props.y_offset - props.line_width * 0.5 - ((props.overlap-1) * props.line_width);
+    float yOverlapMax = props.y_offset + props.line_width * 0.5 + ((props.overlap-1) * props.line_width);
     numLayers = static_cast<int>(std::ceil(props.height / props.layer_height));
 
-    int linesPerSection = static_cast<int>(std::ceil(fill_height / props.line_width)) + props.overlap;
+    int linesPerSection = static_cast<int>(std::ceil((fill_height - props.overlap * props.line_width) / props.line_width)) + props.overlap;
     int overlapLines = props.overlap;
 
     printSampleHeader(props, numLayers, filament_diameter);

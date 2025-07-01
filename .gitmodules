@@ -14,6 +14,6 @@
 [submodule "vendor/tinyfiledialogs"]
 	path = vendor/tinyfiledialogs
 	url = https://github.com/JulesTopart/tinyfiledialogs.git
-[submodule "vendor/tinyxml2"]
-	path = vendor/tinyxml2
+[submodule "vendor/tinyxml2--force"]
+	path = vendor/tinyxml2--force
 	url = https://github.com/JulesTopart/tinyxml2.git

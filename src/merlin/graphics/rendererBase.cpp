@@ -53,6 +53,7 @@ namespace Merlin {
 		m_activeLights.clear();
 		m_scenePoints.clear();
 		Texture2D::resetTextureUnits();
+		renderToDefault();
 	}
 
 
@@ -190,6 +191,21 @@ namespace Merlin {
 	void RendererBase::setRenderModeOveride(RenderMode mode){
 		m_renderModeOverride = mode;
 	}
+
+	void  RendererBase::renderTo(FBO_Ptr target) {
+		m_target = target;
+	}
+
+	void RendererBase::renderToDefault() {
+		if (m_target) m_target->unbind();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		m_target = nullptr;
+	}
+
+	void RendererBase::activateTarget()	{
+		if (m_target) m_target->bind();
+	}
+
 
 	void RendererBase::setEnvironmentGradientColor(float r, float g, float b) {
 		setEnvironmentGradientColor(glm::vec3(r, g, b));

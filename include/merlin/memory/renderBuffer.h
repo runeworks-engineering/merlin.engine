@@ -16,6 +16,7 @@ namespace Merlin {
 
         inline GLuint id() const { return _RenderbufferID; }
 
+        static shared<RenderBuffer> create(int samples = 0);
 
     private:
         GLuint _RenderbufferID;
@@ -24,5 +25,6 @@ namespace Merlin {
 
     };
     typedef RenderBuffer RBO;
+    typedef shared<RenderBuffer> RBO_Ptr;
 }
 

@@ -61,7 +61,7 @@ namespace Merlin {
         }
         // attach the texture to the framebuffer as a color attachment
         tex->bind();
-        m_attatchments.push_back(GL_COLOR_ATTACHMENT0 + m_attatchments.size() - 1);
+        m_attatchments.push_back(GL_COLOR_ATTACHMENT0 + m_attatchments.size());
         glFramebufferTexture2D(GL_FRAMEBUFFER, m_attatchments.back(), tex->getTarget(), tex->id(), 0);
         checkErrors("Error creating GL_COLOR_ATTACHMENT");
     }

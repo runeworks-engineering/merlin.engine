@@ -42,4 +42,8 @@ namespace Merlin {
 		else
 			glRenderbufferStorage(GL_RENDERBUFFER, format, width, height);
 	}
+
+	shared<RenderBuffer> RenderBuffer::create(int samples) {
+		return createShared<RenderBuffer>(samples);
+	}
 }

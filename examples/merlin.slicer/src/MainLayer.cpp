@@ -52,8 +52,8 @@ void MainLayer::createScene() {
 	default_props.line_width = 0.4;
 	default_props.tool_a = 0;
 	default_props.tool_b = 1;
-	default_props.flow_a = 1.0f;
-	default_props.flow_b = 1.0f;
+	default_props.flow_a = 1.2f;
+	default_props.flow_b = 1.2f;
 	default_props.retract_a = 1.0f;
 	default_props.retract_b = 1.0f;
 	default_props.feedrate_a = 1050;
@@ -238,7 +238,7 @@ void MainLayer::onUpdate(Timestep ts) {
 	toolpath_shader->use();
 	toolpath_shader->setInt("layer", current_layer);
 	toolpath_shader->setInt("showG0", showG0);
-
+	glLineWidth(15);
 	renderer.clear();
 	renderer.render(scene, camera());
 	renderer.reset();
