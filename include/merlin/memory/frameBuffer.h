@@ -29,6 +29,8 @@ namespace Merlin {
 
         void renderAttachement(GLuint id);
 
+        inline int width() const { return _width; }
+        inline int height() const{ return _height; }
 
         static std::shared_ptr<FrameBuffer> create(int width, int height);
         

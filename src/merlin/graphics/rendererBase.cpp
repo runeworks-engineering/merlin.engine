@@ -203,7 +203,10 @@ namespace Merlin {
 	}
 
 	void RendererBase::activateTarget()	{
-		if (m_target) m_target->bind();
+		if (m_target) {
+			m_target->bind();
+			glViewport(0,0,m_target->width(), m_target->height());
+		}
 	}
 
 

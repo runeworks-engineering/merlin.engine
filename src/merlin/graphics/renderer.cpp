@@ -65,9 +65,11 @@ namespace Merlin {
 			}
 			if (useFaceCulling()) glEnable(GL_CULL_FACE);
 		}
-		
+
 		camera.restoreViewport();
 		activateTarget();
+		
+		
 
 		//Render the scene
 		if (debug)Console::info() << "Rendering scene objects" << Console::endl;

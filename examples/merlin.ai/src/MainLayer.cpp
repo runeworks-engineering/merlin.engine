@@ -14,7 +14,7 @@ const bool real_scale = false;
 
 const float radius = 3;
 
-MainLayer::MainLayer(){
+MainLayer::MainLayer() : camera_output(512, 512) {
 	camera().setNearPlane(2.0f);
 	camera().setFarPlane(800);
 	camera().setFOV(45); //Use 90.0f as we are using cubemaps
@@ -32,7 +32,7 @@ MainLayer::MainLayer(){
 MainLayer::~MainLayer(){}
 
 
-void MainLayer::onAttach() {
+void MainLayer::onAttach(){
 	Layer3D::onAttach();
 
 	Console::setLevel(ConsoleLevel::_INFO);
@@ -67,13 +67,11 @@ void MainLayer::onAttach() {
 	camera_fbo->attachColorTexture(camera_texture);
 	camera_rbo->bind();
 	camera_fbo->attachDepthStencilRBO(camera_rbo);
-	glDrawBuffer(GL_NONE);
-	glReadBuffer(GL_NONE);
 	camera_fbo->unbind();
 	camera_rbo->unbind();
 	camera_texture->unbind();
 
-
+	
 	camera_output.setView(CameraView::Top, 200, glm::vec3(150, 100, 0));
 	
 }
@@ -103,8 +101,8 @@ void MainLayer::onUpdate(Timestep ts) {
 		renderer.render(scene, camera());
 		renderer.reset();
 
-
 		renderer.renderTo(camera_fbo);
+		renderer.activateTarget();
 		renderer.clear();
 		renderer.render(scene, camera_output);
 		renderer.reset();
@@ -750,9 +748,9 @@ void MainLayer::onImGuiRender() {
 		ImGui::End();
 	}
 
-
+	camera_texture->bind();
 	ImGui::Begin("Camera");
-	ImGui::Image((void*)(intptr_t)camera_texture->id(), ImVec2(512,512), ImVec2(1, 1), ImVec2(0, 0));
+	ImGui::Image((void*)(intptr_t)camera_texture->id(), ImVec2(512,512), ImVec2(0, 1), ImVec2(1, 0));
 	ImGui::End();
 
 
