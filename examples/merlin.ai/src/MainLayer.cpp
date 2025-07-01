@@ -729,7 +729,7 @@ void MainLayer::onImGuiRender() {
 		ImGui::End();
 
 		ImGui::Begin("Debug YZ");
-		ImGui::SliderFloat("Layer", (float*)&offsetPlane, -10, 10);
+		ImGui::SliderFloat("Layer", &offsetPlane, -40, 40);
 		if (ImGui::Button("Save picture")) {
 			std::string savePath = Dialog::saveFileDialog(Dialog::FileType::IMAGE);
 			if (!savePath.size() == 0) {
@@ -1059,6 +1059,7 @@ void MainLayer::plotXY() {
 
 	texture_debugXY->bindImage(0);
 	texPlot->setFloat("offsetPlane", offsetPlane);
+	texPlot->setVec3("offset", glm::vec3(150,100,0));
 	texPlot->setVec3("axis", glm::vec3(1, 1, 0));
 	texPlot->dispatch(x, y);
 	texPlot->barrier(GL_ALL_BARRIER_BITS);
@@ -1072,6 +1073,7 @@ void MainLayer::plotXZ() {
 	texture_debugXZ->bindImage(0);
 	texPlot->setFloat("offsetPlane", offsetPlane);
 	texPlot->setVec3("axis", glm::vec3(1, 0, 1));
+	texPlot->setVec3("offset", glm::vec3(150, 100, 0));
 	texPlot->dispatch(x, z);
 	texPlot->barrier(GL_ALL_BARRIER_BITS);
 }
@@ -1085,6 +1087,7 @@ void MainLayer::plotYZ() {
 
 	texPlot->setFloat("offsetPlane", offsetPlane);
 	texPlot->setVec3("axis", glm::vec3(0, 1, 1));
+	texPlot->setVec3("offset", glm::vec3(150, 100, 0));
 	texPlot->dispatch(y, z);
 	texPlot->barrier(GL_ALL_BARRIER_BITS);
 }

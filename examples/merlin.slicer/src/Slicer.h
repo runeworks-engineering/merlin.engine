@@ -31,8 +31,13 @@ public:
 
     int getLayer() const;
 
-    void generateSample(SampleProperty props);
     inline std::vector<ToolPath>& getToolPath() { return toolpath; };
+    Tool createTool(int id, float flow, float retract, int feedrate, float temp);
+    void generateSample(SampleProperty props);
+    void printSection(Tool& tool, float xStart, float xEnd, const SampleProperty& props, float z, int layer, float yStartA, float yStartB, float yMin, float yMax, int linesPerSection, int overlapLines, bool isFirstSection);
+    void printSampleHeader(const SampleProperty& props, int numLayers, float filament_diameter);
+    float computeY(int i, int layer, const SampleProperty& props, float yStart, float yMin, float yMax, bool isFirstSection);
+
 private:
     void comment(const std::string& comment);
 
@@ -55,7 +60,6 @@ private:
 
     void add_gcode(ToolPath tp, const std::string& command = "G1");
     void add_gcode(const std::string& cmd);
-
 
 private:
     int numLayers;

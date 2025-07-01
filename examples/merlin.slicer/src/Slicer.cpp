@@ -133,38 +133,55 @@ void Slicer::postprocess() {
 }
 
 void Slicer::generateSample(SampleProperty props) {
-    Tool Ta;
-    Tool Tb;
-
-    Ta.id = props.tool_a;
-    Ta.flowrate = props.flow_a;
-    Ta.retract_length = props.retract_a;
-    Ta.feedrate = props.feedrate_a;
-    Ta.temperature = props.temperature_a; // Example temperature for tool A
-
-    Tb.id = props.tool_b;
-    Tb.flowrate = props.flow_b;
-    Tb.retract_length = props.retract_b;
-    Tb.feedrate = props.feedrate_b;
-    Tb.temperature = props.temperature_b; // Example temperature for tool A
+    Tool Ta = createTool(props.tool_a, props.flow_a, props.retract_a, props.feedrate_a, props.temperature_a);
+    Tool Tb = createTool(props.tool_b, props.flow_b, props.retract_b, props.feedrate_b, props.temperature_b);
 
     float fill_height = props.thickness / 2.0f;
-    float xStart = props.x_offset - props.width / 2;
-    float xEnd = props.x_offset + props.width / 2;
-    float yMin = props.y_offset - fill_height;
-    float yMax = props.y_offset + fill_height;
-    float yOverlapMin = props.y_offset - props.overlap * props.line_width / 2.0f;
-    float yOverlapMax = props.y_offset + props.overlap * props.line_width / 2.0f;
-    numLayers = int(std::ceil(props.height / props.layer_height));
+    float xStart = props.x_offset + props.line_width * 0.5 - props.width / 2.0f;
+    float xEnd = props.x_offset - props.line_width * 0.5 + props.width / 2.0f;
+    float yMin = props.y_offset - fill_height + props.line_width*0.5f;
+    float yMax = props.y_offset + fill_height - props.line_width*0.5f;
+    float yOverlapMin = props.y_offset - (props.overlap * props.line_width);
+    float yOverlapMax = props.y_offset + props.overlap * props.line_width(/ 2.0f);
+    numLayers = static_cast<int>(std::ceil(props.height / props.layer_height));
 
-    int linesPerSection = static_cast<int>(std::ceil(fill_height) / props.line_width) + props.overlap;
+    int linesPerSection = static_cast<int>(std::ceil(fill_height / props.line_width)) + props.overlap;
     int overlapLines = props.overlap;
 
+    printSampleHeader(props, numLayers, filament_diameter);
 
+    for (int layer = 0; layer < numLayers; ++layer) {
+        float z = props.layer_height * (layer + 1);
+
+        // First pass: one tool
+        Tool& toolA = (layer % 2 == 0) ? Ta : Tb;
+        printSection(toolA, xStart, xEnd, props, z, layer, yOverlapMax, yOverlapMin, yMin, yMax, linesPerSection, overlapLines, /*isFirstSection=*/true);
+
+        // Second pass: the other tool
+        Tool& toolB = (layer % 2 == 0) ? Tb : Ta;
+        printSection(toolB, xStart, xEnd, props, z, layer, yOverlapMin, yOverlapMax, yMin, yMax, linesPerSection, overlapLines, /*isFirstSection=*/false);
+    }
+
+    retract(1, 2400);
+    comment("End of Sample");
+}
+
+// Create a tool object from the properties
+Tool Slicer::createTool(int id, float flow, float retract, int feedrate, float temp) {
+    Tool t;
+    t.id = id;
+    t.flowrate = flow;
+    t.retract_length = retract;
+    t.feedrate = feedrate;
+    t.temperature = temp;
+    return t;
+}
+
+// Print the G-code sample header
+void Slicer::printSampleHeader(const SampleProperty& props, int numLayers, float filament_diameter) {
     add_gcode("\n");
     comment("-----------------------");
     comment("Start of Sample");
-    //append comment header with props settings, use prop.xxx for each samples
     comment("Sample Name: " + props.name);
     comment("Sample Comment: " + props.comment);
     comment("Filament Diameter: " + std::to_string(filament_diameter) + "mm");
@@ -193,125 +210,73 @@ void Slicer::generateSample(SampleProperty props) {
     comment("Use in to out: " + std::string(props.use_in_to_out ? "Yes" : "No"));
     comment("-----------------------");
     add_gcode("\n");
-    Tool tool = Ta;
+}
 
-    for (int layer = 0; layer < numLayers; ++layer) {
-        float z = props.layer_height * (layer + 1);
+// Print a section for a tool (either first or second pass)
+void Slicer::printSection(
+    Tool& tool, float xStart, float xEnd, const SampleProperty& props, float z, int layer,
+    float yStartA, float yStartB, float yMin, float yMax, int linesPerSection, int overlapLines, bool isFirstSection)
+{
+    tool_change(tool);
+    retract(1, 2400);
+    new_layer(z);
 
-        // TPU section
-        tool = tool.id == Ta.id && layer % 2 == 0 ? Ta : Tb;
+    retract(1.4, 2400);
+    move(glm::vec4(xStart, props.y_offset, actual_max_z + 5, 0), 0, 30000);
+    move(glm::vec4(m_current_position.x, m_current_position.y, z, 0));
+    extrude(1.4, 2400);
 
-        tool_change(tool);
+    int feedrate = tool.feedrate;
+    float yStart = (layer % 2 == 0) ? yStartA : yStartB;
 
-        retract(1, 2400);
-        new_layer(z);
+    for (int i = 0; i < linesPerSection; ++i) {
+        float flow = tool.flowrate;
+        float y = computeY(i, layer, props, yStart, yMin, yMax, isFirstSection);
 
-        retract(1.4, 2400);
-        move(glm::vec4(xStart, props.y_offset, actual_max_z + 5, 0), 0, 30000);
-        move(glm::vec4(m_current_position.x, m_current_position.y, z, 0), 17800);
-        extrude(1.4, 2400);
+        if (props.use_in_to_out) {
+            if (i <= overlapLines) flow *= props.overlap_flow_modifier;
+        }
+        else {
+            if (i >= linesPerSection - overlapLines) flow *= props.overlap_flow_modifier;
+        }
+        if (layer == 0) flow *= 1.2f;
 
-        int feedrate = (tool.id == props.tool_a) ? props.feedrate_a : props.feedrate_b;
-        float yStart = (layer % 2 == 0) ? yOverlapMax : yOverlapMin;
+        float e = compute_e(props.width, flow, props.line_width, props.layer_height);
 
-        for (int i = 0; i < linesPerSection; ++i) {
-
-            float y = 0;
-            
-            float flow = (tool.id == props.tool_a) ? props.flow_a : props.flow_b;
-            if (props.use_in_to_out) {
-                y = (layer % 2 == 0) ? yStart - i * props.line_width : props.y_offset + i * props.line_width;
+        if (props.use_alternate_sweep) {
+            if (i % 2 == 0) {
+                moveXY({ xStart, y }, feedrate);
+                moveXYE({ xEnd, y }, e, feedrate);
             }
             else {
-                y = (layer % 2 == 0) ? yMin + i * props.line_width : yMax - i * props.line_width;
-            }
-
-
-            if (props.use_in_to_out) {
-                if (i <= overlapLines) flow *= props.overlap_flow_modifier;
-            }
-            else {
-                if (i >= linesPerSection - overlapLines) flow *= props.overlap_flow_modifier;
-            }
-
-            if (layer == 0) flow *= 1.2f;
-
-            float e = compute_e(props.width, flow, props.line_width, props.layer_height);
-            std::ostringstream move_cmd;
-
-            if (props.use_alternate_sweep) {
-                if (i % 2 == 0) {
-                    moveXY({ xStart,y }, feedrate);
-                    moveXYE({ xEnd,y }, e, feedrate);
-                }
-                else {
-                    moveXY({ xEnd,y }, feedrate);
-                    moveXYE({ xStart,y }, e, feedrate);
-                }
-            }
-            else {
-                moveXY({ xStart,y }, feedrate);
-                moveXYE({ xEnd,y }, e, feedrate);
+                moveXY({ xEnd, y }, feedrate);
+                moveXYE({ xStart, y }, e, feedrate);
             }
         }
-
-        // PLA Section
-        retract(1, 2400);
-        tool = tool.id == Ta.id && layer % 2 == 0 ? Tb : Ta;
-
-        tool_change(tool);
-
-        feedrate = (tool.id == props.tool_a) ? props.feedrate_a : props.feedrate_b;
-
-        retract(1.4, 2400);
-        move(glm::vec4(xStart, props.y_offset, actual_max_z + 5, 0), 0, 30000);
-        move(glm::vec4(m_current_position.x, m_current_position.y, z, 0));
-        extrude(1.4, 2400);
-
-        yStart = (layer % 2 == 0) ? yOverlapMin : yOverlapMax;
-
-        for (int i = 0; i < linesPerSection; ++i) {
-            float flow = (tool.id == props.tool_a) ? props.flow_a : props.flow_b;
-            float y = 0;
-            if (props.use_in_to_out) {
-                y = (layer % 2 == 0) ? yStart + i * props.line_width : props.y_offset - i * props.line_width;
-            }
-            else {
-                y = (layer % 2 == 0) ? yMin - i * props.line_width : yMax + i * props.line_width;
-            }
-
-            if (props.use_in_to_out) {
-                if (i <= overlapLines) flow *= props.overlap_flow_modifier;
-            }
-            else {
-                if (i >= linesPerSection - overlapLines) flow *= props.overlap_flow_modifier;
-            }
-
-            if (layer == 0) flow *= 1.2f;
-
-            float e = compute_e(props.width, flow, props.line_width, props.layer_height);
-
-            if (props.use_alternate_sweep) {
-                if (i % 2 == 0) {
-                    moveXY({ xStart,y }, feedrate);
-                    moveXYE({ xEnd,y }, e, feedrate);
-                }
-                else {
-                    moveXY({ xEnd,y }, feedrate);
-                    moveXYE({ xStart,y }, e, feedrate);
-                }
-            }
-            else {
-                moveXY({ xStart,y }, feedrate);
-                moveXYE({ xEnd,y }, e, feedrate);
-            }
-
+        else {
+            moveXY({ xStart, y }, feedrate);
+            moveXYE({ xEnd, y }, e, feedrate);
         }
     }
-
     retract(1, 2400);
-    comment("End of Sample");
 }
+
+// Calculate the y coordinate for the current line
+float Slicer::computeY(int i, int layer, const SampleProperty& props, float yStart, float yMin, float yMax, bool isFirstSection) {
+    if (props.use_in_to_out) {
+        if (isFirstSection)
+            return (layer % 2 == 0) ? yStart - i * props.line_width : props.y_offset + i * props.line_width;
+        else
+            return (layer % 2 == 0) ? yStart + i * props.line_width : props.y_offset - i * props.line_width;
+    }
+    else {
+        if (isFirstSection)
+            return (layer % 2 == 0) ? yMin + i * props.line_width : yMax - i * props.line_width;
+        else
+            return (layer % 2 == 0) ? yMin - i * props.line_width : yMax + i * props.line_width;
+    }
+}
+
 
 float Slicer::compute_e(float length, float flow, float line_width, float layer_height) const {
     float filament_area = glm::pi<float>() * pow((filament_diameter / 2.0), 2.0);

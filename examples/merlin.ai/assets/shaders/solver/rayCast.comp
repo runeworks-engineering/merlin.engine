@@ -1,0 +1,72 @@
+#version 430
+
+#pragma once
+#include "../../common/shaders/colors.comp"
+#include "../common/uniforms.comp"
+#include "../common/constants.comp"
+#include "../common/buffers.comp"
+#include "../common/nns.comp"
+#include "sph.kernels.comp" 
+
+layout (local_size_x = 8, local_size_y = 8, local_size_z = 1) in;
+
+layout (rgba16f, binding = 0) writeonly uniform image2D u_output;
+
+uniform int colorMode = 3;
+uniform int colorMapSelection = 0;
+uniform float offsetPlane = 0;
+
+float interpolate(in vec3 position){
+	float density = 0;
+
+	OVERNNS
+		float dist = distance(b_xj.xyz, position);
+		if(dist > H) continue;
+		float Wij = poly6(dist);
+
+		if(phase(j) == FLUID || phase(j) == SOLID)
+			density += mj * Wij*3.9;
+	OVERNNS_END
+	return density;
+}
+
+uniform vec3 axis;
+uniform vec3 offset;
+
+void main(){
+    ivec2 dims = imageSize(u_output).xy;
+    ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy) + ivec2(0,-50);
+
+	vec2 uv = vec2(pixel_coords) / vec2(dims);
+	vec2 position = vec2(0);
+	float temp = 0;
+	float est_phase = 0;
+	float density = 0;
+
+	vec3 worldPos = vec3(0);
+	if(axis == vec3(1,1,0)){
+		uv.x = uv.x - 0.5f;
+		uv.y = uv.y - 0.5f;
+		position = uv * vec2(cst_domain.xy);
+		worldPos = vec3(position.x, position.y, 0 + offsetPlane) + offset;
+
+	}else if(axis == vec3(1,0,1)){
+		uv.x = uv.x - 0.5f;
+		position = uv * vec2(cst_domain.xz);
+		worldPos = vec3(position.x, 0 + offsetPlane, position.y) + offset;
+
+	}else if(axis == vec3(0,1,1)){
+		uv.x = uv.x - 0.5f;
+		position = uv * vec2(cst_domain.yz);
+		worldPos = vec3(0 + offsetPlane, position.x, position.y) + offset;
+	}
+
+
+
+	density = interpolate(worldPos);
+	temp = interpolateHeat(worldPos);
+	est_phase = interpolatePhase(worldPos);
+
+	imageStore(u_output, pixel_coords, vec4(1,0.2,0.2,density));
+	return;
+}

@@ -63,6 +63,7 @@ float interpolateHeat(in vec3 position){
 
 
 uniform vec3 axis;
+uniform vec3 offset;
 
 void main(){
     ivec2 dims = imageSize(u_output).xy;
@@ -79,17 +80,17 @@ void main(){
 		uv.x = uv.x - 0.5f;
 		uv.y = uv.y - 0.5f;
 		position = uv * vec2(cst_domain.xy);
-		worldPos = vec3(position.x, position.y, 2 + offsetPlane/1000.0);
+		worldPos = vec3(position.x, position.y, 0 + offsetPlane) + offset;
 
 	}else if(axis == vec3(1,0,1)){
 		uv.x = uv.x - 0.5f;
 		position = uv * vec2(cst_domain.xz);
-		worldPos = vec3(position.x, 0 + offsetPlane/1000.0, position.y);
+		worldPos = vec3(position.x, 0 + offsetPlane, position.y) + offset;
 
 	}else if(axis == vec3(0,1,1)){
 		uv.x = uv.x - 0.5f;
 		position = uv * vec2(cst_domain.yz);
-		worldPos = vec3(0 + offsetPlane/1000.0, position.x, position.y);
+		worldPos = vec3(0 + offsetPlane, position.x, position.y) + offset;
 	}
 
 

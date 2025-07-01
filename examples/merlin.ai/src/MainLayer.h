@@ -105,7 +105,7 @@ private:
 	bool use_2Dplot = false;
 
 	//Texture debug
-	int offsetPlane = 0;
+	float offsetPlane = 0;
 
 	/*********** Project ***********/
 	

@@ -13,7 +13,7 @@ ExampleLayer::ExampleLayer(){
 	camera().setFarPlane(300.0f);
 	camera().setFOV(45); //Use 90.0f as we are using cubemaps
 	camera().setPosition(glm::vec3(0.7, -7, 2.4));
-	camera().setRotation(glm::vec3(0, 0, +90));
+	camera().setView(CameraView::Iso, 50);
 }
 
 ExampleLayer::~ExampleLayer(){}
