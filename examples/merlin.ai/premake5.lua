@@ -82,6 +82,7 @@ project "merlin.ai"
 		runtime "Debug"
 		symbols "on"
 		postbuildcommands {
+		  '{COPY} "%' .. solutiondir .. 'examples/merlin.ai/lib/libzmq/bin/libzmq-v143-mt-gd-4_3_6.dll" "%{cfg.targetdir}"',
 		  "{COPYDIR} %[assets] %[%{!cfg.targetdir}/assets]",
 		  "{COPYDIR} %[" .. solutiondir .. "/assets] %[%{!cfg.debugdir}/assets/common]"
 		}
@@ -91,6 +92,7 @@ project "merlin.ai"
 		runtime "Release"
 		optimize "on"
 		postbuildcommands {
+		  '{COPY} "%' .. solutiondir .. 'examples/merlin.ai/lib/libzmq/bin/libzmq-v143-mt-gd-4_3_6.dll" "%{cfg.targetdir}"',
 		  "{COPYDIR} %[assets] %[%{!cfg.targetdir}/assets]",
 		  "{COPYDIR} %[" .. solutiondir .. "/assets] %[%{!cfg.debugdir}/assets/common]"
 		}

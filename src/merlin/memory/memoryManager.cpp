@@ -80,15 +80,22 @@ namespace Merlin {
     }
 
     void MemoryManager::initializeAvailableBindingPoints() {
-        GLint maxSSBOBindings;
-        GLint maxUBOBindings;
-        GLint maxVBOBindings = 16; // Limite arbitraire pour les VBOs
-        GLint maxEBOBindings = 16; // Limite arbitraire pour les EBOs
-        GLint maxACBBindings;
+        static bool init = false;
 
-        glGetIntegerv(GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, &maxSSBOBindings);
-        glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxUBOBindings);
-        glGetIntegerv(GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS, &maxACBBindings);
+        static GLint maxSSBOBindings = 16;
+        static GLint maxUBOBindings = 16;
+        static GLint maxVBOBindings = 16; // Limite arbitraire pour les VBOs
+        static GLint maxEBOBindings = 16; // Limite arbitraire pour les EBOs
+        static GLint maxACBBindings = 0;
+
+        if (!init) {
+            glGetIntegerv(GL_MAX_SHADER_STORAGE_BUFFER_BINDINGS, &maxSSBOBindings);
+            glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxUBOBindings);
+            glGetIntegerv(GL_MAX_ATOMIC_COUNTER_BUFFER_BINDINGS, &maxACBBindings);
+            init = true;
+        }
+
+
 
         for (int i = 0; i < maxSSBOBindings; ++i) {
             availableBindingPoints[BufferTarget::Shader_Storage_Buffer].push(i);

@@ -41,7 +41,7 @@ void main() {
 	bool test = phase(gl_InstanceID) == UNUSED || (phase(gl_InstanceID) >= BOUNDARY && showBoundary == 0);
 	color = vec4(1);
 	if(colorCycle == 0){ 
-		color = vec4(vec3(0.8), 1.0);
+		color = vec4(vec3(1), 1.0);
 	}else if(colorCycle == 1){ 
 		color = vec4(randomColor(binindex), 1);
 	}else if(colorCycle == 2){ 

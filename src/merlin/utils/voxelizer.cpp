@@ -101,6 +101,7 @@ namespace Merlin {
 		m_voxelize->attach(voxBuffer);
 		m_voxelize->attach(facetBuffer);
 
+		m_voxelize->bindBuffer();
 		m_voxelize->use();
 		
 		m_voxelize->setVec4("aabbMin", glm::vec4(bb.min, 1));
@@ -117,8 +118,11 @@ namespace Merlin {
 		m_voxelize->dispatch(pWkgCount);
 		m_voxelize->barrier();
 
+		m_voxelize->unbindBuffer();
+
 		facetBuffer->releaseBindingPoint();
 		voxBuffer->releaseBindingPoint();
+		voxBuffer->bind();
 		Console::printSeparator();
 		return voxBuffer->read();
 	}

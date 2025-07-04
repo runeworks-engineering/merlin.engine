@@ -15,6 +15,7 @@ public:
 
     void reset();
     void update(float dt);
+    void control(float vx, float vy, float vz, float ve);
 
     glm::vec3 getNozzlePosition();
     float getExtruderDistance();
@@ -28,8 +29,9 @@ private:
     float m_current_speed = 0;
 	
     glm::vec4 m_current_position;
+    glm::vec4 m_current_velocity = glm::vec4(0);
     glm::vec4 m_current_target;
-    glm::vec3 m_origin_offset = glm::vec3(0,0,5);
+    glm::vec3 m_origin_offset = glm::vec3(150,100,5);
     //glm::vec3 m_origin_offset = glm::vec3(0,0,1);
 };
 

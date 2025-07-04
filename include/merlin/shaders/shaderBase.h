@@ -77,8 +77,8 @@ namespace Merlin {
 
 		void extractBlockBindings(const std::string&);
 		void solveBlockBinding();
-		void bindBuffer();
-		void unbindBuffer();
+		void bindBuffer() const;
+		void unbindBuffer() const;
 		bool hasBinding(const std::string& buf);
 
 		bool hasBuffer(const std::string& buf);

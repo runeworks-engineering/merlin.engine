@@ -47,7 +47,7 @@ struct Settings {
 	glm::vec3 bb = glm::vec3(140, 140, 45);
 
 	// Physics Parameters
-	float timestep									= 0.001;
+	float timestep									= 0.002;
 	Uniform<float> dt								= Uniform<float>("u_dt", timestep / solver_substep);
 	Uniform<float> restDensity						= Uniform<float>("u_rho0", 1.0);
 	//Uniform<float> particleMass						= Uniform<float>("u_mass", particleVolume * 8);
@@ -61,6 +61,7 @@ struct Settings {
 	float emitterDelay = 0.120;//ms
 
 	//calculated (don't change value here)
+	GLuint init_nummparticle = 0;
 	Uniform<GLuint> numParticles					= Uniform<GLuint>("u_numParticles", 0);
 	Uniform<GLuint> numEmitter						= Uniform<GLuint>("u_numEmitter", 0);
 
@@ -73,7 +74,7 @@ struct Settings {
 	//Flow
 	float flow_override = 1.0;
 	bool use_emitter = true;
-	bool use_emitter_init = false;
+	bool use_emitter_init = true;
 
 	//GPU Threading settings
 	GLuint max_pThread = 1000000; //Max Number of particles (thread) (10 milion)

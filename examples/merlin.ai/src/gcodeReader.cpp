@@ -7,6 +7,7 @@
 using namespace Merlin;
 
 GcodeSimulator::GcodeSimulator() : m_current_position(0.0f), m_current_target(0.0f) {
+    m_current_position = glm::vec4(150, 100, 0, 0);
     //m_commands.push_back({ glm::vec4(0, 0, 10, 0) - glm::vec4(m_origin_offset,0), 10 });
     /*
     m_commands.push_back({ glm::vec4(-50, 0, 4, 200) - glm::vec4(m_origin_offset,0), 300 });
@@ -159,26 +160,37 @@ void GcodeSimulator::reset() {
     }
 }
 
+//void GcodeSimulator::update(float dt) {
+//    glm::vec3 delta = glm::vec3(m_current_target) - glm::vec3(m_current_position);
+//    glm::vec3 direction = glm::normalize(delta);
+//    glm::vec3 movement = direction * m_current_speed * dt;
+//
+//    if (glm::length(glm::vec3(delta)) < 0.1) {
+//        m_current_position = m_current_target;
+//        // Move to the next target if available
+//        
+//        if (currentIndex < m_commands.size() - 1) {
+//            currentIndex++;
+//            m_current_target = m_commands[currentIndex].position;
+//            m_current_speed = m_commands[currentIndex].speed; // Set the first target
+//            Console::info() << "Current target : " << m_current_target << Console::endl;
+//            Console::info() << "Current speed  : " << m_current_speed << Console::endl;
+//        }
+//    }
+//    else {
+//        m_current_position += glm::vec4(movement,1.0);
+//    }
+//}
+ 
 void GcodeSimulator::update(float dt) {
-    glm::vec3 delta = glm::vec3(m_current_target) - glm::vec3(m_current_position);
-    glm::vec3 direction = glm::normalize(delta);
-    glm::vec3 movement = direction * m_current_speed * dt;
+    m_current_position += m_current_velocity * dt;
+    m_current_position.w = 1.0;
+    //Console::info() << "dt" << dt << "xyz(" << glm::vec3(m_current_position) << ", " << m_current_velocity.w << ")" << Console::endl;
+}
 
-    if (glm::length(glm::vec3(delta)) < 0.1) {
-        m_current_position = m_current_target;
-        // Move to the next target if available
-        
-        if (currentIndex < m_commands.size() - 1) {
-            currentIndex++;
-            m_current_target = m_commands[currentIndex].position;
-            m_current_speed = m_commands[currentIndex].speed; // Set the first target
-            Console::info() << "Current target : " << m_current_target << Console::endl;
-            Console::info() << "Current speed  : " << m_current_speed << Console::endl;
-        }
-    }
-    else {
-        m_current_position += glm::vec4(movement,1.0);
-    }
+void GcodeSimulator::control(float vx, float vy, float vz, float ve){
+    //m_current_position = glm::vec4(vx, vy, vz, ve);
+    m_current_velocity = glm::vec4(vx, vy, vz, ve);
 }
 
 glm::vec3 GcodeSimulator::getNozzlePosition() {
@@ -187,8 +199,10 @@ glm::vec3 GcodeSimulator::getNozzlePosition() {
 
 float GcodeSimulator::getExtruderDistance() {
     //if (m_commands[currentIndex].position.w != 0) return 500 * 2.0 * flow_override;//return m_commands[currentIndex].position.w * 2.0 * flow_override;
-    if (m_commands[currentIndex].position.w != 0) return m_commands[currentIndex].position.w * 2.0 * flow_override;
-       return 0.0;
+    return m_current_velocity.w * flow_override;
+
+    //if (m_commands[currentIndex].position.w != 0) return m_commands[currentIndex].position.w * flow_override;
+    //   return 0.0;
 }
 
 bool GcodeSimulator::lastCommandReached(){

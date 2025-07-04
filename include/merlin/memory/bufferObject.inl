@@ -116,10 +116,10 @@ namespace Merlin {
 
     template <typename T>
     inline std::vector<T> BufferObject<T>::read() const {
-        GLint bufferSize;
-        glGetNamedBufferParameteriv(id(), GL_BUFFER_SIZE, &bufferSize);
-        std::vector<T> data(bufferSize / sizeof(T));
-        readBuffer(bufferSize, data.data());
+        //GLint bufferSize;
+        //glGetNamedBufferParameteriv(id(), GL_BUFFER_SIZE, &bufferSize);
+        std::vector<T> data(elements());
+        readBuffer(size(), data.data());
         return data;
     }
 

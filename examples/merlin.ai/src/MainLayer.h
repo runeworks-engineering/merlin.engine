@@ -4,6 +4,7 @@
 #include "SampleObject.h"
 #include "Slicer.h"
 #include "sim.h"
+#include "gym.h"
 
 using namespace Merlin;
 
@@ -18,6 +19,7 @@ public:
 	~MainLayer();
 
 	void onAttach() override;
+	void onDetach() override;
 	void onUpdate(Timestep ts) override;
 	void onImGuiRender() override;
 
@@ -27,6 +29,11 @@ public:
 	void createScene();
 	void createShaders();
 	void createSamples();
+	void createCamera();
+	void createGym();
+
+	std::vector<uint8_t> captureGoalImage();
+	std::vector<uint8_t> captureCurrentImage();
 
 	void slice();
 	void createSample(SampleProperty);
@@ -50,15 +57,19 @@ public:
 
 private:
 
+	int colorMode = 4;
+
 	Slicer slicer;
 	Scene_Ptr scene;
 	Renderer renderer;
 
 	Sim sim;
+	GymServer gym;
 
 	/*********** Scene ***********/
 
-	
+	Mesh_Ptr goal_geom;
+
 	Model_Ptr bed;
 	Model_Ptr bed_glass;
 	Model_Ptr bed_surface;
@@ -79,11 +90,12 @@ private:
 	Texture2D_Ptr texture_debugXY;
 	Texture2D_Ptr texture_debugYZ;
 
-
+	const int img_res = 64;
 	Camera camera_output;
 	FBO_Ptr camera_fbo;
 	RBO_Ptr camera_rbo;
 	Texture2D_Ptr camera_texture;
+	Texture2D_Ptr camera_goal_texture;
 
 
 

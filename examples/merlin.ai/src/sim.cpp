@@ -43,28 +43,22 @@ void Sim::init() {
 	nozzle_emitter->scale(10);
 	nozzle_emitter->applyMeshTransform();
 
-
-}
-
-
-void Sim::reset(){
-	elapsedTime = 0;
-	lastSpawTime = 0;
-	simulator.reset();
+	MemoryManager::instance().resetBindings();
 
 
-	auto& memory = MemoryManager::instance();
-	memory.resetBindings();
+
+
+
 
 	Console::info() << "Generating particles..." << Console::endl;
 
 	float spacing = settings.particleRadius * 2.0;
-	auto cpu_position = std::vector<glm::vec4>();
-	auto cpu_sdf = std::vector<glm::vec4>();
+	cpu_position = std::vector<glm::vec4>();
+	cpu_sdf = std::vector<glm::vec4>();
 	//auto cpu_velocity = std::vector<glm::vec4>();
-	auto cpu_temp = std::vector<glm::vec2>();
-	auto cpu_meta = std::vector<glm::uvec4>();
-	auto cpu_emitterPosition = std::vector<glm::vec4>();
+	cpu_temp = std::vector<glm::vec2>();
+	cpu_meta = std::vector<glm::uvec4>();
+	cpu_emitterPosition = std::vector<glm::vec4>();
 
 	settings.numEmitter = 0;
 	settings.numParticles = 0;
@@ -125,7 +119,7 @@ void Sim::reset(){
 
 	if (settings.use_emitter_init) {
 		Mesh_Ptr init_fluid = Primitives::createCylinder(4.5, 18, 10);
-		init_fluid->setPosition(glm::vec3(0, 0, 23));
+		init_fluid->setPosition(glm::vec3(150, 100, 23));
 		init_fluid->rotate(glm::vec3(0, 90.0f * DEG_TO_RAD, 0));
 		init_fluid->computeBoundingBox();
 		init_fluid->voxelize(spacing * 0.8);
@@ -138,11 +132,11 @@ void Sim::reset(){
 			//cpu_velocity.push_back(glm::vec4(0));
 			cpu_temp.push_back(glm::vec2(275.15 + 200, 0)); //ambient
 			cpu_meta.push_back(glm::uvec4(FLUID, settings.numParticles(), settings.numParticles(), 0.0));
-			settings.numParticles()++; 
+			settings.numParticles()++;
 		}
 
 		init_fluid = Primitives::createCone(13, 5, 10);
-		init_fluid->setPosition(glm::vec3(0, 0, 23));
+		init_fluid->setPosition(glm::vec3(150, 100, 23));
 		init_fluid->rotate(glm::vec3(0.0f, 90.0f * DEG_TO_RAD, 0.0f));
 		init_fluid->computeBoundingBox();
 		init_fluid->voxelize(spacing * 0.8);
@@ -159,7 +153,7 @@ void Sim::reset(){
 			settings.numParticles()++;
 		}
 	}
-
+	settings.init_nummparticle = cpu_position.size();
 	while (cpu_position.size() < settings.max_pThread) {
 		cpu_position.push_back(glm::vec4(0.0, 0.0, 0.0, 0.0));
 		cpu_sdf.push_back(glm::vec4(0));
@@ -167,10 +161,21 @@ void Sim::reset(){
 		cpu_temp.push_back(glm::vec2(298.15, 0));
 		cpu_meta.push_back(glm::uvec4(FLUID_EMITTER, settings.numParticles(), settings.numParticles(), settings.numParticles()));
 	}
+}
 
+
+void Sim::reset(){
+	//std::lock_guard<std::mutex> lock(sim_mutex);
+	elapsedTime = 0;
+	lastSpawTime = 0;
+	simulator.reset();
+
+	auto& memory = MemoryManager::instance();
+	memory.resetBindings();
 
 	Console::info() << "Uploading buffer on device..." << Console::endl;
 
+	settings.numParticles = settings.init_nummparticle;
 	settings.pThread = settings.numParticles();
 	settings.pWkgCount = (settings.pThread + settings.pWkgSize - 1) / settings.pWkgSize; //Total number of workgroup needed
 	settings.blockSize = std::floor(log2f(settings.bThread));
@@ -186,7 +191,6 @@ void Sim::reset(){
 	ps->setInstancesCount(settings.max_pThread);
 	ps->setActiveInstancesCount(settings.pThread);
 	bs->setInstancesCount(settings.bThread);
-
 
 	syncUniform();
 
@@ -205,6 +209,8 @@ void Sim::reset(){
 	memory.clearBuffer("lambda_buffer");
 	//memory.clearBuffer("stress_buffer");
 
+	memory.resetBindings();
+	shouldReset = false;
 }
 
 void Sim::start(){
@@ -280,65 +286,87 @@ void Sim::nns(){
 	
 }
 
-void Sim::step(Timestep ts){
-	if (running) {
+std::mutex& Sim::mutex()
+{
+	return sim_mutex;
+}
+
+void Sim::control(float vx, float vy, float ve){
+	simulator.control(vx, vy, 0, ve);
+}
+
+void Sim::api_step() {
+	shouldStep = true;
+}
+
+void Sim::api_reset() {
+	shouldReset = true;
+}
+
+void Sim::run(Timestep ts) {
+	if (running && shouldStep) {
+
 		solver->bindBuffer();
 		prefixSum->bindBuffer();
-	
+
 		GPU_PROFILE(solver_total_time,
-			elapsedTime += ts.getSeconds();
-			settings.setTimestep(ts.getSeconds());
+			elapsedTime += settings.timestep;
 
-			//ps->clearField("correction_buffer");
+		solver->use();
+		settings.dt.sync(*solver);
 
+		for (int i = 0; i < settings.solver_substep; i++) {
+
+			simulator.update(settings.timestep / (settings.solver_substep));
+
+			nozzle_position = simulator.getNozzlePosition();
+
+
+			settings.emitter_transform = glm::mat4(1);
+			settings.emitter_transform = glm::translate(settings.emitter_transform(), glm::vec3(nozzle_position));
+			settings.emitter_transform.sync(*solver);
 			
-			
-			solver->use();
-			settings.dt.sync(*solver);
-			
-			for (int i = 0; i < settings.solver_substep; i++) {
+			float e_speed = simulator.getExtruderDistance();
+			float emitterDelay = 1000.0 / (settings.particleVolume * 1.0) / e_speed;
+			if (settings.use_emitter && simulator.getExtruderDistance() > 0.01)
+				if (elapsedTime - lastSpawTime > (emitterDelay / 1000.0)) {
+					spawn();
+					lastSpawTime = elapsedTime;
+				}
 
-				for (int i = 0; i < 10; i++)
-					simulator.update(ts.getSeconds() / (settings.solver_substep * 10));
+			solver->execute(2);
 
-				nozzle_position = simulator.getNozzlePosition();
-
-
-				settings.emitter_transform = glm::mat4(1);
-				settings.emitter_transform = glm::translate(settings.emitter_transform(), glm::vec3(nozzle_position));
-				settings.emitter_transform.sync(*solver);
-
-				float e_speed = simulator.getExtruderDistance();
-				float emitterDelay = 1000.0 / (settings.particleVolume * 1.0) / e_speed;
-				if (settings.use_emitter && simulator.getExtruderDistance() > 0.01)
-					if (elapsedTime - lastSpawTime > (emitterDelay / 1000.0)) {
-						spawn();
-						lastSpawTime = elapsedTime;
-					}
-
-				solver->execute(2);
-				
-				GPU_PROFILE(nns_time,
-					nns();
-				)
+			GPU_PROFILE(nns_time,
+				nns();
+			)
 
 				if (integrate) {
-					
+
 					for (int j = 0; j < settings.solver_iteration; j++) {
 						solver->execute(3);
 						solver->execute(4);
 						solver->execute(5);
 					}
-	
+
 					solver->execute(6);
 					solver->execute(7);
 				}
-			}
-		)
+		}
+			)
+			//if (simulator.lastCommandReached()) paused = true;
+			MemoryManager::instance().resetBindings();
+		shouldStep = false;
 	}
-	if (simulator.lastCommandReached()) paused = true;
 }
 
+bool Sim::hasStepped(){
+	return !shouldStep;
+}
+
+bool Sim::hasReset()
+{
+	return !shouldReset;
+}
 
 
 void Sim::syncUniform(){

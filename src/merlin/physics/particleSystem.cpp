@@ -22,12 +22,12 @@ namespace Merlin{
 			break;
 		case ParticleSystemDisplayMode::POINT_SPRITE :
 			glEnable(GL_PROGRAM_POINT_SIZE);
+			glEnable(0x8861);//Point shading
 			if (m_geometry) m_geometry->drawInstanced(m_active_instancesCount);
 			glDisable(GL_PROGRAM_POINT_SIZE);
 			break;
 		case ParticleSystemDisplayMode::POINT_SPRITE_SHADED:
 			glEnable(GL_PROGRAM_POINT_SIZE);
-			glEnable(0x8861);//Point shading
 			if (m_geometry) m_geometry->drawInstanced(m_active_instancesCount);
 			glDisable(GL_PROGRAM_POINT_SIZE);
 			glDisable(0x8861);

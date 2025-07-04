@@ -38,10 +38,13 @@ namespace Merlin {
 
 		//Transformation
 		void translate(glm::vec3);
+		void translate(float x, float y, float z = 0);
+
 		void rotate(glm::vec3);
 		void rotate(float angle, glm::vec3 v);
 		void setTransform(glm::mat4 t);
 		void setPosition(glm::vec3 v);
+		void setPosition(float x, float y, float z);
 		void scale(glm::vec3 v);
 		void scale(float v);
 		void alignToDirection(const glm::vec3& direction);//align to direction

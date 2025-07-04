@@ -57,20 +57,7 @@ namespace Merlin {
 		bound_shader = this;
 		glUseProgram(m_programID);
 
-		for (auto buf_ptr : m_buffers) {
-			AbstractBufferObject& buf = *buf_ptr.second;
-			int block_index = glGetProgramResourceIndex(m_programID, GL_SHADER_STORAGE_BLOCK, buf.name().c_str());
-			if (block_index == -1) Console::error("ShaderBase") << "Block " << buf.name() << " not found in shader '" << m_name << "'. Did you bind it properly ?" << Console::endl;
-			else {
-				MemoryManager& manager = MemoryManager::instance();
-				auto bindingPoint = manager.allocateBindingPoint(buf.target(), buf.id());
-				buf.bind();
-				buf.setBindingPoint(bindingPoint);
-				Console::trace("ShaderBase") << buf.name() << "( block index " << block_index << ") is now bound to " << name() << " using binding point " << bindingPoint << Console::endl;
-				glShaderStorageBlockBinding(m_programID, block_index, bindingPoint);//Do this explicitly in your shader !
-				buf.unbind();
-			}
-		}
+		//bindBuffer();
 	}
 
 	bool ShaderBase::hasBuffer(const std::string& buf)	{
@@ -120,7 +107,7 @@ namespace Merlin {
 
 	}
 
-	void ShaderBase::bindBuffer()	{
+	void ShaderBase::bindBuffer() const {
 		for (auto buf_ptr : m_buffers) {
 			AbstractBufferObject& buf = *buf_ptr.second;
 			int block_index = glGetProgramResourceIndex(m_programID, GL_SHADER_STORAGE_BLOCK, buf.name().c_str());
@@ -137,7 +124,7 @@ namespace Merlin {
 		}
 	}
 
-	void ShaderBase::unbindBuffer(){
+	void ShaderBase::unbindBuffer() const {
 		for (auto buf : m_buffers)
 			buf.second->releaseBindingPoint();
 	}

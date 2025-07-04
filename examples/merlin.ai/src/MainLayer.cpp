@@ -14,7 +14,7 @@ const bool real_scale = false;
 
 const float radius = 3;
 
-MainLayer::MainLayer() : camera_output(512, 512) {
+MainLayer::MainLayer() : camera_output(img_res, img_res) {
 	camera().setNearPlane(2.0f);
 	camera().setFarPlane(800);
 	camera().setFOV(45); //Use 90.0f as we are using cubemaps
@@ -29,8 +29,9 @@ MainLayer::MainLayer() : camera_output(512, 512) {
 	glEnable(GL_LINE_SMOOTH);
 }
 
-MainLayer::~MainLayer(){}
-
+MainLayer::~MainLayer(){
+	gym.stop();
+}
 
 void MainLayer::onAttach(){
 	Layer3D::onAttach();
@@ -49,40 +50,35 @@ void MainLayer::onAttach(){
 	createShaders();
 	sim.reset();
 	createScene();
-
-	camera_fbo = FBO::create(512, 512);
-
-	camera_rbo = RBO::create();
-	camera_rbo->reserve(512,512,GL_DEPTH24_STENCIL8);
-
-	camera_texture = Texture2D::create(512,512, 4, 8, TextureType::ALBEDO);
-	camera_texture->bind();
-	camera_texture->setInterpolationMode(GL_LINEAR, GL_LINEAR);
-	camera_texture->setRepeatMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
-	camera_texture->setBorderColor4f(1, 1, 1, 1);
-	camera_texture->unbind();
 	
-	camera_fbo->bind();
-	camera_texture->bind();
-	camera_fbo->attachColorTexture(camera_texture);
-	camera_rbo->bind();
-	camera_fbo->attachDepthStencilRBO(camera_rbo);
-	camera_fbo->unbind();
-	camera_rbo->unbind();
-	camera_texture->unbind();
+	createCamera();
+	createGym();
+	gym.start();
 
-	
-	camera_output.setView(CameraView::Top, 200, glm::vec3(150, 100, 0));
-	
+
+	if (!ps->isHidden()) particle_shader->bindBuffer();
+	if (!bs->isHidden()) bin_shader->bindBuffer();
+	if (!isosurface->isHidden()) isosurface_shader->bindBuffer();
+
+	gym.setGoalImage(captureGoalImage());
+	gym.setCurrentImage(captureCurrentImage());
+}
+
+void MainLayer::onDetach(){
+	Layer3D::onDetach();
+	sim.stop();
+	gym.stop();
 }
 
 void MainLayer::onUpdate(Timestep ts) {
 	Layer3D::onUpdate(ts);
+	
+	std::lock_guard<std::mutex> lock(sim.mutex());
 
 	GPU_PROFILE(render_time,
 
-	if(real_scale) 	nozzle->setPosition(sim.getNozzlePosition()*0.1f);
-	else nozzle->setPosition(sim.getNozzlePosition());
+		if (real_scale) 	nozzle->setPosition(sim.getNozzlePosition() * 0.1f);
+		else nozzle->setPosition(sim.getNozzlePosition());
 
 		syncUniform();
 
@@ -93,33 +89,27 @@ void MainLayer::onUpdate(Timestep ts) {
 
 		//MemoryManager::instance().resetBindings();
 
-		if(!ps->isHidden()) particle_shader->bindBuffer();
-		if(!bs->isHidden()) bin_shader->bindBuffer();
-		if(!isosurface->isHidden()) isosurface_shader->bindBuffer();
+		if (!ps->isHidden()) particle_shader->bindBuffer();
+		if (!bs->isHidden()) bin_shader->bindBuffer();
+		if (!isosurface->isHidden()) isosurface_shader->bindBuffer();
 
 		renderer.clear();
 		renderer.render(scene, camera());
 		renderer.reset();
 
-		renderer.renderTo(camera_fbo);
-		renderer.activateTarget();
-		renderer.clear();
-		renderer.render(scene, camera_output);
-		renderer.reset();
-
+		gym.setCurrentImage(captureCurrentImage());
 		//MemoryManager::instance().resetBindings();
 	)
 
-
-	sim.step(settings.timestep);
-
-	
-
-	need_sync = false;
+		need_sync = false;
 
 	if (last_numParticle != settings.numParticles()) need_sync = true;
 
+	if (!sim.hasReset()) sim.reset();
+
+	sim.run(ts);
 	MemoryManager::instance().resetBindings();
+	
 }
 
 
@@ -142,6 +132,48 @@ void MainLayer::slice(){
 	current_layer = data.size();
 
 	//slicer.export_gcode("./samples.gcode");
+}
+
+
+void MainLayer::createCamera() {
+	camera_fbo = FBO::create(img_res, img_res);
+
+	camera_rbo = RBO::create();
+	camera_rbo->reserve(img_res, img_res, GL_DEPTH24_STENCIL8);
+
+	camera_texture = Texture2D::create(img_res, img_res, 4, 8, TextureType::ALBEDO);
+	camera_texture->bind();
+	camera_texture->setInterpolationMode(GL_LINEAR, GL_LINEAR);
+	camera_texture->setRepeatMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
+	camera_texture->setBorderColor4f(1, 1, 1, 1);
+	camera_texture->unbind();
+
+
+	camera_fbo->bind();
+	camera_texture->bind();
+	camera_fbo->attachColorTexture(camera_texture);
+	camera_rbo->bind();
+	camera_fbo->attachDepthStencilRBO(camera_rbo);
+	camera_fbo->unbind();
+	camera_rbo->unbind();
+	camera_texture->unbind();
+
+	camera_goal_texture = Texture2D::create(img_res, img_res, 4, 8, TextureType::ALBEDO);
+	camera_goal_texture->bind();
+	camera_goal_texture->setInterpolationMode(GL_LINEAR, GL_LINEAR);
+	camera_goal_texture->setRepeatMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
+	camera_goal_texture->setBorderColor4f(1, 1, 1, 1);
+	camera_goal_texture->unbind();
+
+	camera_output.setView(CameraView::Top, 100, glm::vec3(150, 100, 0));
+
+	//camera_output(img_res, img_res)
+	static float nearPlane = 95;
+	static float farPlane = 110;
+
+	camera_output.setNearPlane(nearPlane);
+	camera_output.setFarPlane(farPlane);
+
 }
 
 
@@ -300,6 +332,15 @@ void MainLayer::createScene() {
 
 
 	/****************************
+		Setup Goal geom
+	*****************************/
+
+	//goal_geom = Primitives::createCircle(30,50);
+	goal_geom = Primitives::createRectangle(20,50);
+	goal_geom->translate(150, 100, 0.5);
+
+
+	/****************************
 		Scene assembly
 	*****************************/
 
@@ -312,6 +353,8 @@ void MainLayer::createScene() {
 	scene->add(bed);
 	scene->add(origin);
 	scene->add(toolpath);
+
+	scene->add(goal_geom);
 
 	bs->hide();
 	toolpath->hide();
@@ -345,6 +388,86 @@ void MainLayer::createSamples() {
 	default_props.feedrate = 600;
 
 	createSample(default_props);
+}
+
+void MainLayer::createGym(){
+	gym.setSim(&sim);
+}
+
+std::vector<uint8_t> MainLayer::captureCurrentImage(){
+	bool particleHidden = ps->isHidden();
+	bool nozzleHidden = nozzle->isHidden();
+	bool isosurfaceHidden = isosurface->isHidden();
+	nozzle->hide();
+	isosurface->hide();
+	ps->show();
+
+	ps->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE);
+
+	particle_shader->use();
+	particle_shader->setInt("colorCycle", 0);
+
+	camera_texture->bind();
+	renderer.renderTo(camera_fbo);
+	renderer.activateTarget();
+	renderer.clear();
+	renderer.render(scene, camera_output);
+	renderer.reset();
+
+	int width = camera_texture->width();
+	int height = camera_texture->height();
+	
+	std::vector<uint8_t> pixels(width * height * 3);
+
+	camera_texture->bind();
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+	camera_texture->unbind();
+	
+	ps->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE_SHADED);
+	if (!nozzleHidden) nozzle->show();
+	if (!isosurfaceHidden) isosurface->show();
+	if (particleHidden) ps->hide();
+
+	particle_shader->use();
+	particle_shader->setInt("colorCycle", colorMode);
+	
+	return pixels; // RGB format, 8-bit per channel
+}
+
+std::vector<uint8_t> MainLayer::captureGoalImage(){
+
+	goal_geom->show();
+	bool nozzleHidden = nozzle->isHidden();
+	nozzle->hide();
+
+	renderer.renderTo(camera_fbo);
+	renderer.activateTarget();
+	renderer.clear();
+	renderer.render(scene, camera_output);
+	renderer.reset();
+
+
+	int width = camera_texture->width();
+	int height = camera_texture->height();
+
+
+	glCopyImageSubData(camera_texture->id(), GL_TEXTURE_2D, 0, 0, 0, 0,
+		camera_goal_texture->id(), GL_TEXTURE_2D, 0, 0, 0, 0,
+		width, height, 1);
+
+
+
+	std::vector<uint8_t> pixels(width * height * 3);
+
+	camera_goal_texture->bind();
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+	camera_goal_texture->unbind();
+
+
+	goal_geom->hide();
+	if(!nozzleHidden) nozzle->show();
+
+	return pixels; // RGB format, 8-bit per channel
 }
 
 
@@ -630,7 +753,6 @@ void MainLayer::onImGuiRender() {
 
 	if (ImGui::TreeNode("Vizualisation"))
 	{
-		static int colorMode = 4;
 		static const char* options[] = { "Solid color", "Bin index", "Density", "Temperature", "Velocity", "Mass", "Neighbors" };
 		if (ImGui::ListBox("Colored field", &colorMode, options, 7)) {
 			particle_shader->use();
@@ -748,9 +870,33 @@ void MainLayer::onImGuiRender() {
 		ImGui::End();
 	}
 
-	camera_texture->bind();
+	
 	ImGui::Begin("Camera");
-	ImGui::Image((void*)(intptr_t)camera_texture->id(), ImVec2(512,512), ImVec2(0, 1), ImVec2(1, 0));
+
+	camera_texture->bind();
+	ImGui::Image((void*)(intptr_t)camera_texture->id(), ImVec2(img_res,img_res), ImVec2(0, 1), ImVec2(1, 0));
+	camera_texture->unbind();
+
+	//camera_output(img_res, img_res)
+	static float nearPlane = 95;
+	static float farPlane = 110;
+
+	bool state = false;
+	state = ImGui::DragFloat("Near plane", &nearPlane, 50);
+	state |= ImGui::DragFloat("Far plane", &farPlane, 300);
+	
+
+	if (state) {
+		camera_output.setNearPlane(nearPlane);
+		camera_output.setFarPlane(farPlane);
+	}
+	ImGui::End();
+
+		
+	ImGui::Begin("Goal Image");
+	camera_goal_texture->bind();
+	ImGui::Image((void*)(intptr_t)camera_goal_texture->id(), ImVec2(img_res,img_res), ImVec2(0, 1), ImVec2(1, 0));
+	camera_goal_texture->unbind();
 	ImGui::End();
 
 
@@ -1045,7 +1191,6 @@ void MainLayer::plotIsoSurface(){
 }
 
 void MainLayer::plotCutView(){
-		
 	if (use_2Dplot) {
 		texPlot->bindBuffer();
 		texPlot->use();

@@ -1,12 +1,25 @@
 #include "gym.h"
+#include "settings.h"
 #include <iostream>
-/*
+
 GymServer::GymServer(int port)
     : port_(port), running_(false), ctx_(nullptr), sock_(nullptr) {
 }
 
 GymServer::~GymServer() {
     stop();
+}
+
+void GymServer::setSim(Sim* sim){
+    sim_ = sim;
+}
+
+void GymServer::setGoalImage(const std::vector<uint8_t>& in){
+    goal_image = in;
+}
+
+void GymServer::setCurrentImage(const std::vector<uint8_t>& in) {
+    current_image = in;
 }
 
 void GymServer::start() {
@@ -22,7 +35,7 @@ void GymServer::stop() {
         if (serverThread_.joinable())
             serverThread_.join();
     }
-    // Cleanup
+    // Only now is it safe to clean up socket/context:
     if (sock_) { sock_->close(); delete sock_; sock_ = nullptr; }
     if (ctx_) { delete ctx_; ctx_ = nullptr; }
 }
@@ -37,55 +50,66 @@ void GymServer::serverLoop() {
 
     std::string addr = "tcp://*:" + std::to_string(port_);
     sock_->bind(addr);
-    std::cout << "[GymServer] Listening on " << addr << std::endl;
 
     while (running_) {
-        zmq::message_t msg;
-        if (!sock_->recv(msg, zmq::recv_flags::none))
-            continue;
+        zmq::pollitem_t items[] = { {static_cast<void*>(*sock_), 0, ZMQ_POLLIN, 0} };
+        zmq::poll(items, 1, 100); // 100 ms timeout
 
-        std::string msg_str(static_cast<char*>(msg.data()), msg.size());
+        if (items[0].revents & ZMQ_POLLIN) {
+            zmq::message_t msg;
+            if (!sock_->recv(msg, zmq::recv_flags::none))
+                continue;
+        
 
-        nlohmann::json j;
-        try { j = nlohmann::json::parse(msg_str); }
-        catch (...) {
-            std::string err = "bad json";
-            sock_->send(zmq::buffer(err), zmq::send_flags::none);
-            continue;
-        }
+            std::string msg_str(static_cast<char*>(msg.data()), msg.size());
 
-        // ---- Command Handlers ----
-        if (j["type"] == "reset") {
-            sim_->reset();
-            std::string ack = "ok";
-            sock_->send(zmq::buffer(ack), zmq::send_flags::none);
-        }
-        else if (j["type"] == "get_images") {
-            auto current = sim_->get_current_image(); // std::vector<uint8_t>
-            auto goal = sim_->get_goal_image();
+            nlohmann::json j;
+            try { j = nlohmann::json::parse(msg_str); }
+            catch (...) {
+                std::string err = "bad json";
+                sock_->send(zmq::buffer(err), zmq::send_flags::none);
+                continue;
+            }
 
-            zmq::message_t cur_msg(current.data(), current.size());
-            zmq::message_t goal_msg(goal.data(), goal.size());
+            // ---- Command Handlers ----
+            if (j["type"] == "reset") {
+                sim_->api_reset();
+                while (!sim_->hasReset() && sim_->isRunning());
+                std::string ack = "ok";
+                sock_->send(zmq::buffer(ack), zmq::send_flags::none);
+            }
+            else if (j["type"] == "get_images") {
+                zmq::message_t cur_msg(current_image.data(), current_image.size());
+                zmq::message_t goal_msg(goal_image.data(), goal_image.size());
 
-            sock_->send(cur_msg, zmq::send_flags::sndmore);
-            sock_->send(goal_msg, zmq::send_flags::none);
-        }
-        else if (j["type"] == "step") {
-            auto xyze = j["xyze"].get<std::vector<float>>();
-            sim_->step(xyze);
-            std::string ack = "stepped";
-            sock_->send(zmq::buffer(ack), zmq::send_flags::none);
-        }
-        else if (j["type"] == "is_done") {
-            bool done = sim_->is_done();
-            nlohmann::json resp;
-            resp["done"] = done;
-            auto s = resp.dump();
-            sock_->send(zmq::buffer(s), zmq::send_flags::none);
-        }
-        else {
-            std::string err = "unknown command";
-            sock_->send(zmq::buffer(err), zmq::send_flags::none);
+                sock_->send(cur_msg, zmq::send_flags::sndmore);
+                sock_->send(goal_msg, zmq::send_flags::none);
+
+            }
+            else if (j["type"] == "step") {
+                auto xye = j["xye"].get<std::vector<float>>();
+                if (xye.size() >= 3)
+                    sim_->control(xye[0], xye[1], xye[2]);
+
+                for (int i = 0; i < 10; i++) {
+                    sim_->api_step();
+                    while (!sim_->hasStepped() && sim_->isRunning()); // Wait until the sim has actually processed the step
+                }
+
+                std::string ack = "stepped";
+                sock_->send(zmq::buffer(ack), zmq::send_flags::none);
+            }
+            else if (j["type"] == "is_done") {
+                bool done = !sim_->isRunning();
+                nlohmann::json resp;
+                resp["done"] = done;
+                auto s = resp.dump();
+                sock_->send(zmq::buffer(s), zmq::send_flags::none);
+            }
+            else {
+                std::string err = "unknown command";
+                sock_->send(zmq::buffer(err), zmq::send_flags::none);
+            }
         }
     }
 
@@ -94,5 +118,5 @@ void GymServer::serverLoop() {
     delete sock_; sock_ = nullptr;
     delete ctx_; ctx_ = nullptr;
     std::cout << "[GymServer] Server stopped.\n";
+
 }
-*/

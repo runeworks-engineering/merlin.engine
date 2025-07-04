@@ -200,9 +200,12 @@ namespace Merlin {
 		}
 	}
 
-
 	void RenderableObject::translate(glm::vec3 v) {
 		m_transform = glm::translate(m_transform, v);
+	}
+
+	void RenderableObject::translate(float x, float y, float z)	{
+		translate(glm::vec3(x, y, z));
 	}
 
 	void RenderableObject::scale(glm::vec3 v) {
@@ -245,6 +248,10 @@ namespace Merlin {
 
 	void RenderableObject::setPosition(glm::vec3 v) {
 		m_transform = glm::translate(m_transform, v - position());
+	}
+
+	void RenderableObject::setPosition(float x, float y, float z){
+		setPosition(glm::vec3(x, y, z));
 	}
 
 	void RenderableObject::rotate(glm::vec3 v) {
