@@ -5,6 +5,7 @@
 #include "Slicer.h"
 #include "sim.h"
 #include "gym.h"
+#include <random>
 
 using namespace Merlin;
 
@@ -24,6 +25,8 @@ public:
 	void onImGuiRender() override;
 
 	
+	void createRandomGoal();
+	void createRectangleGoal();
 
 	void createBuffers();
 	void createScene();
@@ -56,6 +59,12 @@ public:
 	void plotYZ();
 
 private:
+	bool shape = false;
+	int   curriculum_step_;
+	int   max_curriculum_steps_;
+	float min_size_, max_size_;
+	std::mt19937 rng_{ std::random_device{}() };
+
 
 	int colorMode = 4;
 
@@ -68,7 +77,7 @@ private:
 
 	/*********** Scene ***********/
 
-	Mesh_Ptr goal_geom;
+	Model_Ptr goal_geom;
 
 	Model_Ptr bed;
 	Model_Ptr bed_glass;
@@ -90,7 +99,7 @@ private:
 	Texture2D_Ptr texture_debugXY;
 	Texture2D_Ptr texture_debugYZ;
 
-	const int img_res = 64;
+	const int img_res = 128;
 	Camera camera_output;
 	FBO_Ptr camera_fbo;
 	RBO_Ptr camera_rbo;

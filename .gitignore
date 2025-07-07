@@ -15,4 +15,8 @@
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
+
+#ML
 *.zip
+tb_*
+viz

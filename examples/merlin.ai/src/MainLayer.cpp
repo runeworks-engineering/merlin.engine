@@ -38,12 +38,12 @@ void MainLayer::onAttach(){
 
 	Console::setLevel(ConsoleLevel::_INFO);
 
-	double buffers_init = 0;
-	double shaders_init = 0;
-	double sim_init = 0;
-	double scene_init = 0;
-	//double samples_init = 0;
-	double scenario_init = 0;
+	shape = 1;
+	curriculum_step_=0;
+	max_curriculum_steps_ = 10000;
+	min_size_= 15;
+	max_size_= 40;
+
 
 	createBuffers();
 	sim.init();
@@ -60,6 +60,8 @@ void MainLayer::onAttach(){
 	if (!bs->isHidden()) bin_shader->bindBuffer();
 	if (!isosurface->isHidden()) isosurface_shader->bindBuffer();
 
+	//createRandomGoal();
+	createRectangleGoal();
 	gym.setGoalImage(captureGoalImage());
 	gym.setCurrentImage(captureCurrentImage());
 }
@@ -105,7 +107,11 @@ void MainLayer::onUpdate(Timestep ts) {
 
 	if (last_numParticle != settings.numParticles()) need_sync = true;
 
-	if (!sim.hasReset()) sim.reset();
+	if (!sim.hasReset()) {
+		sim.reset();
+		//createRandomGoal();
+		//gym.setGoalImage(captureGoalImage());
+	}
 
 	sim.run(ts);
 	MemoryManager::instance().resetBindings();
@@ -180,6 +186,70 @@ void MainLayer::createCamera() {
 void MainLayer::createSample(SampleProperty props) {
 	samples.emplace_back(props);
 	scene->add(samples[samples.size()-1].getMesh());
+}
+
+void MainLayer::createRandomGoal() {
+	// 1) Remove old mesh
+	if (auto old = goal_geom->getChild("mesh")) {
+		goal_geom->removeChild(old);
+	}
+
+	// 2) Sample size in [min_size_, max_size_]
+	std::uniform_real_distribution<float> size_dist(min_size_, max_size_);
+	float w = size_dist(rng_);
+	float h = size_dist(rng_);
+
+	// 3) Sample center position so rectangle stays in [-80,+80]
+	// half-dims
+	float hw = w / 2.0f, hh = h / 2.0f;
+	std::uniform_real_distribution<float> xpos(-50.0f + hw, 50.0f - hw);
+	std::uniform_real_distribution<float> ypos(-50.0f + hh, 50.0f - hh);
+	float cx = xpos(rng_), cy = ypos(rng_);
+
+	// 4) Optionally random rotation angle
+	std::uniform_real_distribution<float> ang_dist(0.0f, 360.0f);
+	float angle_deg = ang_dist(rng_);
+
+	// 5) Create mesh
+	Mesh_Ptr mesh;
+	if (shape) {
+		mesh = Primitives::createRectangle(w, h);
+	}
+	else {
+		// switch to circle with radius = min(w,h)/2
+		mesh = Primitives::createCircle(std::min(w, h) / 2.0f, 64);
+	}
+
+	// 6) Apply transform: translate to (cx,cy) and rotate
+	mesh->setPosition(glm::vec3(cx, cy, 0.0f));
+	mesh->rotate(glm::vec3(0.0f, 0.0f, glm::radians(angle_deg)));
+
+	mesh->rename("mesh");
+	goal_geom->addChild(mesh);
+
+	// 7) Toggle shape for next time, and advance curriculum
+	shape = !shape;
+	curriculum_step_ = std::min(curriculum_step_ + 1, max_curriculum_steps_ - 1);
+
+	// 8) Optionally reset/extend curriculum when done
+	if (curriculum_step_ == max_curriculum_steps_ - 1) {
+		curriculum_step_ = 0;
+		// you could expand max/min size here if you want to grow over time
+		// max_curriculum_steps_ = …;
+		// min_size_ = …; max_size_ = …;
+	}
+}
+
+void MainLayer::createRectangleGoal() {
+	// 1) Remove old mesh
+	if (auto old = goal_geom->getChild("mesh")) {
+		goal_geom->removeChild(old);
+	}
+
+	Mesh_Ptr mesh = Primitives::createRectangle(15, 60);
+
+	mesh->rename("mesh");
+	goal_geom->addChild(mesh);
 }
 
 void MainLayer::createBuffers(){
@@ -336,9 +406,8 @@ void MainLayer::createScene() {
 	*****************************/
 
 	//goal_geom = Primitives::createCircle(30,50);
-	goal_geom = Primitives::createRectangle(20,50);
+	goal_geom = Model::create("goal_geom");
 	goal_geom->translate(150, 100, 0.5);
-
 
 	/****************************
 		Scene assembly
@@ -402,7 +471,7 @@ std::vector<uint8_t> MainLayer::captureCurrentImage(){
 	isosurface->hide();
 	ps->show();
 
-	ps->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE);
+	ps->setDisplayMode(ParticleSystemDisplayMode::MESH);
 
 	particle_shader->use();
 	particle_shader->setInt("colorCycle", 0);
@@ -656,7 +725,7 @@ void MainLayer::onImGuiRender() {
 	}
 
 	if (ImGui::SmallButton("Reset simulation")) {
-		sim.reset();
+		sim.api_reset();
 	}
 
 	ImGui::DragFloat("Flow override", &settings.flow_override, 1.0, 0.0f, 100.0f);
@@ -897,6 +966,12 @@ void MainLayer::onImGuiRender() {
 	camera_goal_texture->bind();
 	ImGui::Image((void*)(intptr_t)camera_goal_texture->id(), ImVec2(img_res,img_res), ImVec2(0, 1), ImVec2(1, 0));
 	camera_goal_texture->unbind();
+
+	if (ImGui::Button("New Goal")) {
+		createRandomGoal();
+		gym.setGoalImage(captureGoalImage());
+	}
+
 	ImGui::End();
 
 

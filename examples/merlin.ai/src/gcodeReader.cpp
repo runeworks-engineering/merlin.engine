@@ -185,6 +185,11 @@ void GcodeSimulator::reset() {
 void GcodeSimulator::update(float dt) {
     m_current_position += m_current_velocity * dt;
     m_current_position.w = 1.0;
+
+    if (m_current_position.x > 80) m_current_position.x = 80;
+    if (m_current_position.x < -80) m_current_position.x = -80;
+    if (m_current_position.y > 80) m_current_position.y = 80;
+    if (m_current_position.y < -80) m_current_position.y = -80;
     //Console::info() << "dt" << dt << "xyz(" << glm::vec3(m_current_position) << ", " << m_current_velocity.w << ")" << Console::endl;
 }
 
