@@ -59,9 +59,9 @@ void GcodeSimulator::partGCodeLine(const std::string& line){
             float value;
             while (iss >> coord >> value) {
                 switch (coord) {
-                case 'X': command.position.x = value * 10; break;
-                case 'Y': command.position.y = value * 10; break;
-                case 'Z': command.position.z = value * 10; break;
+                case 'X': command.position.x = value ; break;
+                case 'Y': command.position.y = value ; break;
+                case 'Z': command.position.z = value ; break;
                 case 'E':
                     if (m_extrusion_absolute) command.position.w = value;
                     else command.position.w += value;

@@ -34,6 +34,6 @@ private:
     glm::vec4 m_current_position;
     glm::vec4 m_current_velocity = glm::vec4(0);
     glm::vec4 m_current_target;
-    glm::vec3 m_origin_offset = glm::vec3(-150,-100,5);
+    glm::vec3 m_origin_offset = glm::vec3(0,0,5);
 };
 
