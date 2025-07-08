@@ -12,41 +12,8 @@
 Slicer::Slicer()
     : toolpath(0), noTool({ -1,0,10000,0 }) {
 
-    start_gcode = {
-        "T-1",
-        "G28",
-        "G29",
-        "G29 S1",
-        "G1 Z5 F5000",
-        "G10 S220 R215 P0",
-        "G10 S230 R235 P1",
-        "M190 S60",
-        "T1 P0",
-        "M116",
-        "T0 P0",
-        "M116",
-        "T-1",
-        "T0",
-        "G21",
-        "G90",
-        "M83",
-        "G92 E0",
-        "M107"
-    };
-
-    end_gcode = {
-        "G1 E-0.8 F2400",
-        "M107",
-        "G91",
-        "G1 Z2 F1000",
-        "G90",
-        "T-1",
-        "G29 S2",
-        "G28 X0",
-        "M0",
-        "M84",
-        "M73 P100 R0"
-    };
+    start_gcode = {};
+    end_gcode = {};
     clear();
 }
 
@@ -60,6 +27,7 @@ void Slicer::clear() {
 
     actual_max_z = 0;
     numLayers = 0;
+    m_current_layer = 0;
     filament_diameter = 1.75;
 
     m_cumulative_E = 0;
@@ -135,10 +103,14 @@ void Slicer::postprocess() {
 void Slicer::generateSample(SampleProperty props) {
     Tool tool;
 
-    tool.id = props.tool;
+    tool.id = 0;
     tool.flowrate = props.flow;
-    tool.retract_length = props.retract;
+    tool.retract_length = 0;
     tool.feedrate = props.feedrate;
+
+    m_active_tool = tool;
+
+    numLayers = (int) ceil(props.height / props.layer_height);
 
     add_gcode("\n");
     comment("-----------------------");
@@ -148,110 +120,99 @@ void Slicer::generateSample(SampleProperty props) {
     comment("Sample Comment: " + props.comment);
     comment("Filament Diameter: " + std::to_string(filament_diameter) + "mm");
     comment("Number of Layers: " + std::to_string(numLayers));
-    comment("X Offset: " + std::to_string(props.x_offset));
-    comment("Y Offset: " + std::to_string(props.y_offset));
-    comment("Radius: " + std::to_string(props.radius));
+    comment("X Offset: " + std::to_string(props.x_position));
+    comment("Y Offset: " + std::to_string(props.y_position));
+    comment("Length: " + std::to_string(props.length));
+    comment("Width: " + std::to_string(props.width));
     comment("Height: " + std::to_string(props.height));
     comment("Layer Height: " + std::to_string(props.layer_height));
     comment("Line Width: " + std::to_string(props.line_width));
-    comment("Tool ID: " + std::to_string(props.tool));
     comment("Flow: " + std::to_string(props.flow));
-    comment("Retract: " + std::to_string(props.retract));
     comment("Feedrate: " + std::to_string(props.feedrate));
-    comment("Use concentric: " + std::to_string(props.use_concentric));
-    comment("Use outline: " + std::to_string(props.use_outline));
     comment("-----------------------");
     add_gcode("\n");
 
     for (int layer = 0; layer < numLayers; ++layer) {
         float z = props.layer_height * (layer + 1);
+        
+        // Compute corners position (with rotation)
+        float dx = props.length * 0.5f;
+        float dy = props.width * 0.5f;
+        glm::vec2 center = glm::vec2(props.x_position, props.y_position);
+        glm::vec2 A = center + glm::vec2(-dx * cos(props.rotation_z), -dy * sin(props.rotation_z));
+        glm::vec2 B = center + glm::vec2(+dx * cos(props.rotation_z), -dy * sin(props.rotation_z));
+        glm::vec2 C = center + glm::vec2(+dx * cos(props.rotation_z), +dy * sin(props.rotation_z));
+        glm::vec2 D = center + glm::vec2(-dx * cos(props.rotation_z), +dy * sin(props.rotation_z));
 
-        retract(1, 2400);
+
         new_layer(z);
-
-        retract(1.4, 2400);
-        move(glm::vec4(props.x_offset, props.y_offset, actual_max_z + 5, 0), 0, 30000);
-        move(glm::vec4(m_current_position.x, m_current_position.y, z, 0), 17800);
-        extrude(1.4, 2400);
-
-        if (props.use_concentric) generateConcentric(props);
-        else generateSpiral(props);
-
-        // PLA Section
-        retract(1, 2400);
-    }
-
-    retract(1, 2400);
-    comment("End of Sample");
-}
-
-void Slicer::generateSpiral(SampleProperty props){
-    float a = 0.0f;
-    float pi = glm::pi<float>();
-    float b = props.line_width / (2.0f * pi);
-    float theta = 0.0f;
-    float r = pi / 12.0f;
+        move(glm::vec4(props.x_position, props.y_position, actual_max_z + 5, 0), 0, 1000);
+        move(glm::vec4(m_current_position.x, m_current_position.y, z, 0), 1000);
 
 
-    // First spiral arm
-    while (true) {
-        float dTheta = props.resolution * (r / props.radius) / std::sqrt(b * b + std::pow(b * theta, 2));
-        theta += dTheta;
-        r = a + b * theta;
+        // Perimeter (rectangle)
+        float e_perim = compute_e(props.length, props.flow, props.line_width, props.layer_height);
+        float e_perim_y = compute_e(props.width, props.flow, props.line_width, props.layer_height);
 
-        if (props.use_outline) {
-            if (r + props.line_width > props.radius) break;
-        }
-        else {
-            if (r > props.radius) break;
-        }
-
-        glm::vec3 next = glm::vec3(r * std::cos(theta), r * std::sin(theta), m_current_position.z);
-        float e = compute_e(glm::distance(glm::vec3(m_current_position), next), props.flow, props.line_width, props.layer_height);
-        move(glm::vec4(next, e));
-    }
-
-    // Outer ring if outline is used
-    if (props.use_outline) {
-        float dTheta = props.resolution / (4.0f * props.radius) / std::sqrt(b * b + std::pow(b * theta, 2));
-        float ring_radius = props.radius - props.line_width * 0.2f;
-
-        for (float gamma = theta; gamma < theta + 2.0f * pi; gamma += dTheta) {
-            float x = ring_radius * std::cos(gamma);
-            float y = ring_radius * std::sin(gamma);
             
+        move(glm::vec4(A, z, 3), 0, tool.feedrate); //move and prime
+        moveXYE(B, e_perim, 1, tool.feedrate);
+        moveXYE(C, e_perim_y, 1, tool.feedrate);
+        moveXYE(D, e_perim, 1, tool.feedrate);
+        moveXYE(A, e_perim_y, 1, tool.feedrate);
+        retract(3);
+        move_Z(m_current_position.z + 10);
 
-            glm::vec3 next = glm::vec3(x, y, m_current_position.z);
-            float e = compute_e(glm::distance(glm::vec3(m_current_position), next), props.flow, props.line_width, props.layer_height);
-            move(glm::vec4(next, e));
-        }
+        //Rectilinear infill 100%
+        float infill_spacing = props.line_width;
+        int num_lines = static_cast<int>(props.width / infill_spacing);
+
+        glm::vec2 tangent = glm::normalize(A - B);
+        glm::vec2 normal = glm::normalize(glm::cross(glm::vec3(tangent, 0), glm::vec3(0,0,1)));
+        float line_length = props.length - props.line_width; //remove perimeter
+
+        glm::vec2 lineStart = A + tangent * props.line_width*0.5f + normal * props.line_width * 0.5f;
+        glm::vec2 lineEnd = A + tangent * line_length + normal * props.line_width * 0.5f;
+        moveXY(lineStart, 0, tool.feedrate); // Aller au coin bas-gauche
+        move_Z(z, tool.feedrate); // Aller au coin bas-gauche
+        /**/
+        for (int i = 0; i <= num_lines; ++i) {
+                
+                
+            float e_infill = compute_e(line_length, props.flow, props.line_width, props.layer_height);
+
+            if (i % 2 == 0) {
+                moveXYE(lineEnd, e_infill, 1, tool.feedrate); // Extrusion ligne
+                lineEnd += normal * props.line_width;
+                moveXYE(lineEnd, e_infill, 1, tool.feedrate); // Extrusion ligne
+
+            }
+            else {
+                moveXYE(lineStart, e_infill, 1, tool.feedrate);
+                lineStart += normal * props.line_width;
+                moveXYE(lineStart, e_infill, 1, tool.feedrate);
+            }
+
+                
+                
+        }/**/
+        retract(-3);
+        move_Z(z + 10, tool.feedrate); // Aller au coin bas-gauche
+        
+
+
+    }
+
+ 
+    comment("-----------------------");
+    comment("     End of Sample");
+    comment("-----------------------");
+
+    for (auto& tc : toolpath) {
+        Console::info() << "ToolPath : " << "{ " << tc.start << " | " << tc.end << " } " << Console::endl;
     }
 }
 
-void Slicer::generateConcentric(SampleProperty props){
-
-    int n = static_cast<int>(props.radius / props.line_width);
-    float alpha = 0.0f;
-    float pi = glm::pi<float>();
-    for (int i = 0; i < n; ++i) {
-        if (alpha == 0.0f) {
-            alpha += props.line_width;
-            continue;
-        }
-
-        float inc = std::asin(props.resolution * 0.5f / alpha);
-        for (float theta = 0.0f; theta < 2.0f * pi; theta += inc) {
-            float x = std::cos(theta) * alpha;
-            float y = std::sin(theta) * alpha;
-
-            glm::vec3 next = glm::vec3(x, y, m_current_position.z);
-            float e = compute_e(glm::distance(glm::vec3(m_current_position), next), props.flow, props.line_width, props.layer_height);
-            move(glm::vec4(next, e));
-        }
-
-        alpha += props.line_width;
-    }  
-}
 
 float Slicer::compute_e(float length, float flow, float line_width, float layer_height) const {
     float filament_area = glm::pi<float>() * pow((filament_diameter / 2.0), 2.0);

@@ -43,6 +43,11 @@ namespace Merlin {
 		m_currentNode->addChild(light);
 	}
 
+	void Scene::remove(shared<RenderableObject> obj) {
+		m_currentNode->removeChild(obj);
+	}
+
+
 	bool Scene::hasEnvironment() const{
 		return m_environment != nullptr;
 	}

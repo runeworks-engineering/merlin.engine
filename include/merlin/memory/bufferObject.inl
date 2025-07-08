@@ -26,6 +26,7 @@ namespace Merlin {
         m_isMutable = true;
         m_size = bytes;
         m_usage = usage;
+        m_isAllocated = true;
         glNamedBufferData(id(), bytes, nullptr, static_cast<GLenum>(usage));
         clearBuffer();
         writeBuffer(bytes, data);
@@ -33,6 +34,7 @@ namespace Merlin {
 
     inline void AbstractBufferObject::allocateImmutableBuffer(GLsizeiptr bytes, const void* data, BufferStorageFlags flags) {
         m_isMutable = false;
+        m_isAllocated = true;
         m_size = bytes;
         m_flags = flags;
         glNamedBufferStorage(id(), bytes, data, static_cast<GLbitfield>(flags));
@@ -96,11 +98,17 @@ namespace Merlin {
 
     template <typename T>
     inline void BufferObject<T>::write(const std::vector<T>& data) {
+        if (data.size() > elements())
+            allocate(data, m_usage);
+
         writeBuffer(data.size() * sizeof(T), data.data());
     }
 
     template <typename T>
     inline void BufferObject<T>::write(const T* data, GLsizeiptr size) {
+        if (size > elements())
+            allocate(size, data, m_usage);
+
         writeBuffer(size * sizeof(T), data);
     }
 

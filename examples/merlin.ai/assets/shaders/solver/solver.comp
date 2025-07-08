@@ -19,10 +19,19 @@ layout (local_size_x = PTHREAD) in;
 uniform uint stage;
 void exec(uint index, uint kernel);
 
+uniform float retract = 0;
 // XPBD_Main
 void main() {
 	uint index = gl_GlobalInvocationID.x;
 	if (index >= u_numParticles + u_numEmitter) return;
+
+	
+	if(retract < 0){
+		uint i = index;
+		vec4 nozzle = u_emitterTransform * vec4(0,0,0,1);
+		if (phase(index) == FLUID && ((b_pi.z > nozzle.z-retract && distance(nozzle.xy, b_pi.xy) < 10)))
+			phase(index) = UNUSED;
+	}
 
 	if(phase(index) == BOUNDARY + 1u && index < u_numParticles && stage >= 2){ //fix copy error see 02/05/2025
 		uint i = index;

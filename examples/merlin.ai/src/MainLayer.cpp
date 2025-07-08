@@ -38,12 +38,21 @@ void MainLayer::onAttach(){
 
 	Console::setLevel(ConsoleLevel::_INFO);
 
-	shape = 1;
-	curriculum_step_=0;
-	max_curriculum_steps_ = 10000;
 	min_size_= 15;
 	max_size_= 40;
 
+	default_props.name = "sample";
+	default_props.comment = "Specimen 0";
+	default_props.x_position = 0;
+	default_props.y_position = 0;
+	default_props.length = 30;
+	default_props.width = 20;
+	default_props.height = 0.15f;
+	default_props.layer_height = 0.2;
+	default_props.line_width = 0.4;
+	default_props.flow = 1.0f;
+	default_props.retract = 1.0f;
+	default_props.feedrate = 1050;
 
 	createBuffers();
 	sim.init();
@@ -54,16 +63,8 @@ void MainLayer::onAttach(){
 	createCamera();
 	createGym();
 	gym.start();
-
-
-	if (!ps->isHidden()) particle_shader->bindBuffer();
-	if (!bs->isHidden()) bin_shader->bindBuffer();
-	if (!isosurface->isHidden()) isosurface_shader->bindBuffer();
-
-	//createRandomGoal();
-	createRectangleGoal();
-	gym.setGoalImage(captureGoalImage());
-	gym.setCurrentImage(captureCurrentImage());
+	createRandomSample();
+	slice();
 }
 
 void MainLayer::onDetach(){
@@ -90,11 +91,7 @@ void MainLayer::onUpdate(Timestep ts) {
 		}
 
 		//MemoryManager::instance().resetBindings();
-
-		if (!ps->isHidden()) particle_shader->bindBuffer();
-		if (!bs->isHidden()) bin_shader->bindBuffer();
-		if (!isosurface->isHidden()) isosurface_shader->bindBuffer();
-
+		
 		renderer.clear();
 		renderer.render(scene, camera());
 		renderer.reset();
@@ -113,6 +110,20 @@ void MainLayer::onUpdate(Timestep ts) {
 		//gym.setGoalImage(captureGoalImage());
 	}
 
+	if (!sim.hasPhaseChanged()) {
+		sim.phase();
+		createRandomSample();
+		slice();
+
+		if (!ps->isHidden()) particle_shader->bindBuffer();
+		if (!bs->isHidden()) bin_shader->bindBuffer();
+		if (!isosurface->isHidden()) isosurface_shader->bindBuffer();
+
+		gym.setGoalImage(captureGoalImage());
+		gym.setGoalDepthImage(captureGoalDepthImage());
+		gym.setCurrentImage(captureCurrentImage());
+	}
+
 	sim.run(ts);
 	MemoryManager::instance().resetBindings();
 	
@@ -123,20 +134,26 @@ void MainLayer::onUpdate(Timestep ts) {
 
 void MainLayer::slice(){
 	slicer.clear();
-	for (auto& s : samples) {
-		if (!s.enabled) continue;
-		slicer.generateSample(s.getProperties());
-	}
+	//for (auto& s : samples) {
+	//	if (!s.enabled) continue;
+	//	slicer.generateSample(s.getProperties());
+	//}
+
+	if(sample_obj.enabled)
+		slicer.generateSample(sample_obj.getProperties());
+	slicer.slice();
+
 	toolpath_buffer->bind();
 	auto& data = slicer.getToolPath();
 
 	if (toolpath_buffer->elements() < data.size()) {
+		toolpath_buffer->setElements(data.size());
 		toolpath_buffer->allocateBuffer(data.size() * sizeof(ToolPath), data.data(), BufferUsage::StaticDraw);
 	}
 	else toolpath_buffer->writeBuffer(data.size() * sizeof(ToolPath), data.data());
 	toolpath->setInstancesCount(data.size());
 	current_layer = data.size();
-
+	toolpath_buffer->unbind();
 	//slicer.export_gcode("./samples.gcode");
 }
 
@@ -153,7 +170,6 @@ void MainLayer::createCamera() {
 	camera_texture->setRepeatMode(GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER);
 	camera_texture->setBorderColor4f(1, 1, 1, 1);
 	camera_texture->unbind();
-
 
 	camera_fbo->bind();
 	camera_texture->bind();
@@ -184,72 +200,43 @@ void MainLayer::createCamera() {
 
 
 void MainLayer::createSample(SampleProperty props) {
-	samples.emplace_back(props);
-	scene->add(samples[samples.size()-1].getMesh());
+	sample_obj = SampleObject(props);
+	if (sample_mesh)
+		scene->remove(sample_mesh);
+
+	sample_mesh = sample_obj.getMesh();
+
+	if(sample_mesh)
+		scene->add(sample_mesh);
 }
 
-void MainLayer::createRandomGoal() {
-	// 1) Remove old mesh
-	if (auto old = goal_geom->getChild("mesh")) {
-		goal_geom->removeChild(old);
-	}
+void MainLayer::createRandomSample() {
 
-	// 2) Sample size in [min_size_, max_size_]
 	std::uniform_real_distribution<float> size_dist(min_size_, max_size_);
 	float w = size_dist(rng_);
-	float h = size_dist(rng_);
+	float l = size_dist(rng_);
 
-	// 3) Sample center position so rectangle stays in [-80,+80]
-	// half-dims
-	float hw = w / 2.0f, hh = h / 2.0f;
+	float hw = w / 2.0f, hh = l / 2.0f;
 	std::uniform_real_distribution<float> xpos(-50.0f + hw, 50.0f - hw);
 	std::uniform_real_distribution<float> ypos(-50.0f + hh, 50.0f - hh);
-	float cx = xpos(rng_), cy = ypos(rng_);
+	float cx = xpos(rng_) + 150, cy = ypos(rng_) + 100;
 
-	// 4) Optionally random rotation angle
 	std::uniform_real_distribution<float> ang_dist(0.0f, 360.0f);
 	float angle_deg = ang_dist(rng_);
 
-	// 5) Create mesh
-	Mesh_Ptr mesh;
-	if (shape) {
-		mesh = Primitives::createRectangle(w, h);
-	}
-	else {
-		// switch to circle with radius = min(w,h)/2
-		mesh = Primitives::createCircle(std::min(w, h) / 2.0f, 64);
-	}
+	SampleProperty props = default_props;
+	
+	props.width = w;
+	props.length = l;
+	
+	props.x_position = cx;
+	props.y_position = cy;
+	props.rotation_z = glm::radians(angle_deg);
 
-	// 6) Apply transform: translate to (cx,cy) and rotate
-	mesh->setPosition(glm::vec3(cx, cy, 0.0f));
-	mesh->rotate(glm::vec3(0.0f, 0.0f, glm::radians(angle_deg)));
-
-	mesh->rename("mesh");
-	goal_geom->addChild(mesh);
-
-	// 7) Toggle shape for next time, and advance curriculum
-	shape = !shape;
-	curriculum_step_ = std::min(curriculum_step_ + 1, max_curriculum_steps_ - 1);
-
-	// 8) Optionally reset/extend curriculum when done
-	if (curriculum_step_ == max_curriculum_steps_ - 1) {
-		curriculum_step_ = 0;
-		// you could expand max/min size here if you want to grow over time
-		// max_curriculum_steps_ = …;
-		// min_size_ = …; max_size_ = …;
-	}
-}
-
-void MainLayer::createRectangleGoal() {
-	// 1) Remove old mesh
-	if (auto old = goal_geom->getChild("mesh")) {
-		goal_geom->removeChild(old);
-	}
-
-	Mesh_Ptr mesh = Primitives::createRectangle(15, 60);
-
-	mesh->rename("mesh");
-	goal_geom->addChild(mesh);
+	if (sample_mesh) 
+		scene->removeChild(sample_mesh);
+	
+	createSample(props);
 }
 
 void MainLayer::createBuffers(){
@@ -290,7 +277,6 @@ void MainLayer::createScene() {
 
 	scene = Scene::create("scene");
 
-
 	auto& memory = MemoryManager::instance();
 
 	/***********************
@@ -309,12 +295,14 @@ void MainLayer::createScene() {
 		Scene decoration
 	************************/
 
+	origin = TransformObject::create("origin", 10);
+
 	bed = ModelLoader::loadModel("./assets/models/bed.stl");
 	bed->translate(glm::vec3(0.75, -0.25, 0));
 	bed->setMaterial("chrome");
 
 	bed_glass = ModelLoader::loadModel("./assets/models/glass.stl");
-	bed_glass->setMaterial("water");
+	bed_glass->setMaterial("glass");
 	bed_glass->translate(glm::vec3(-8, -8, 5));
 	bed_glass->scale(glm::vec3(0.98f, 0.98f, 1.0f));
 	bed_glass->translate(glm::vec3(-150, -100, -5.2));
@@ -336,13 +324,6 @@ void MainLayer::createScene() {
 	bed->addChild(bed_surface);
 	bed->translate(glm::vec3(150, 100, -5.2));
 
-
-	origin = TransformObject::create("origin", 10);
-
-
-
-	//scene.add(static_emitter);
-
 	nozzle = ModelLoader::loadMesh("./assets/models/nozzle.stl");
 	nozzle->setMaterial("gold");
 	//std::static_pointer_cast<PhongMaterial>(nozzle->getMaterial())->setAlphaBlending(0.1);
@@ -357,6 +338,11 @@ void MainLayer::createScene() {
 	}
 	nozzle->applyMeshTransform();
 
+
+	/***********************
+		Setup Textures
+	************************/
+
 	texture_debugXZ = Texture2D::create(settings.tex_size.x, settings.tex_size.z, 4, 16);
 	texture_debugXZ->setUnit(0);
 	texture_debugXY = Texture2D::create(settings.tex_size.x, settings.tex_size.y, 4, 16);
@@ -369,7 +355,6 @@ void MainLayer::createScene() {
 	/***********************
 		Setup Iso-Surface
 	************************/
-
 
 	volume = Texture3D::create(settings.volume_size.x, settings.volume_size.y, settings.volume_size.z, 4, 16);
 	volume->setUnit(0);
@@ -400,15 +385,6 @@ void MainLayer::createScene() {
 		bs->scale(0.1);
 	}
 
-
-	/****************************
-		Setup Goal geom
-	*****************************/
-
-	//goal_geom = Primitives::createCircle(30,50);
-	goal_geom = Model::create("goal_geom");
-	goal_geom->translate(150, 100, 0.5);
-
 	/****************************
 		Scene assembly
 	*****************************/
@@ -423,40 +399,10 @@ void MainLayer::createScene() {
 	scene->add(origin);
 	scene->add(toolpath);
 
-	scene->add(goal_geom);
-
 	bs->hide();
-	toolpath->hide();
+	//toolpath->hide();
 	isosurface->hide();
 
-	for (auto& s : samples) {
-		if (!s.enabled) continue;
-		scene->add(s.getMesh());
-	}
-}
-
-void MainLayer::createSamples() {
-	default_props.name = "Sample 0";
-	default_props.comment = "Specimen 0";
-	default_props.x_offset = 0;
-	default_props.y_offset = 0;
-	default_props.radius = 6;
-	default_props.height = 0.15f;
-	default_props.layer_height = 0.2;
-	default_props.line_width = 0.4;
-	default_props.tool = 0;
-	default_props.flow = 1.0f;
-	default_props.retract = 1.0f;
-	default_props.feedrate = 1050;
-
-
-	default_props.name = "Sample 0";
-	default_props.comment = "Specimen 0";
-	default_props.x_offset = 0;
-	default_props.y_offset = 0;
-	default_props.feedrate = 600;
-
-	createSample(default_props);
 }
 
 void MainLayer::createGym(){
@@ -467,8 +413,10 @@ std::vector<uint8_t> MainLayer::captureCurrentImage(){
 	bool particleHidden = ps->isHidden();
 	bool nozzleHidden = nozzle->isHidden();
 	bool isosurfaceHidden = isosurface->isHidden();
+	bool toolpathHidden = toolpath->isHidden();
 	nozzle->hide();
 	isosurface->hide();
+	toolpath->hide();
 	ps->show();
 
 	ps->setDisplayMode(ParticleSystemDisplayMode::MESH);
@@ -495,6 +443,7 @@ std::vector<uint8_t> MainLayer::captureCurrentImage(){
 	ps->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE_SHADED);
 	if (!nozzleHidden) nozzle->show();
 	if (!isosurfaceHidden) isosurface->show();
+	if (!toolpathHidden) toolpath->show();
 	if (particleHidden) ps->hide();
 
 	particle_shader->use();
@@ -505,7 +454,7 @@ std::vector<uint8_t> MainLayer::captureCurrentImage(){
 
 std::vector<uint8_t> MainLayer::captureGoalImage(){
 
-	goal_geom->show();
+	sample_mesh->show();
 	bool nozzleHidden = nozzle->isHidden();
 	nozzle->hide();
 
@@ -533,13 +482,49 @@ std::vector<uint8_t> MainLayer::captureGoalImage(){
 	camera_goal_texture->unbind();
 
 
-	goal_geom->hide();
+	sample_mesh->hide();
 	if(!nozzleHidden) nozzle->show();
 
 	return pixels; // RGB format, 8-bit per channel
 }
 
+std::vector<uint8_t> MainLayer::captureGoalDepthImage() {
 
+	sample_mesh->show();
+	sample_mesh->setRenderMode(RenderMode::DEPTH);
+	bool nozzleHidden = nozzle->isHidden();
+	nozzle->hide();
+
+	renderer.renderTo(camera_fbo);
+	renderer.activateTarget();
+	renderer.clear();
+	renderer.render(scene, camera_output);
+	renderer.reset();
+
+
+	int width = camera_texture->width();
+	int height = camera_texture->height();
+
+
+	glCopyImageSubData(camera_texture->id(), GL_TEXTURE_2D, 0, 0, 0, 0,
+		camera_goal_texture->id(), GL_TEXTURE_2D, 0, 0, 0, 0,
+		width, height, 1);
+
+
+
+	std::vector<uint8_t> pixels(width * height * 3);
+
+	camera_goal_texture->bind();
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
+	camera_goal_texture->unbind();
+
+
+	sample_mesh->hide();
+	sample_mesh->setRenderMode(RenderMode::LIT);
+	if (!nozzleHidden) nozzle->show();
+
+	return pixels; // RGB format, 8-bit per channel
+}
 
 
 
@@ -968,7 +953,7 @@ void MainLayer::onImGuiRender() {
 	camera_goal_texture->unbind();
 
 	if (ImGui::Button("New Goal")) {
-		createRandomGoal();
+		createRandomSample();
 		gym.setGoalImage(captureGoalImage());
 	}
 
@@ -985,13 +970,17 @@ void MainLayer::onImGuiRender() {
 
 	ImGui::Begin("Sample List");
 
-	if (ImGui::Button("Create Sample")) {
+	if (ImGui::Button("New Sample")) {
+		/*
 		if (selected_sample_index != -1 && selected_sample_index < samples.size()) {
 			createSample(samples[selected_sample_index].getProperties());
 		}
-		else createSample(default_props);
+		else 
+		*/
+		createRandomSample();
 	}
 
+	/*
 	if (ImGui::Button("Remove Selected Sample")) {
 		if (selected_sample_index != -1 && selected_sample_index < samples.size()) {
 			samples.erase(samples.begin() + selected_sample_index);
@@ -999,9 +988,9 @@ void MainLayer::onImGuiRender() {
 			ImGui::End();
 			return;
 		}
-	}
+	}*/
 
-	for (int i = 0; i < samples.size(); i++) {
+	for (int i = 0; i < 1 /*samples.size()*/; i++) {
 
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_SpanAvailWidth;
 
@@ -1065,7 +1054,8 @@ void MainLayer::onImGuiRender() {
 	if (selected_renderable) {
 		selected_renderable->onRenderMenu();  // Assume `drawProperties()` exists for graphics properties
 	}else if(selected_sample_index != -1){
-		samples[selected_sample_index].renderMenu();  // Render sample properties
+		//samples[selected_sample_index].renderMenu();  // Render sample properties
+		sample_obj.renderMenu();  // Render sample properties
 	}
 	ImGui::End();
 
@@ -1092,9 +1082,10 @@ void MainLayer::saveProject(){
 
 	file << "<Samples>\n";
 
-	for (auto& s : samples) {
-		file << s.toXML();
-	}
+	//for (auto& s : samples) {
+		//file << s.toXML();
+	//}
+	file << sample_obj.toXML();  // Render sample properties
 
 	file << "</Samples>\n";
 	file.close();
@@ -1118,7 +1109,7 @@ void MainLayer::importProject() {
 		return;
 	}
 
-	samples.clear(); // optional: reset current project
+	//samples.clear(); // optional: reset current project
 
 	XMLElement* root = doc.FirstChildElement("Samples");
 	if (!root) {
@@ -1126,7 +1117,7 @@ void MainLayer::importProject() {
 		return;
 	}
 
-	samples.clear();
+	//samples.clear();
 
 	for (XMLElement* elem = root->FirstChildElement("Sample"); elem != nullptr; elem = elem->NextSiblingElement("Sample")) {
 		SampleProperty s = SampleObject::fromXML(elem);
@@ -1180,43 +1171,8 @@ void MainLayer::createShaders() {
 	toolpath_shader->supportShadows(false);
 	toolpath_shader->supportTexture(false);
 
+
 }
-/*
-void MainLayer::attachBuffers(){
-
-	isosurface_shader->attach(sim.getBuffer("position_buffer"));
-	isosurface_shader->attach(sim.getBuffer("predicted_position_buffer"));
-	isosurface_shader->attach(sim.getBuffer("density_buffer"));
-	isosurface_shader->attach(sim.getBuffer("temperature_buffer"));
-	isosurface_shader->attach(sim.getBuffer("meta_buffer"));
-	isosurface_shader->attach(sim.getBuffer("bin_buffer"));
-
-	particle_shader->attach(sim.getBuffer("position_buffer"));
-	particle_shader->attach(sim.getBuffer("predicted_position_buffer"));
-	particle_shader->attach(sim.getBuffer("velocity_buffer"));
-	particle_shader->attach(sim.getBuffer("correction_buffer"));
-	particle_shader->attach(sim.getBuffer("temperature_buffer"));
-	particle_shader->attach(sim.getBuffer("meta_buffer"));
-	particle_shader->attach(sim.getBuffer("bin_buffer"));
-
-	isoGen->attach(sim.getBuffer("position_buffer"));
-	isoGen->attach(sim.getBuffer("predicted_position_buffer"));
-	isoGen->attach(sim.getBuffer("density_buffer"));
-	isoGen->attach(sim.getBuffer("temperature_buffer"));
-	isoGen->attach(sim.getBuffer("meta_buffer"));
-	isoGen->attach(sim.getBuffer("bin_buffer"));
-
-	texPlot->attach(sim.getBuffer("position_buffer"));
-	texPlot->attach(sim.getBuffer("predicted_position_buffer"));
-	texPlot->attach(sim.getBuffer("density_buffer"));
-	texPlot->attach(sim.getBuffer("temperature_buffer"));
-	texPlot->attach(sim.getBuffer("meta_buffer"));
-	texPlot->attach(sim.getBuffer("bin_buffer"));
-
-	bin_shader->attach(sim.getBuffer("bin_buffer"));
-
-}*/
-
 
 void MainLayer::syncUniform(){
 	if (need_sync) {
@@ -1240,7 +1196,7 @@ void MainLayer::newProject() {
 	if (answer == 1) saveProject();
 	if (answer == 2);//just import
 
-	samples.clear(); // optional: reset current project
+	//samples.clear(); // optional: reset current project
 }
 
 void MainLayer::plotIsoSurface(){
@@ -1303,7 +1259,6 @@ void MainLayer::plotXZ() {
 	texPlot->dispatch(x, z);
 	texPlot->barrier(GL_ALL_BARRIER_BITS);
 }
-
 
 void MainLayer::plotYZ() {
 	int y = (settings.tex_size.y - 1) / settings.texWkgSize.y;

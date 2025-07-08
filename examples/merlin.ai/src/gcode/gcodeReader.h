@@ -12,10 +12,11 @@ class GcodeSimulator{
 public:
     GcodeSimulator();
     void readFile(const std::string& filepath);
+    void readGCode(const std::string& gcode);
+    void partGCodeLine(const std::string& line);
 
     void reset();
     void update(float dt);
-    void control(float vx, float vy, float vz, float ve);
 
     glm::vec3 getNozzlePosition();
     float getExtruderDistance();
@@ -27,11 +28,12 @@ private:
     std::vector<Command> m_commands;
     size_t currentIndex = 0;
     float m_current_speed = 0;
+    bool m_extrusion_absolute = false;
+    float m_current_extrusion = 0;
 	
     glm::vec4 m_current_position;
     glm::vec4 m_current_velocity = glm::vec4(0);
     glm::vec4 m_current_target;
-    glm::vec3 m_origin_offset = glm::vec3(150,100,5);
-    //glm::vec3 m_origin_offset = glm::vec3(0,0,1);
+    glm::vec3 m_origin_offset = glm::vec3(-150,-100,5);
 };
 

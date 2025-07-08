@@ -12,10 +12,10 @@ struct Tool {
 };
 
 struct ToolPath {
-    glm::vec4 start = glm::vec4(0); // x, y, z, e;
-    glm::vec4 end = glm::vec4(0);   // x, y, z, e;
-    glm::vec4 meta = glm::vec4(0);  // feed, T°, flow, tool
-    glm::vec4 meta_bis = glm::vec4(0);  // layer, type, null, null
+    alignas(16) glm::vec4 start = glm::vec4(0); // x, y, z, e;
+    alignas(16) glm::vec4 end = glm::vec4(0);   // x, y, z, e;
+    alignas(16) glm::vec4 meta = glm::vec4(0);  // feed, T°, flow, tool
+    alignas(16) glm::vec4 meta_bis = glm::vec4(0);  // layer, type, null, null
 };
 
 class Slicer {
@@ -31,8 +31,6 @@ public:
     int getLayer() const;
 
     void generateSample(SampleProperty props);
-    void generateSpiral(SampleProperty props);
-    void generateConcentric(SampleProperty props);
 
 
     inline std::vector<ToolPath>& getToolPath() { return toolpath; };

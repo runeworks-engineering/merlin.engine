@@ -1,5 +1,6 @@
 #pragma once
-#include "GcodeReader.h"
+#include "../gcode/agent.h"
+#include "../gcode/gcodeReader.h"
 #include "merlin.h"
 
 #include <mutex>
@@ -21,6 +22,7 @@ public:
 
 	void init();
     void reset();
+    void phase();
     void start();
     void stop();
     void run(Timestep ts);
@@ -34,8 +36,10 @@ public:
 	void control(float vx, float vy, float ve);
 	void api_step();
 	void api_reset();
+	void api_phase();
 	bool hasStepped();
 	bool hasReset();
+	bool hasPhaseChanged();
 
 	void syncUniform();
 
@@ -49,8 +53,10 @@ private:
 	bool running = false;
 	bool shouldStep = false;
 	bool shouldReset = false;
+	bool shouldPhaseChange = false;
 
-    GcodeSimulator simulator;
+    //Agent agent;
+	GcodeSimulator simulator;
   
     StagedComputeShader_Ptr solver;
     StagedComputeShader_Ptr prefixSum;

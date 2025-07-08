@@ -80,7 +80,7 @@ namespace Merlin {
         SINGLETON(MaterialLibrary)
     public:
         inline void add(shared<MaterialBase> mat) { RessourceManager::add(mat->name(), mat); };
-
+        std::string getColorCycle();
     private:
         MaterialLibrary();
         void LoadDefaultMaterials();

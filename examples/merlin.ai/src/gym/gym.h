@@ -3,8 +3,8 @@
 #include <thread>
 #include <atomic>
 #include <zmq.hpp>
-#include "json.hpp"
-#include "sim.h"
+#include "../json.hpp"
+#include "../sim/sim.h"
 
 class GymServer {
 public:
@@ -15,6 +15,7 @@ public:
 
     void setCurrentImage(const std::vector<uint8_t>&);
     void setGoalImage(const std::vector<uint8_t>&);
+    void setGoalDepthImage(const std::vector<uint8_t>&);
 
     void start();
     void stop();
@@ -34,6 +35,7 @@ private:
 
 
     std::vector<uint8_t> goal_image;
+    std::vector<uint8_t> goal_depth_image;
     std::vector<uint8_t> current_image;
 
 

@@ -213,7 +213,7 @@ namespace Merlin {
 
 		Texture2D::resetTextureUnits();
 		shader->use();
-
+		shader->bindBuffer();
 		if (shader->name() == "default.phong" || shader->name() == "default.pbr") {
 			switch (m_renderMode) {
 			case RenderMode::UNLIT:
@@ -286,6 +286,7 @@ namespace Merlin {
 				m_activeLights[i]->detach();
 			}
 		}
+		shader->unbindBuffer();
 	}
 
 
@@ -352,11 +353,9 @@ namespace Merlin {
 			shader->setMat4("model", m_currentTransform); //sync model matrix with GPU
 			shader->setMat4("view", camera.getViewMatrix()); //sync model matrix with GPU
 			shader->setMat4("projection", camera.getProjectionMatrix()); //sync model matrix with GPU
-
-			
-			
+			shader->bindBuffer();
 			ps.draw();
-
+			shader->unbindBuffer();
 		} else {
 			Mesh& mesh = *ps.getMesh();
 			Material_Ptr mat = mesh.getMaterial();
@@ -374,7 +373,7 @@ namespace Merlin {
 
 			Texture2D::resetTextureUnits();
 			shader->use();
-
+			shader->bindBuffer();
 			if(shader->supportLights())
 			for (int i = 0; i < m_activeLights.size(); i++) {
 				m_activeLights[i]->attach(i, *shader);
@@ -414,6 +413,7 @@ namespace Merlin {
 			for (int i = 0; i < m_activeLights.size(); i++) {
 				m_activeLights[i]->detach();
 			}
+			shader->unbindBuffer();
 		}
 	}
 

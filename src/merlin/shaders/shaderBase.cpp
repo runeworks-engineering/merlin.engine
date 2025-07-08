@@ -118,7 +118,7 @@ namespace Merlin {
 				buf.bind();
 				buf.setBindingPoint(bindingPoint);
 				Console::trace("ShaderBase") << buf.name() << "( block index " << block_index << ") is now bound to " << name() << " using binding point " << bindingPoint << Console::endl;
-				glShaderStorageBlockBinding(m_programID, block_index, bindingPoint);//Do this explicitly in your shader !
+				glShaderStorageBlockBinding(m_programID, block_index, bindingPoint);
 				buf.unbind();
 			}
 		}

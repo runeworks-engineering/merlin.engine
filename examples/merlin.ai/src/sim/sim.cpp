@@ -1,5 +1,5 @@
 #include "sim.h"
-#include "settings.h"
+#include "../settings.h"
 #include <GLFW/glfw3.h>
 
 Sim::Sim(){}
@@ -8,6 +8,7 @@ Sim::~Sim() {}
 
 void Sim::init() {
 
+	//agent.reset();
 	simulator.reset();
 
 	//Compute Shaders
@@ -163,11 +164,15 @@ void Sim::init() {
 	}
 }
 
+void Sim::phase() {
+	shouldPhaseChange = false;
+}
 
 void Sim::reset(){
 	//std::lock_guard<std::mutex> lock(sim_mutex);
 	elapsedTime = 0;
 	lastSpawTime = 0;
+	//agent.reset();
 	simulator.reset();
 
 	auto& memory = MemoryManager::instance();
@@ -292,7 +297,8 @@ std::mutex& Sim::mutex()
 }
 
 void Sim::control(float vx, float vy, float ve){
-	simulator.control(vx, vy, 0, ve);
+	//simulator.control(vx, vy, 0, ve);
+	simulator.flow_override = ve;
 }
 
 void Sim::api_step() {
@@ -301,6 +307,10 @@ void Sim::api_step() {
 
 void Sim::api_reset() {
 	shouldReset = true;
+}
+
+void Sim::api_phase() {
+	shouldPhaseChange = true;
 }
 
 void Sim::run(Timestep ts) {
@@ -326,6 +336,11 @@ void Sim::run(Timestep ts) {
 			settings.emitter_transform = glm::translate(settings.emitter_transform(), glm::vec3(nozzle_position));
 			settings.emitter_transform.sync(*solver);
 			
+			if (simulator.getExtruderDistance() < 0) {
+				solver->setInt("retract", simulator.getExtruderDistance());
+			}
+			else solver->setInt("retract", 0);
+
 			float e_speed = simulator.getExtruderDistance();
 			float emitterDelay = 1000.0 / (settings.particleVolume * 1.0) / e_speed;
 			if (settings.use_emitter && simulator.getExtruderDistance() > 0.01)
@@ -353,7 +368,7 @@ void Sim::run(Timestep ts) {
 				}
 		}
 			)
-			//if (simulator.lastCommandReached()) paused = true;
+			//if (agent.lastCommandReached()) paused = true;
 			MemoryManager::instance().resetBindings();
 		shouldStep = false;
 	}
@@ -368,6 +383,10 @@ bool Sim::hasReset()
 	return !shouldReset;
 }
 
+bool Sim::hasPhaseChanged()
+{
+	return !shouldPhaseChange;
+}
 
 void Sim::syncUniform(){
 

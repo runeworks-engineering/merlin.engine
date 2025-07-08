@@ -1,20 +1,16 @@
 #include "SampleObject.h"
 #include <iomanip> // for std::setprecision
 #include <sstream>
+#include "merlin/utils/ressourceManager.h"
 
+SampleObject::SampleObject(){
+	this->props = SampleProperty();
+	generateMesh();
+}
 
 SampleObject::SampleObject(const SampleProperty& props) {
-
 	this->props = props;
-
-	static int i = 0;
-	mesh = Primitives::createCylinder(props.radius, props.height, 30);
-	mesh->rename(props.name);
-	mesh->translate(glm::vec3(props.x_offset, props.y_offset, props.height * 1.0));
-	mesh->rotate(glm::vec3(0, 90 * DEG_TO_RAD, 0));
-	mesh->setMaterial("black plastic");  //PLA
-	i++;
-
+	generateMesh();
 }
 
 void SampleObject::renderMenu() {
@@ -26,23 +22,20 @@ void SampleObject::renderMenu() {
 
 	ImGui::Checkbox("Enabled", &enabled);
 
-	changed |= ImGui::DragFloat("X Offset", &props.x_offset);
-	changed |= ImGui::DragFloat("Y Offset", &props.y_offset);
-	changed |= ImGui::DragFloat("Radius", &props.radius);
-	changed |= ImGui::DragFloat("Height", &props.height);
+	changed |= ImGui::DragFloat("X Position", &props.x_position);
+	changed |= ImGui::DragFloat("Y Position", &props.y_position);
+	changed |= ImGui::DragFloat("Rotation (Z)", &props.rotation_z, 0.1f, -3.14f, 3.14f);
 
-	ImGui::InputInt("Tool", &props.tool);
+	changed |= ImGui::DragFloat("Length", &props.length);
+	changed |= ImGui::DragFloat("Width", &props.width);
+	changed |= ImGui::DragFloat("Height", &props.height);
 
 	ImGui::InputFloat("Flow", &props.flow);
 
-	ImGui::InputFloat("Retract", &props.retract);
-
+	ImGui::InputFloat("Layer height", &props.feedrate);
+	ImGui::InputFloat("Line width", &props.line_width);
 	ImGui::InputFloat("Feedrate", &props.feedrate);
 
-	ImGui::InputFloat("Line Width", &props.line_width);
-
-	if (!ImGui::Checkbox("Use concentric infill", &props.use_concentric))
-		ImGui::Checkbox("Use outline", &props.use_outline);
 
 	char buffer[256];
 	strncpy(buffer, props.comment.c_str(), sizeof(buffer));
@@ -52,13 +45,7 @@ void SampleObject::renderMenu() {
 	}
 
 	if (ImGui::Button("Apply changes") || changed) {
-		std::string name = mesh->name();
-		mesh = Primitives::createCylinder(props.radius, props.height,30);
-		mesh->rename(name);
-		mesh->translate(glm::vec3(props.x_offset, props.y_offset, props.height * 1.0));
-		mesh->rotate(glm::vec3(0, 90 * DEG_TO_RAD, 0));
-		mesh->setMaterial("black plastic");  //PLA
-
+		generateMesh();
 	}
 }
 
@@ -67,19 +54,26 @@ std::string SampleObject::toXML() const {
 
 	ss << "<Sample name=\"" << props.name << "\">\n";
 	ss << "  <Comment>" << props.comment << "</Comment>\n";
-	ss << "  <Position x=\"" << props.x_offset << "\" y=\"" << props.y_offset << "\" />\n";
+	ss << "  <Position x=\"" << props.x_position << "\" y=\"" << props.y_position << "\" />\n";
 
-	ss << "  <Geometry radius=\"" << props.radius << "\" height=\"" << props.height << "\" />\n";
+	ss << "  <Geometry lenght=\"" << props.length << "\" width=\"" << props.width << "\" height=\"" << props.height << "\" />\n";
 
 	ss << "  <Print layerHeight=\"" << props.layer_height
 		<< "\" lineWidth=\"" << props.line_width
-		<< "\" tool=\"" << props.tool
 		<< "\" flow=\"" << props.flow
-		<< "\" retract=\"" << props.retract
 		<< "\" feedrate=\"" << props.feedrate << "\" />\n";
 
 	ss << "</Sample>\n";
 	return ss.str();
+}
+
+void SampleObject::generateMesh(){
+	mesh = Primitives::createBox(props.length, props.width, props.height);
+	mesh->rename(props.name);
+	mesh->translate(glm::vec3(props.x_position, props.y_position, props.height * 0.5));
+	mesh->rotate(glm::vec3(0, 0 , props.rotation_z * DEG_TO_RAD));
+	//mesh->setMaterial(Merlin::MaterialLibrary::instance().getColorCycle());  //PLA
+	mesh->setMaterial("white rubber");  //PLA
 }
 
 
@@ -96,21 +90,20 @@ SampleProperty SampleObject::fromXML(const tinyxml2::XMLElement* elem) {
 		props.comment = comment->GetText() ? comment->GetText() : "";
 
 	if (auto pos = elem->FirstChildElement("Position")) {
-		pos->QueryFloatAttribute("x", &props.x_offset);
-		pos->QueryFloatAttribute("y", &props.y_offset);
+		pos->QueryFloatAttribute("x", &props.x_position);
+		pos->QueryFloatAttribute("y", &props.y_position);
 	}
 
 	if (auto geo = elem->FirstChildElement("Geometry")) {
-		geo->QueryFloatAttribute("radius", &props.radius);
+		geo->QueryFloatAttribute("length", &props.length);
+		geo->QueryFloatAttribute("width", &props.width);
 		geo->QueryFloatAttribute("height", &props.height);
 	}
 
 	if (auto print = elem->FirstChildElement("Print")) {
 		print->QueryFloatAttribute("layerHeight", &props.layer_height);
 		print->QueryFloatAttribute("lineWidth", &props.line_width);
-		print->QueryIntAttribute("tool", &props.tool);
 		print->QueryFloatAttribute("flow", &props.flow);
-		print->QueryFloatAttribute("retract", &props.retract);
 		print->QueryFloatAttribute("feedrate", &props.feedrate);
 	}
 

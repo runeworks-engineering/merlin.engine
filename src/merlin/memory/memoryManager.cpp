@@ -9,19 +9,23 @@ namespace Merlin {
     }
 
     GLuint MemoryManager::allocateBindingPoint(BufferTarget bufferType, GLuint bufferID) {
-        // Check if the buffer is already assigned a binding point
+        // If already assigned, return it
         if (bufferToBindingPoint.find(bufferID) != bufferToBindingPoint.end()) {
             return bufferToBindingPoint[bufferID];
         }
 
-        if (availableBindingPoints[bufferType].empty()) {
+        auto& available = availableBindingPoints[bufferType];
+        auto& used = usedBindingPoints[bufferType];
+
+        if (available.empty()) {
             Console::error("MemoryManager") << "No available binding points for the given buffer type" << Console::endl;
             throw std::runtime_error("No available binding points for the given buffer type");
         }
 
-        GLuint bindingPoint = availableBindingPoints[bufferType].front();
-        availableBindingPoints[bufferType].pop();
-        usedBindingPoints[bufferType].push_back(bindingPoint);
+        // Always grab the lowest available binding point
+        GLuint bindingPoint = *available.begin();
+        available.erase(available.begin());
+        used.insert(bindingPoint);
         bufferToBindingPoint[bufferID] = bindingPoint;
 
         Console::trace("MemoryManager") << bindingPoint << " allocated for buffer " << bufferID << Console::endl;
@@ -29,41 +33,40 @@ namespace Merlin {
     }
 
     void MemoryManager::releaseBindingPoint(BufferTarget bufferType, GLuint bufferID) {
-        if (bufferToBindingPoint.find(bufferID) == bufferToBindingPoint.end()) {
+        auto it = bufferToBindingPoint.find(bufferID);
+        if (it == bufferToBindingPoint.end()) {
             Console::trace("MemoryManager") << "Attempt to release a binding point for a buffer that was not allocated" << Console::endl;
             return;
         }
 
-        GLuint bindingPoint = bufferToBindingPoint[bufferID];
-        bufferToBindingPoint.erase(bufferID);
+        GLuint bindingPoint = it->second;
+        bufferToBindingPoint.erase(it);
 
-        auto& points = usedBindingPoints[bufferType];
-        points.erase(std::remove(points.begin(), points.end(), bindingPoint), points.end());
+        auto& available = availableBindingPoints[bufferType];
+        auto& used = usedBindingPoints[bufferType];
 
-        std::queue<GLuint> tempQueue;
-        tempQueue.push(bindingPoint);
-        while (!availableBindingPoints[bufferType].empty()) {
-            tempQueue.push(availableBindingPoints[bufferType].front());
-            availableBindingPoints[bufferType].pop();
-        }
-        availableBindingPoints[bufferType] = tempQueue;
+        used.erase(bindingPoint);
+        available.insert(bindingPoint); // O(log n), minimal
 
         Console::trace("MemoryManager") << bindingPoint << " freed from buffer " << bufferID << Console::endl;
     }
 
-    const std::vector<GLuint>& MemoryManager::getUsedBindingPoints(BufferTarget bufferType) const {
-        return usedBindingPoints.at(bufferType);
+    std::vector<GLuint> MemoryManager::getUsedBindingPoints(BufferTarget bufferType) const {
+        // Return as vector for compatibility
+        std::vector<GLuint> result;
+        const auto& used = usedBindingPoints.at(bufferType);
+        result.insert(result.end(), used.begin(), used.end());
+        return result;
     }
 
-    void MemoryManager::resetBindings(){
+    void MemoryManager::resetBindings() {
         usedBindingPoints.clear();
         bufferToBindingPoint.clear();
         availableBindingPoints.clear();
         initializeAvailableBindingPoints();
-
     }
 
-    void MemoryManager::printLimits(){
+    void MemoryManager::printLimits() {
         GLint maxSSBOBindings;
         GLint maxUBOBindings;
         GLint maxACBBindings;
@@ -76,7 +79,6 @@ namespace Merlin {
         Console::info("MemoryManager") << "Max SSBO bindings: " << maxSSBOBindings << Console::endl;
         Console::info("MemoryManager") << "Max UBO bindings: " << maxUBOBindings << Console::endl;
         Console::info("MemoryManager") << "Max Atomic Counter Buffer bindings: " << maxACBBindings << Console::endl;
-        
     }
 
     void MemoryManager::initializeAvailableBindingPoints() {
@@ -84,8 +86,8 @@ namespace Merlin {
 
         static GLint maxSSBOBindings = 16;
         static GLint maxUBOBindings = 16;
-        static GLint maxVBOBindings = 16; // Limite arbitraire pour les VBOs
-        static GLint maxEBOBindings = 16; // Limite arbitraire pour les EBOs
+        static GLint maxVBOBindings = 16; // Arbitrary for VBO
+        static GLint maxEBOBindings = 16; // Arbitrary for EBO
         static GLint maxACBBindings = 0;
 
         if (!init) {
@@ -95,29 +97,22 @@ namespace Merlin {
             init = true;
         }
 
-
-
-        for (int i = 0; i < maxSSBOBindings; ++i) {
-            availableBindingPoints[BufferTarget::Shader_Storage_Buffer].push(i);
-        }
-        for (int i = 0; i < maxUBOBindings; ++i) {
-            availableBindingPoints[BufferTarget::Uniform_Buffer].push(i);
-        }
-        for (int i = 0; i < maxVBOBindings; ++i) {
-            availableBindingPoints[BufferTarget::Array_Buffer].push(i);
-        }
-        for (int i = 0; i < maxEBOBindings; ++i) {
-            availableBindingPoints[BufferTarget::Element_Array_Buffer].push(i);
-        }
-        for (int i = 0; i < maxACBBindings; ++i) {
-            availableBindingPoints[BufferTarget::Atomic_Counter_Buffer].push(i);
-        }
-        // Add other buffer types if needed
+        for (int i = 0; i < maxSSBOBindings; ++i)
+            availableBindingPoints[BufferTarget::Shader_Storage_Buffer].insert(i);
+        for (int i = 0; i < maxUBOBindings; ++i)
+            availableBindingPoints[BufferTarget::Uniform_Buffer].insert(i);
+        for (int i = 0; i < maxVBOBindings; ++i)
+            availableBindingPoints[BufferTarget::Array_Buffer].insert(i);
+        for (int i = 0; i < maxEBOBindings; ++i)
+            availableBindingPoints[BufferTarget::Element_Array_Buffer].insert(i);
+        for (int i = 0; i < maxACBBindings; ++i)
+            availableBindingPoints[BufferTarget::Atomic_Counter_Buffer].insert(i);
+        // Extend for other types if needed
     }
 
-
     AbstractBufferObject_Ptr MemoryManager::getBuffer(const std::string& key) {
-        if (!hasBuffer(key)) Console::error("Sim") << "has no buffer named " << key << Console::endl;
+        if (!hasBuffer(key)) 
+            Console::error("Sim") << "has no buffer named " << key << Console::endl;
         return m_buffers[key];
     }
 

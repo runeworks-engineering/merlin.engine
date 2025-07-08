@@ -8,27 +8,27 @@ using namespace Merlin;
 struct SampleProperty {
     std::string name;
     std::string comment;
-    float x_offset = 0;
-    float y_offset = 0;
+    float x_position = 0;
+    float y_position = 0;
+    float rotation_z = 0;
 
-    float radius = 6;
+    float width = 10;
+    float length = 20;
     float height = 0.15;
-    float resolution = 0.01;
 
     float layer_height = 0.15;
     float line_width = 0.72;
-    int tool = 15;
     float flow = 1.0;
+    float retract = 1.0;
 
-    float retract = 0.8;
     float feedrate = 600;
 
-    bool use_outline = false;
-    bool use_concentric = false;
+    int perimeter = 0;
 };
 
 class SampleObject {
 public:
+	SampleObject();
 	SampleObject(const SampleProperty& props);
 
 	void renderMenu();
@@ -39,6 +39,8 @@ public:
     std::string toXML() const;
 	bool enabled = true;
 private:
+    void generateMesh();
+
     SampleProperty props;
 	Mesh_Ptr mesh;
 

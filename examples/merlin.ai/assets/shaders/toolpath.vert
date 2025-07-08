@@ -33,8 +33,8 @@ void main() {
 		if(_position.x == 0) offset = ssbo_toolpath[i].start.xyz;
 		else offset = ssbo_toolpath[i].end.xyz;
 	}
-
-	vout.position = model * (vec4(_position + vec3(offset),1));
+	offset += vec3(0, gl_InstanceID,0);
+	vout.position = model * (vec4(offset + _position,1));
 	vout.screen_position = projection * view * vout.position;
 	
 

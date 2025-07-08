@@ -190,10 +190,7 @@ void MainLayer::slice(){
 	toolpath_buffer->bind();
 	auto& data = slicer.getToolPath();
 
-	if (toolpath_buffer->elements() < data.size()) {
-		toolpath_buffer->allocateBuffer(data.size() * sizeof(ToolPath), data.data(), BufferUsage::StaticDraw);
-	}
-	else toolpath_buffer->writeBuffer(data.size() * sizeof(ToolPath), data.data());
+	toolpath_buffer->write(data);
 	toolpath->setInstancesCount(data.size());
 	current_layer = data.size();
 

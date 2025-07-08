@@ -1,10 +1,10 @@
 #pragma once
 
 #include <Merlin.h>
-#include "SampleObject.h"
-#include "Slicer.h"
-#include "sim.h"
-#include "gym.h"
+#include "slicer/sampleObject.h"
+#include "slicer/slicer.h"
+#include "sim/sim.h"
+#include "gym/gym.h"
 #include <random>
 
 using namespace Merlin;
@@ -24,18 +24,16 @@ public:
 	void onUpdate(Timestep ts) override;
 	void onImGuiRender() override;
 
-	
-	void createRandomGoal();
-	void createRectangleGoal();
-
 	void createBuffers();
 	void createScene();
 	void createShaders();
-	void createSamples();
 	void createCamera();
 	void createGym();
 
+	void createRandomSample();
+
 	std::vector<uint8_t> captureGoalImage();
+	std::vector<uint8_t> captureGoalDepthImage();
 	std::vector<uint8_t> captureCurrentImage();
 
 	void slice();
@@ -59,9 +57,6 @@ public:
 	void plotYZ();
 
 private:
-	bool shape = false;
-	int   curriculum_step_;
-	int   max_curriculum_steps_;
 	float min_size_, max_size_;
 	std::mt19937 rng_{ std::random_device{}() };
 
@@ -76,8 +71,6 @@ private:
 	GymServer gym;
 
 	/*********** Scene ***********/
-
-	Model_Ptr goal_geom;
 
 	Model_Ptr bed;
 	Model_Ptr bed_glass;
@@ -137,8 +130,9 @@ private:
 
 	/*********** Project ***********/
 	
-	std::vector<SampleObject> samples;
-	std::vector<Mesh_Ptr> samples_3D;
+	SampleObject sample_obj;
+	Mesh_Ptr sample_mesh;
+
 	SampleProperty default_props;
 
 	int current_layer = 0;

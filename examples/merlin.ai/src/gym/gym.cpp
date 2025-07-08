@@ -1,5 +1,5 @@
 #include "gym.h"
-#include "settings.h"
+#include "../settings.h"
 #include <iostream>
 
 GymServer::GymServer(int port)
@@ -16,6 +16,10 @@ void GymServer::setSim(Sim* sim){
 
 void GymServer::setGoalImage(const std::vector<uint8_t>& in){
     goal_image = in;
+}
+
+void GymServer::setGoalDepthImage(const std::vector<uint8_t>& in) {
+    goal_depth_image = in;
 }
 
 void GymServer::setCurrentImage(const std::vector<uint8_t>& in) {
@@ -75,6 +79,12 @@ void GymServer::serverLoop() {
             if (j["type"] == "reset") {
                 sim_->api_reset();
                 while (!sim_->hasReset() && sim_->isRunning());
+                std::string ack = "ok";
+                sock_->send(zmq::buffer(ack), zmq::send_flags::none);
+            }
+            else if (j["type"] == "phase") {
+                sim_->api_phase();
+                while (!sim_->hasPhaseChanged() && sim_->isRunning());
                 std::string ack = "ok";
                 sock_->send(zmq::buffer(ack), zmq::send_flags::none);
             }
