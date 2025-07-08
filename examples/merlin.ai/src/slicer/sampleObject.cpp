@@ -13,7 +13,7 @@ SampleObject::SampleObject(const SampleProperty& props) {
 	generateMesh();
 }
 
-void SampleObject::renderMenu() {
+bool SampleObject::renderMenu() {
 	ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 
 	ImGui::Text((std::string("name : ") + props.name).c_str());
@@ -24,7 +24,7 @@ void SampleObject::renderMenu() {
 
 	changed |= ImGui::DragFloat("X Position", &props.x_position);
 	changed |= ImGui::DragFloat("Y Position", &props.y_position);
-	changed |= ImGui::DragFloat("Rotation (Z)", &props.rotation_z, 0.1f, -3.14f, 3.14f);
+	changed |= ImGui::DragFloat("Rotation (Z)", &props.rotation_z, 1.0f, -180.0f, 180.0f);
 
 	changed |= ImGui::DragFloat("Length", &props.length);
 	changed |= ImGui::DragFloat("Width", &props.width);
@@ -46,7 +46,9 @@ void SampleObject::renderMenu() {
 
 	if (ImGui::Button("Apply changes") || changed) {
 		generateMesh();
+		changed = true;
 	}
+	return changed;
 }
 
 std::string SampleObject::toXML() const {

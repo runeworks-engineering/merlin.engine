@@ -38,8 +38,8 @@ void MainLayer::onAttach(){
 
 	Console::setLevel(ConsoleLevel::_INFO);
 
-	min_size_= 15;
-	max_size_= 40;
+	min_size_= 20;
+	max_size_= 50;
 
 	default_props.name = "sample";
 	default_props.comment = "Specimen 0";
@@ -47,9 +47,9 @@ void MainLayer::onAttach(){
 	default_props.y_position = 0;
 	default_props.length = 30;
 	default_props.width = 20;
-	default_props.height = 0.15f;
-	default_props.layer_height = 0.2;
-	default_props.line_width = 0.4;
+	default_props.height = 0.15f * 10;
+	default_props.layer_height = 0.2 * 10;
+	default_props.line_width = 0.4 * 10;
 	default_props.flow = 1.0f;
 	default_props.retract = 1.0f;
 	default_props.feedrate = 1050;
@@ -71,6 +71,16 @@ void MainLayer::onDetach(){
 	Layer3D::onDetach();
 	sim.stop();
 	gym.stop();
+}
+
+
+void debugToolPath(std::vector<ToolPath>& vec) {
+	Console::info("Vector") << " : " << Console::endl << "[";
+	for (GLuint i = 0; i < ((vec.size() > 100) ? 100 : vec.size() - 1); i++) {
+		Console::print() << vec[i].start << "|" << vec[i].start << ", ";
+	}
+	if (vec.size() > 100) Console::print() << "..., ";
+	Console::print() << vec[vec.size() - 1].start << "|" << vec[vec.size() - 1].start << "]" << Console::endl << Console::endl;
 }
 
 void MainLayer::onUpdate(Timestep ts) {
@@ -115,15 +125,12 @@ void MainLayer::onUpdate(Timestep ts) {
 		createRandomSample();
 		slice();
 
-		if (!ps->isHidden()) particle_shader->bindBuffer();
-		if (!bs->isHidden()) bin_shader->bindBuffer();
-		if (!isosurface->isHidden()) isosurface_shader->bindBuffer();
-
 		gym.setGoalImage(captureGoalImage());
 		gym.setGoalDepthImage(captureGoalDepthImage());
 		gym.setCurrentImage(captureCurrentImage());
 	}
 
+	sim.api_step();
 	sim.run(ts);
 	MemoryManager::instance().resetBindings();
 	
@@ -154,6 +161,8 @@ void MainLayer::slice(){
 	toolpath->setInstancesCount(data.size());
 	current_layer = data.size();
 	toolpath_buffer->unbind();
+
+	sim.setGCode(slicer.get_gcode());
 	//slicer.export_gcode("./samples.gcode");
 }
 
@@ -1043,10 +1052,10 @@ void MainLayer::onImGuiRender() {
 
 	ImGui::Begin("Layers");
 
-	if (ImGui::VSliderInt("layer", ImVec2(30, 1000), &current_layer, 0, slicer.getLayer())) {
-		toolpath_shader->use();
-		toolpath_shader->setInt("layer", current_layer);
-	}
+	//if (ImGui::VSliderInt("layer", ImVec2(30, 1000), &current_layer, 0, slicer.getLayerCount())) {
+		//toolpath_shader->use();
+		//toolpath_shader->setInt("layer", current_layer);
+	//}
 	ImGui::End();
 
 	// Properties panel (shows either physics or graphics properties)
@@ -1055,7 +1064,11 @@ void MainLayer::onImGuiRender() {
 		selected_renderable->onRenderMenu();  // Assume `drawProperties()` exists for graphics properties
 	}else if(selected_sample_index != -1){
 		//samples[selected_sample_index].renderMenu();  // Render sample properties
-		sample_obj.renderMenu();  // Render sample properties
+		if (sample_obj.renderMenu()) {  // Render sample properties
+			scene->remove(sample_mesh);
+			sample_mesh = sample_obj.getMesh();
+			scene->add(sample_mesh);
+		}
 	}
 	ImGui::End();
 

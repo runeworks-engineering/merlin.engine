@@ -31,7 +31,7 @@ void Slicer::clear() {
     filament_diameter = 1.75;
 
     m_cumulative_E = 0;
-    m_current_feedrate = 1000;
+    m_current_feedrate = 0;
 }
 
 void Slicer::load_macro(const std::string& start_path, const std::string& end_path) {
@@ -100,6 +100,15 @@ void Slicer::postprocess() {
     // Placeholder for any post-processing steps
 }
 
+glm::vec2 rotate2D(glm::vec2 v, float rotation) {
+    float s = sin(rotation);
+    float c = cos(rotation);
+    glm::vec2 cpy = v;
+    v.x = cpy.x * c - cpy.y * s;
+    v.y = cpy.y * c + cpy.x * s;
+    return v;
+}
+
 void Slicer::generateSample(SampleProperty props) {
     Tool tool;
 
@@ -122,6 +131,7 @@ void Slicer::generateSample(SampleProperty props) {
     comment("Number of Layers: " + std::to_string(numLayers));
     comment("X Offset: " + std::to_string(props.x_position));
     comment("Y Offset: " + std::to_string(props.y_position));
+    comment("Rotation Z: " + std::to_string(props.rotation_z));
     comment("Length: " + std::to_string(props.length));
     comment("Width: " + std::to_string(props.width));
     comment("Height: " + std::to_string(props.height));
@@ -136,68 +146,68 @@ void Slicer::generateSample(SampleProperty props) {
         float z = props.layer_height * (layer + 1);
         
         // Compute corners position (with rotation)
-        float dx = props.length * 0.5f;
-        float dy = props.width * 0.5f;
+        float dx = props.length * 0.5f - props.line_width * 0.5f;
+        float dy = props.width * 0.5f - props.line_width * 0.5f;
+        float theta = props.rotation_z * DEG_TO_RAD;
+        float gamma = 45 * DEG_TO_RAD;
         glm::vec2 center = glm::vec2(props.x_position, props.y_position);
-        glm::vec2 A = center + glm::vec2(-dx * cos(props.rotation_z), -dy * sin(props.rotation_z));
-        glm::vec2 B = center + glm::vec2(+dx * cos(props.rotation_z), -dy * sin(props.rotation_z));
-        glm::vec2 C = center + glm::vec2(+dx * cos(props.rotation_z), +dy * sin(props.rotation_z));
-        glm::vec2 D = center + glm::vec2(-dx * cos(props.rotation_z), +dy * sin(props.rotation_z));
 
+        glm::vec2 A = rotate2D(glm::vec2(-dx, -dy), theta) + center;
+        glm::vec2 B = rotate2D(glm::vec2(+dx, -dy), theta) + center;
+        glm::vec2 C = rotate2D(glm::vec2(+dx, +dy), theta) + center;
+        glm::vec2 D = rotate2D(glm::vec2(-dx, +dy), theta) + center;
 
         new_layer(z);
         move(glm::vec4(props.x_position, props.y_position, actual_max_z + 5, 0), 0, 1000);
-        move(glm::vec4(m_current_position.x, m_current_position.y, z, 0), 1000);
-
-
+      
         // Perimeter (rectangle)
         float e_perim = compute_e(props.length, props.flow, props.line_width, props.layer_height);
         float e_perim_y = compute_e(props.width, props.flow, props.line_width, props.layer_height);
 
-            
-        move(glm::vec4(A, z, 3), 0, tool.feedrate); //move and prime
-        moveXYE(B, e_perim, 1, tool.feedrate);
-        moveXYE(C, e_perim_y, 1, tool.feedrate);
-        moveXYE(D, e_perim, 1, tool.feedrate);
-        moveXYE(A, e_perim_y, 1, tool.feedrate);
+        move(glm::vec4(A, 0, 3), 0); //move and prime
+        move_Z(z); //move and prime
+        moveXYE(B, e_perim, 1);
+        moveXYE(C, e_perim_y, 1);
+        moveXYE(D, e_perim, 1);
+        moveXYE(A, e_perim_y, 1);
         retract(3);
-        move_Z(m_current_position.z + 10);
-
+        move_Z(m_current_position.z + 5, 0);
+        
+        
         //Rectilinear infill 100%
         float infill_spacing = props.line_width;
-        int num_lines = static_cast<int>(props.width / infill_spacing);
+        int num_lines = static_cast<int>(props.width / infill_spacing) - 1;
 
-        glm::vec2 tangent = glm::normalize(A - B);
-        glm::vec2 normal = glm::normalize(glm::cross(glm::vec3(tangent, 0), glm::vec3(0,0,1)));
-        float line_length = props.length - props.line_width; //remove perimeter
+        glm::vec2 tangent = glm::normalize(B - A);
+        glm::vec2 normal = glm::normalize(glm::cross(glm::vec3(tangent, 0), glm::vec3(0,0,-1)));
+        float line_length = props.length - props.line_width * 1.5; //remove perimeter
 
         glm::vec2 lineStart = A + tangent * props.line_width*0.5f + normal * props.line_width * 0.5f;
         glm::vec2 lineEnd = A + tangent * line_length + normal * props.line_width * 0.5f;
-        moveXY(lineStart, 0, tool.feedrate); // Aller au coin bas-gauche
-        move_Z(z, tool.feedrate); // Aller au coin bas-gauche
-        /**/
+        moveXY(lineStart, 0); // Aller au coin bas-gauche
+        move_Z(z); // Aller au coin bas-gauche
+
         for (int i = 0; i <= num_lines; ++i) {
-                
                 
             float e_infill = compute_e(line_length, props.flow, props.line_width, props.layer_height);
 
             if (i % 2 == 0) {
-                moveXYE(lineEnd, e_infill, 1, tool.feedrate); // Extrusion ligne
+                moveXYE(lineEnd, e_infill, 1); // Extrusion ligne
                 lineEnd += normal * props.line_width;
-                moveXYE(lineEnd, e_infill, 1, tool.feedrate); // Extrusion ligne
+                lineStart += normal * props.line_width;
+                moveXYE(lineEnd, 0, 1); // Extrusion ligne
 
             }
             else {
-                moveXYE(lineStart, e_infill, 1, tool.feedrate);
+                moveXYE(lineStart, e_infill, 1);
                 lineStart += normal * props.line_width;
-                moveXYE(lineStart, e_infill, 1, tool.feedrate);
+                lineEnd += normal * props.line_width;
+                moveXYE(lineStart, 0, 1);
             }
-
-                
                 
         }/**/
         retract(-3);
-        move_Z(z + 10, tool.feedrate); // Aller au coin bas-gauche
+        move_Z(z + 5); // Aller au coin bas-gauche
         
 
 
@@ -208,9 +218,6 @@ void Slicer::generateSample(SampleProperty props) {
     comment("     End of Sample");
     comment("-----------------------");
 
-    for (auto& tc : toolpath) {
-        Console::info() << "ToolPath : " << "{ " << tc.start << " | " << tc.end << " } " << Console::endl;
-    }
 }
 
 
@@ -247,6 +254,10 @@ void Slicer::export_gcode(const std::string& filename) {
     out.close();
 
     Merlin::Console::info() << "GCode successfully written to " << filename << Merlin::Console::endl;
+}
+
+const std::vector<std::string>& Slicer::get_gcode(){
+    return post_processed_gcode;
 }
 
 void Slicer::retract(float length, float feedrate_override) {
@@ -305,6 +316,10 @@ int Slicer::getLayer() const{
     return m_current_layer;
 }
 
+int Slicer::getLayerCount() const {
+    return numLayers;
+}
+
 void Slicer::new_layer(float z) {
     glm::vec4 start = m_current_position;
     glm::vec4 end = m_current_position;
@@ -313,7 +328,7 @@ void Slicer::new_layer(float z) {
     actual_max_z = z > actual_max_z ? z : actual_max_z;
 
     m_current_layer++;
-    ToolPath tp = gen_toolpath(start, end, m_active_tool, m_current_feedrate, 0);
+    ToolPath tp = gen_toolpath(start, end, m_active_tool, m_active_tool.feedrate, 0);
     add_gcode(tp);
 
     //m_sliced_object.push_back(m_current_layer);

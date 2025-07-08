@@ -119,34 +119,75 @@ void GcodeSimulator::update(float dt) {
 
     float move_distance = glm::length(xyz_delta);
     float extrude_distance = fabs(e_delta);
+    bool verbose = true;
+    // ---- VERBOSE LOGGING ----
+    if (verbose) {
+        Console::info() << "=== GcodeSimulator::update ===" << Console::endl;
+        Console::info() << "dt: " << dt << Console::endl;
+        Console::info() << "Current Position: [" << m_current_position.x << ", " << m_current_position.y << ", " << m_current_position.z << ", " << m_current_position.w << "]" << Console::endl;
+        Console::info() << "Target Position:  [" << m_current_target.x << ", " << m_current_target.y << ", " << m_current_target.z << ", " << m_current_target.w << "]" << Console::endl;
+        Console::info() << "Delta:            [" << delta.x << ", " << delta.y << ", " << delta.z << ", " << delta.w << "]" << Console::endl;
+        Console::info() << "XYZ Delta length: " << move_distance << " | E Delta: " << e_delta << Console::endl;
+        Console::info() << "XYZ Done: " << xyz_done << " | E Done: " << e_done << Console::endl;
+        Console::info() << "Current Command Index: " << currentIndex << "/" << m_commands.size() << Console::endl;
+    }
+    // ---- END VERBOSE LOGGING ----
 
     // If both position and extrusion are done, advance
     if (xyz_done && e_done) {
         m_current_position = m_current_target;
+
+        if (verbose) {
+            Console::info() << "Arrived at target. Advancing to next command." << Console::endl;
+        }
+
         if (currentIndex < m_commands.size() - 1) {
             currentIndex++;
             m_current_target = m_commands[currentIndex].position;
             m_current_speed = m_commands[currentIndex].speed;
+
+            if (verbose) {
+                Console::info() << "Next Target Position: [" << m_current_target.x << ", " << m_current_target.y << ", " << m_current_target.z << ", " << m_current_target.w << "]" << Console::endl;
+                Console::info() << "Next Speed: " << m_current_speed << Console::endl;
+            }
+        }
+        else if (verbose) {
+            Console::info() << "No more commands." << Console::endl;
         }
     }
     else {
         // Move and extrude proportionally
         glm::vec4 movement(0.0f);
+
         if (!xyz_done && move_distance > 0) {
             glm::vec3 dir = glm::normalize(xyz_delta);
             glm::vec3 move = dir * m_current_speed * dt;
             if (glm::length(move) > move_distance) move = xyz_delta;
             movement = glm::vec4(move, 0.0f);
+
+            if (verbose) {
+                Console::info() << "Moving XYZ: [" << move.x << ", " << move.y << ", " << move.z << "]" << Console::endl;
+            }
         }
         if (!e_done && extrude_distance > 0) {
-            // Use same speed or define an extrusion speed?
             float extrude_amount = m_current_speed * dt;
             if (fabs(extrude_amount) > extrude_distance) extrude_amount = e_delta;
             movement.w = (e_delta > 0 ? 1 : -1) * fabs(extrude_amount);
+
+            if (verbose) {
+                Console::info() << "Extruding: " << movement.w << Console::endl;
+            }
         }
+
         m_current_position += movement;
+
+        if (verbose) {
+            Console::info() << "Updated Position: [" << m_current_position.x << ", " << m_current_position.y << ", " << m_current_position.z << ", " << m_current_position.w << "]" << Console::endl;
+            Console::info() << "-------------------------------" << Console::endl;
+        }
     }
 }
+
 
 glm::vec3 GcodeSimulator::getNozzlePosition() {
     return glm::vec3(m_current_position) + m_origin_offset;

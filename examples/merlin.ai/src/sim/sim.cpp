@@ -301,6 +301,17 @@ void Sim::control(float vx, float vy, float ve){
 	simulator.flow_override = ve;
 }
 
+void Sim::setGCode(const std::vector<std::string>& gcode){
+	
+	std::string gcode_str;
+	for (const auto& str : gcode) {
+		gcode_str += str + "\n";
+		Console::print() << str << Console::endl;
+	}
+	simulator.reset();
+	simulator.readGCode(gcode_str);
+}
+
 void Sim::api_step() {
 	shouldStep = true;
 }
@@ -327,6 +338,7 @@ void Sim::run(Timestep ts) {
 
 		for (int i = 0; i < settings.solver_substep; i++) {
 
+
 			simulator.update(settings.timestep / (settings.solver_substep));
 
 			nozzle_position = simulator.getNozzlePosition();
@@ -337,9 +349,9 @@ void Sim::run(Timestep ts) {
 			settings.emitter_transform.sync(*solver);
 			
 			if (simulator.getExtruderDistance() < 0) {
-				solver->setInt("retract", simulator.getExtruderDistance());
+				solver->setFloat("retract", simulator.getExtruderDistance());
 			}
-			else solver->setInt("retract", 0);
+			else solver->setFloat("retract", 0);
 
 			float e_speed = simulator.getExtruderDistance();
 			float emitterDelay = 1000.0 / (settings.particleVolume * 1.0) / e_speed;

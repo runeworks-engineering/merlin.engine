@@ -34,6 +34,7 @@ public:
 	std::mutex& mutex();
 
 	void control(float vx, float vy, float ve);
+	void setGCode(const std::vector<std::string>& gcode);;
 	void api_step();
 	void api_reset();
 	void api_phase();

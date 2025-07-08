@@ -31,7 +31,7 @@ public:
 	SampleObject();
 	SampleObject(const SampleProperty& props);
 
-	void renderMenu();
+    bool renderMenu();
 	const SampleProperty& getProperties() const { return props; }
 	const Mesh_Ptr& getMesh() const { return mesh; }
 

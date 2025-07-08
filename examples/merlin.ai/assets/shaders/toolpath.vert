@@ -11,7 +11,7 @@ out VS_out{
 	mat4 mv;
 } vout;
 
-uniform int layer = 0;
+//uniform int layer = 0;
 uniform float layer_height = 0.2;
 
 uniform mat4 view;
@@ -29,12 +29,12 @@ void main() {
 	bool show = true;
 	if(!showG0 && ssbo_toolpath[i].meta_bis.y == 0) show = false;
 
-	if(layer > ssbo_toolpath[i].meta_bis.x && show){
+	if( show){
 		if(_position.x == 0) offset = ssbo_toolpath[i].start.xyz;
 		else offset = ssbo_toolpath[i].end.xyz;
 	}
-	offset += vec3(0, gl_InstanceID,0);
-	vout.position = model * (vec4(offset + _position,1));
+
+	vout.position = model * (vec4(offset,1));
 	vout.screen_position = projection * view * vout.position;
 	
 

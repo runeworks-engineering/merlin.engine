@@ -35,7 +35,7 @@ namespace Merlin {
     void MemoryManager::releaseBindingPoint(BufferTarget bufferType, GLuint bufferID) {
         auto it = bufferToBindingPoint.find(bufferID);
         if (it == bufferToBindingPoint.end()) {
-            Console::trace("MemoryManager") << "Attempt to release a binding point for a buffer that was not allocated" << Console::endl;
+            Console::trace("MemoryManager") << "Attempt to release a binding point for a buffer that was not allocated (" << bufferID << ")" << Console::endl;
             return;
         }
 

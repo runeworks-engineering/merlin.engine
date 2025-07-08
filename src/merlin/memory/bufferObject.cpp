@@ -6,7 +6,7 @@
 namespace Merlin {
  
     void AbstractBufferObject::releaseBindingPoint() {
-        if(m_bindingPoint < 16) MemoryManager::instance().releaseBindingPoint(m_target, m_bindingPoint);
+        if(m_bindingPoint < 16) MemoryManager::instance().releaseBindingPoint(m_target, id());
         m_bindingPoint = -1;
         return;
     }

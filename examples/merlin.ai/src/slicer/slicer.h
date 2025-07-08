@@ -25,10 +25,12 @@ public:
     void slice();
     void load_macro(const std::string& start_path, const std::string& end_path);
     void export_gcode(const std::string& filename);
+    const std::vector<std::string>& get_gcode();
     void process();
     void postprocess();
 
     int getLayer() const;
+    int getLayerCount() const;
 
     void generateSample(SampleProperty props);
 
