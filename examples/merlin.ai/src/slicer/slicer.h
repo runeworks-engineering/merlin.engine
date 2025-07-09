@@ -65,13 +65,13 @@ private:
     int m_current_layer = 0;
     float filament_diameter;
     float actual_max_z = 0;
-    float m_cumulative_E;
     float m_current_feedrate;
     const Tool noTool;
     Tool m_last_tool = noTool;
     Tool m_active_tool = noTool;
 
     bool use_relative_extrusion = true;
+    float pendingE = 0;
 
     std::vector<std::string> start_gcode;
     std::vector<std::string> end_gcode;

@@ -96,6 +96,16 @@ void GymServer::serverLoop() {
                 sock_->send(goal_msg, zmq::send_flags::none);
 
             }
+            else if (j["type"] == "get_nozzle_position") {
+                glm::vec2 pos = sim_->getNozzlePosition();
+                 
+                nlohmann::json reply;
+                reply["x"] = pos.x;
+                reply["y"] = pos.y;
+                std::string ack = reply.dump();
+                sock_->send(zmq::buffer(ack), zmq::send_flags::none);
+
+            }
             else if (j["type"] == "step") {
                 auto xye = j["xye"].get<std::vector<float>>();
                 if (xye.size() >= 3)
@@ -105,18 +115,8 @@ void GymServer::serverLoop() {
                     sim_->api_step();
                     while (!sim_->hasStepped() && sim_->isRunning()); // Wait until the sim has actually processed the step
                 }
-                // After you’ve executed the step in your sim:
-                glm::vec2 pos = sim_->getNozzlePosition();
 
-                // 1) Build a JSON object with the new position
-                nlohmann::json reply;
-                reply["x"] = pos.x;
-                reply["y"] = pos.y;
-
-                // 2) Dump it to a string
-                std::string ack = reply.dump();
-
-                // 3) Send it back over ZMQ
+                std::string ack = "stepped";
                 sock_->send(zmq::buffer(ack), zmq::send_flags::none);
             }
             else if (j["type"] == "is_done") {

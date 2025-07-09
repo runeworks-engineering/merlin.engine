@@ -32,7 +32,7 @@ float computeTemperatureDelta(uint i) {
 
 
 	if(!isInNozzle){
-		temperatureDelta += 6.0 * (298.15 - b_Ti); //fan
+		temperatureDelta += 20.0 * (298.15 - b_Ti); //fan
 	}else temperatureDelta += 0.9 * (298.15 - b_Ti); //losses
 
 	if(isnan(temperatureDelta)) return 0;

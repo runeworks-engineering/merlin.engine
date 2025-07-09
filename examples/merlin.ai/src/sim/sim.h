@@ -77,6 +77,7 @@ private:
 
 	//Emitter
 	float lastSpawTime = 0;
+	float emitterVolume = 0;
 
 	//Time
 	float elapsedTime = 0;

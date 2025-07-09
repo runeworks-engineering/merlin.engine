@@ -60,7 +60,7 @@ private:
 	float min_size_, max_size_;
 	std::mt19937 rng_{ std::random_device{}() };
 
-
+	bool use_zmq_control = true;
 	int colorMode = 4;
 
 	Slicer slicer;

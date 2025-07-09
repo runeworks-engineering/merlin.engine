@@ -3,6 +3,7 @@
 #include <sstream>
 #include <iostream>
 #include "merlin/core/console.h"
+#include "../settings.h"
 
 using namespace Merlin;
 
@@ -19,68 +20,75 @@ void GcodeSimulator::readFile(const std::string& filepath) {
         std::cerr << "Failed to open file: " << filepath << std::endl;
         return;
     }
+    reset();
+    m_commands.clear();
+    m_commands_str.clear();
 
+    Command command = { glm::vec4(0),0 };
     while (getline(file, line)) {
-        partGCodeLine(line);
+        partGCodeLine(line, command);
     }
 
     file.close();
-    if (!m_commands.empty()) {
-        m_current_target = m_commands[0].position; // Set the first target
-        m_current_speed = m_commands[0].speed; // Set the first target
-    }
+    reset();
 }
 
 void GcodeSimulator::readGCode(const std::string& gcode) {
     std::stringstream ss(gcode);
     std::string line;
     if (gcode.empty()) return;
+    reset();
+    m_commands.clear();
+    m_commands_str.clear();
 
+    Command command = { glm::vec4(0),0 };
     while (getline(ss, line)) {
-        partGCodeLine(line);
+        partGCodeLine(line, command);
     }
 
-    if (!m_commands.empty()) {
-        m_current_target = m_commands[0].position; // Set the first target
-        m_current_speed = m_commands[0].speed; // Set the first target
-    }
+    reset();
 }
 
-void GcodeSimulator::partGCodeLine(const std::string& line){
+void GcodeSimulator::partGCodeLine(const std::string& line, Command& command){
     if (line[0] == 'G') {
         std::istringstream iss(line.substr(1));
         int commandNum;
         iss >> commandNum;
-        static Command command = { glm::vec4(0), 0 };
-
-        if (commandNum == 1) {  // We handle G1 commands
+        
+        if (commandNum == 1 || commandNum == 0) {  // We handle G1 commands
 
             char coord;
             float value;
             while (iss >> coord >> value) {
                 switch (coord) {
-                case 'X': command.position.x = value * 10; break;
-                case 'Y': command.position.y = value * 10; break;
-                case 'Z': command.position.z = value * 10; break;
+                case 'X': command.position.x = value; break;
+                case 'Y': command.position.y = value; break;
+                case 'Z': command.position.z = value; break;
                 case 'E':
-                    if (m_extrusion_absolute) command.position.w = value;
-                    else command.position.w += value;
+                    if (m_extrusion_absolute) cumulative_extrusion = value;
+                    else cumulative_extrusion += value;
+                    command.position.w = cumulative_extrusion;
                     break;
                 case 'F': command.speed = value; break;
                     break;
                 }
             }
             m_commands.push_back(command);
+            m_commands_str.push_back(line);
         }
         else if (commandNum == 92) {  // We handle G1 commands
             char coord;
             float value;
             while (iss >> coord >> value) {
                 switch (coord) {
-                case 'E': command.position.w = 5 /*value * 10.0*/; break;
+                case 'E':
+                    cumulative_extrusion = 0; 
+                    command.position.w = 0;
+                    break;
                 }
             }
             m_commands.push_back(command);
+            m_commands_str.push_back(line);
         }
     }
     else if (line[0] == 'M') {
@@ -99,103 +107,82 @@ void GcodeSimulator::partGCodeLine(const std::string& line){
 
 void GcodeSimulator::reset() {
     m_extrusion_absolute = false;
-    m_current_extrusion = 0;
-    m_current_position = glm::vec4(-m_origin_offset, 0);
     m_current_position = glm::vec4(0);
+    m_current_target = glm::vec4(0);
+    m_current_velocity = glm::vec4(0);
+    distanceToExtrude = 0;
+    currentIndex = 0;
+    cumulative_extrusion = 0;
     if (!m_commands.empty()) {
         m_current_target = m_commands[0].position; // Set the first target
         m_current_speed = m_commands[0].speed; // Set the first target
         currentIndex = 0;
+        Console::info("GcodeSimulator") << "Executing command :" << m_commands_str[0] << Console::endl;
     }
 }
 
+void GcodeSimulator::resetVolume(){
+    distanceToExtrude = 0;
+}
+
 void GcodeSimulator::update(float dt) {
+    float flow_override = settings.flow_override;
+    if (glm::isnan(flow_override)) flow_override = 0;
+
     glm::vec4 delta = m_current_target - m_current_position;
     glm::vec3 xyz_delta = glm::vec3(delta);
-    float e_delta = delta.w;
-
+    float e_delta = delta.w * flow_override;
+    
     bool xyz_done = glm::length(xyz_delta) < 0.01f;
-    bool e_done = fabs(e_delta) < 0.0001f;
+    bool e_done = fabs(e_delta) < 0.001f;
 
     float move_distance = glm::length(xyz_delta);
     float extrude_distance = fabs(e_delta);
-    bool verbose = true;
-    // ---- VERBOSE LOGGING ----
-    if (verbose) {
-        Console::info() << "=== GcodeSimulator::update ===" << Console::endl;
-        Console::info() << "dt: " << dt << Console::endl;
-        Console::info() << "Current Position: [" << m_current_position.x << ", " << m_current_position.y << ", " << m_current_position.z << ", " << m_current_position.w << "]" << Console::endl;
-        Console::info() << "Target Position:  [" << m_current_target.x << ", " << m_current_target.y << ", " << m_current_target.z << ", " << m_current_target.w << "]" << Console::endl;
-        Console::info() << "Delta:            [" << delta.x << ", " << delta.y << ", " << delta.z << ", " << delta.w << "]" << Console::endl;
-        Console::info() << "XYZ Delta length: " << move_distance << " | E Delta: " << e_delta << Console::endl;
-        Console::info() << "XYZ Done: " << xyz_done << " | E Done: " << e_done << Console::endl;
-        Console::info() << "Current Command Index: " << currentIndex << "/" << m_commands.size() << Console::endl;
-    }
-    // ---- END VERBOSE LOGGING ----
 
     // If both position and extrusion are done, advance
     if (xyz_done && e_done) {
         m_current_position = m_current_target;
 
-        if (verbose) {
-            Console::info() << "Arrived at target. Advancing to next command." << Console::endl;
-        }
-
         if (currentIndex < m_commands.size() - 1) {
             currentIndex++;
+            Console::info("GcodeSimulator") << "Current Position :" << m_current_position << Console::endl;
+            Console::info("GcodeSimulator") << "Executing command :" << m_commands_str[currentIndex] << Console::endl;
             m_current_target = m_commands[currentIndex].position;
             m_current_speed = m_commands[currentIndex].speed;
-
-            if (verbose) {
-                Console::info() << "Next Target Position: [" << m_current_target.x << ", " << m_current_target.y << ", " << m_current_target.z << ", " << m_current_target.w << "]" << Console::endl;
-                Console::info() << "Next Speed: " << m_current_speed << Console::endl;
-            }
-        }
-        else if (verbose) {
-            Console::info() << "No more commands." << Console::endl;
+            Console::info("GcodeSimulator") << "Current Target :" << m_current_target << Console::endl;
         }
     }
     else {
-        // Move and extrude proportionally
+        // Coordinated move: both XYZ and E finish at the same time
+        float total_distance = move_distance;
+        if (total_distance < 1e-6f) total_distance = extrude_distance;
+        if (total_distance < 1e-6f) total_distance = 1e-6f; // avoid div by zero
+        float move_time = total_distance / m_current_speed;
+        float step = dt / move_time;
+        if (step > 1.0f) step = 1.0f;
+
         glm::vec4 movement(0.0f);
-
         if (!xyz_done && move_distance > 0) {
-            glm::vec3 dir = glm::normalize(xyz_delta);
-            glm::vec3 move = dir * m_current_speed * dt;
-            if (glm::length(move) > move_distance) move = xyz_delta;
-            movement = glm::vec4(move, 0.0f);
-
-            if (verbose) {
-                Console::info() << "Moving XYZ: [" << move.x << ", " << move.y << ", " << move.z << "]" << Console::endl;
-            }
+            movement += glm::vec4(xyz_delta * step, 0.0f);
         }
-        if (!e_done && extrude_distance > 0) {
-            float extrude_amount = m_current_speed * dt;
-            if (fabs(extrude_amount) > extrude_distance) extrude_amount = e_delta;
-            movement.w = (e_delta > 0 ? 1 : -1) * fabs(extrude_amount);
-
-            if (verbose) {
-                Console::info() << "Extruding: " << movement.w << Console::endl;
-            }
+        if (!e_done) {
+            movement.w += e_delta * step;
         }
-
         m_current_position += movement;
-
-        if (verbose) {
-            Console::info() << "Updated Position: [" << m_current_position.x << ", " << m_current_position.y << ", " << m_current_position.z << ", " << m_current_position.w << "]" << Console::endl;
-            Console::info() << "-------------------------------" << Console::endl;
-        }
+        distanceToExtrude += 50 * dt * flow_override;
     }
 }
-
 
 glm::vec3 GcodeSimulator::getNozzlePosition() {
     return glm::vec3(m_current_position) + m_origin_offset;
 }
 
 float GcodeSimulator::getExtruderDistance() {
-    if (m_commands[currentIndex].position.w != 0) return m_commands[currentIndex].position.w * flow_override;
-    return 0.0;
+    return distanceToExtrude;
+}
+
+float GcodeSimulator::getVolumeToExtrude() { //0.5 penalty that AI is fighting
+    return distanceToExtrude * 3.1415926*(17.5 * 17.5)/4.0;
 }
 
 bool GcodeSimulator::lastCommandReached(){

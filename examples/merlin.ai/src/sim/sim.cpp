@@ -38,6 +38,7 @@ void Sim::init() {
 
 	static_emitter = Primitives::createCylinder(8, 2, 10);
 	static_emitter->translate(glm::vec3(0, 0, 1.25 * 10));
+	static_emitter->rotate(glm::vec3(0, 90*DEG_TO_RAD, 0));
 
 	nozzle_emitter = ModelLoader::loadMesh("./assets/models/nozzle_emitter.stl");
 	nozzle_emitter->setMaterial("gold");
@@ -188,6 +189,7 @@ void Sim::reset(){
 	settings.bWkgCount = (settings.blocks + settings.bWkgSize - 1) / settings.bWkgSize; //Total number of workgroup needed
 	settings.emitter_transform = glm::mat4(1);
 	//settings.emitter_transform.sync(*solver);
+	emitterVolume = cpu_emitterPosition.size() * settings.particleVolume;
 
 
 	solver->setWorkgroupLayout(settings.pWkgCount);
@@ -298,7 +300,7 @@ std::mutex& Sim::mutex()
 
 void Sim::control(float vx, float vy, float ve){
 	//simulator.control(vx, vy, 0, ve);
-	simulator.flow_override = ve;
+	settings.flow_override = ve;
 }
 
 void Sim::setGCode(const std::vector<std::string>& gcode){
@@ -308,8 +310,9 @@ void Sim::setGCode(const std::vector<std::string>& gcode){
 		gcode_str += str + "\n";
 		Console::print() << str << Console::endl;
 	}
-	simulator.reset();
+	
 	simulator.readGCode(gcode_str);
+	simulator.reset();
 }
 
 void Sim::api_step() {
@@ -348,19 +351,25 @@ void Sim::run(Timestep ts) {
 			settings.emitter_transform = glm::translate(settings.emitter_transform(), glm::vec3(nozzle_position));
 			settings.emitter_transform.sync(*solver);
 			
-			if (simulator.getExtruderDistance() < 0) {
+			float e_volume = simulator.getVolumeToExtrude();
+			/*
+			if (simulator.getExtruderDistance() < -2) {
 				solver->setFloat("retract", simulator.getExtruderDistance());
+				simulator.resetVolume();
+				lastSpawTime = elapsedTime;
 			}
 			else solver->setFloat("retract", 0);
+			/**/
 
-			float e_speed = simulator.getExtruderDistance();
-			float emitterDelay = 1000.0 / (settings.particleVolume * 1.0) / e_speed;
-			if (settings.use_emitter && simulator.getExtruderDistance() > 0.01)
-				if (elapsedTime - lastSpawTime > (emitterDelay / 1000.0)) {
-					spawn();
-					lastSpawTime = elapsedTime;
-				}
-
+			//float emitterDelay = 1000.0 / (settings.particleVolume * 1.0) / e_speed;
+			//if (settings.use_emitter && simulator.getExtruderDistance() > 0.01)
+			if (settings.use_emitter && e_volume > emitterVolume) {
+				//if (elapsedTime - lastSpawTime > (emitterDelay / 1000.0)) {
+				spawn();
+				simulator.resetVolume();
+				lastSpawTime = elapsedTime;
+				//}
+			}
 			solver->execute(2);
 
 			GPU_PROFILE(nns_time,
@@ -379,9 +388,10 @@ void Sim::run(Timestep ts) {
 					solver->execute(7);
 				}
 		}
-			)
-			//if (agent.lastCommandReached()) paused = true;
-			MemoryManager::instance().resetBindings();
+		)
+		//if (agent.lastCommandReached()) paused = true;
+		if (simulator.lastCommandReached()) stop();
+		MemoryManager::instance().resetBindings();
 		shouldStep = false;
 	}
 }

@@ -25,11 +25,10 @@ void main() {
 	uint index = gl_GlobalInvocationID.x;
 	if (index >= u_numParticles + u_numEmitter) return;
 
-	
 	if(retract < 0){
 		uint i = index;
 		vec4 nozzle = u_emitterTransform * vec4(0,0,0,1);
-		if (phase(index) == FLUID && ((b_pi.z > nozzle.z-retract && distance(nozzle.xy, b_pi.xy) < 10)))
+		if (phase(index) == FLUID && ((b_pi.z > nozzle.z+3 && b_pi.z < nozzle.z+3-retract && distance(nozzle.xy, b_pi.xy) < 10)))
 			phase(index) = UNUSED;
 	}
 
@@ -44,7 +43,6 @@ void main() {
 	}
 
 	exec(index, stage);
-
 
 }
 

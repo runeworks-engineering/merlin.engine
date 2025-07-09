@@ -36,7 +36,7 @@ struct Settings {
 	const float particleVolume = (4.0 / 3.0) * glm::pi<float>() * particleRadius * particleRadius * particleRadius;
 	const float smoothingRadius = 4 * particleRadius;
 	const float bWidth = smoothingRadius;
-	const float volumeWidth = smoothingRadius*0.25;
+	const float volumeWidth = smoothingRadius*0.5;
 
 	//Solver settings
 	int solver_substep = 10;
@@ -44,7 +44,7 @@ struct Settings {
 	float overRelaxation = 1.0;
 
 	//Boundary Volume dimensions
-	glm::vec3 bb = glm::vec3(140, 140, 45);
+	glm::vec3 bb = glm::vec3(300, 200, 35);
 
 	// Physics Parameters
 	float timestep									= 0.002;
@@ -55,7 +55,7 @@ struct Settings {
 
 	Uniform<float> viscosity						= Uniform<float>("u_viscosity", 0.0);
 	//Uniform<float> artificialViscosityMultiplier	= Uniform<float>("u_artificialViscosityMultiplier", 47 * 0.001);
-	Uniform<float> artificialViscosityMultiplier	= Uniform<float>("u_artificialViscosityMultiplier", 210 * 0.001);
+	Uniform<float> artificialViscosityMultiplier	= Uniform<float>("u_artificialViscosityMultiplier", 260 * 0.001);
 	Uniform<float> artificialPressureMultiplier		= Uniform<float>("u_artificialPressureMultiplier",  50 * 0.0001); //2.6 * 0.001
 
 	float emitterDelay = 0.120;//ms
@@ -74,7 +74,7 @@ struct Settings {
 	//Flow
 	float flow_override = 1.0;
 	bool use_emitter = true;
-	bool use_emitter_init = true;
+	bool use_emitter_init = false;
 
 	//GPU Threading settings
 	GLuint max_pThread = 1000000; //Max Number of particles (thread) (10 milion)

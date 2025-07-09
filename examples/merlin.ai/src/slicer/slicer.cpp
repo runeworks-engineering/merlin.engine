@@ -5,10 +5,6 @@
 #include <ctime>
 #include <fstream>
 
-
-
-
-
 Slicer::Slicer()
     : toolpath(0), noTool({ -1,0,10000,0 }) {
 
@@ -28,9 +24,8 @@ void Slicer::clear() {
     actual_max_z = 0;
     numLayers = 0;
     m_current_layer = 0;
-    filament_diameter = 1.75;
-
-    m_cumulative_E = 0;
+    filament_diameter = 17.5;
+    pendingE = 0;
     m_current_feedrate = 0;
 }
 
@@ -158,20 +153,20 @@ void Slicer::generateSample(SampleProperty props) {
         glm::vec2 D = rotate2D(glm::vec2(-dx, +dy), theta) + center;
 
         new_layer(z);
-        move(glm::vec4(props.x_position, props.y_position, actual_max_z + 5, 0), 0, 1000);
+        move(glm::vec4(props.x_position, props.y_position, actual_max_z + 5, 0), 0);
       
         // Perimeter (rectangle)
         float e_perim = compute_e(props.length, props.flow, props.line_width, props.layer_height);
         float e_perim_y = compute_e(props.width, props.flow, props.line_width, props.layer_height);
 
-        move(glm::vec4(A, 0, 3), 0); //move and prime
-        move_Z(z); //move and prime
+        move_Z(z);
+        moveXY(A, 0); //move and prime
         moveXYE(B, e_perim, 1);
         moveXYE(C, e_perim_y, 1);
         moveXYE(D, e_perim, 1);
         moveXYE(A, e_perim_y, 1);
-        retract(3);
-        move_Z(m_current_position.z + 5, 0);
+        retract(10, 2400);
+        move_Z(z + 5, 0);
         
         
         //Rectilinear infill 100%
@@ -195,6 +190,7 @@ void Slicer::generateSample(SampleProperty props) {
                 moveXYE(lineEnd, e_infill, 1); // Extrusion ligne
                 lineEnd += normal * props.line_width;
                 lineStart += normal * props.line_width;
+                retract(10, 2400);
                 moveXYE(lineEnd, 0, 1); // Extrusion ligne
 
             }
@@ -202,17 +198,18 @@ void Slicer::generateSample(SampleProperty props) {
                 moveXYE(lineStart, e_infill, 1);
                 lineStart += normal * props.line_width;
                 lineEnd += normal * props.line_width;
+                retract(10, 2400);
                 moveXYE(lineStart, 0, 1);
             }
-                
+            
         }/**/
-        retract(-3);
+        retract(20, 2400);
         move_Z(z + 5); // Aller au coin bas-gauche
-        
+        retract(20, 2400);
 
 
     }
-
+    retract(20, 2400);
  
     comment("-----------------------");
     comment("     End of Sample");
@@ -261,15 +258,11 @@ const std::vector<std::string>& Slicer::get_gcode(){
 }
 
 void Slicer::retract(float length, float feedrate_override) {
-    glm::vec4 end = m_current_position;
-    end.w = -length;
-    move(end, feedrate_override);
+    pendingE -= length;
 }
 
 void Slicer::extrude(float length, float feedrate_override) {
-    glm::vec4 end = m_current_position;
-    end.w = length;
-    move(end, feedrate_override);
+    pendingE += length;
 }
 
 void Slicer::move(glm::vec4 destination, int mode, float feedrate_override) {
@@ -362,11 +355,15 @@ ToolPath Slicer::gen_toolpath(const glm::vec4& start, const glm::vec4& end, cons
 void Slicer::add_gcode(ToolPath tp, const std::string& command) {
     std::ostringstream line;
     line << command << " ";
+    if (pendingE != 0) {
+        tp.end.w += pendingE;
+        pendingE = 0;
+    }
 
     if (tp.end.x != m_current_position.x) line << "X" << std::fixed << std::setprecision(3) << tp.end.x << " ";
     if (tp.end.y != m_current_position.y) line << "Y" << std::fixed << std::setprecision(3) << std::to_string(tp.end.y) + " ";
     if (tp.end.z != m_current_position.z) line << "Z" << std::fixed << std::setprecision(3) << std::to_string(tp.end.z) + " ";
-    if (tp.end.w != 0) line << "E" << std::fixed << std::setprecision(5) << std::to_string(tp.end.w) + " ";
+    if (tp.end.w != m_current_position.w) line << "E" << std::fixed << std::setprecision(5) << std::to_string(tp.end.w) + " ";
     if (tp.meta.x != m_current_feedrate) line << "F" << std::to_string(int(tp.meta.x)) + " ";
 
     if (line.str() == command + " ") return;

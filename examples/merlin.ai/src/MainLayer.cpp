@@ -38,8 +38,8 @@ void MainLayer::onAttach(){
 
 	Console::setLevel(ConsoleLevel::_INFO);
 
-	min_size_= 20;
-	max_size_= 50;
+	min_size_= 60;
+	max_size_= 150;
 
 	default_props.name = "sample";
 	default_props.comment = "Specimen 0";
@@ -47,12 +47,12 @@ void MainLayer::onAttach(){
 	default_props.y_position = 0;
 	default_props.length = 30;
 	default_props.width = 20;
-	default_props.height = 0.15f * 10;
-	default_props.layer_height = 0.2 * 10;
-	default_props.line_width = 0.4 * 10;
+	default_props.height = 5;
+	default_props.layer_height = 5;
+	default_props.line_width = 15;
 	default_props.flow = 1.0f;
 	default_props.retract = 1.0f;
-	default_props.feedrate = 1050;
+	default_props.feedrate = 600;
 
 	createBuffers();
 	sim.init();
@@ -64,7 +64,7 @@ void MainLayer::onAttach(){
 	createGym();
 	gym.start();
 	createRandomSample();
-	slice();
+	
 }
 
 void MainLayer::onDetach(){
@@ -116,6 +116,7 @@ void MainLayer::onUpdate(Timestep ts) {
 
 	if (!sim.hasReset()) {
 		sim.reset();
+		sim.start();
 		//createRandomGoal();
 		//gym.setGoalImage(captureGoalImage());
 	}
@@ -123,14 +124,9 @@ void MainLayer::onUpdate(Timestep ts) {
 	if (!sim.hasPhaseChanged()) {
 		sim.phase();
 		createRandomSample();
-		slice();
-
-		gym.setGoalImage(captureGoalImage());
-		gym.setGoalDepthImage(captureGoalDepthImage());
-		gym.setCurrentImage(captureCurrentImage());
 	}
 
-	sim.api_step();
+	if(!use_zmq_control) sim.api_step();
 	sim.run(ts);
 	MemoryManager::instance().resetBindings();
 	
@@ -196,11 +192,11 @@ void MainLayer::createCamera() {
 	camera_goal_texture->setBorderColor4f(1, 1, 1, 1);
 	camera_goal_texture->unbind();
 
-	camera_output.setView(CameraView::Top, 100, glm::vec3(150, 100, 0));
+	camera_output.setView(CameraView::Top, 250, glm::vec3(150, 100, 0));
 
 	//camera_output(img_res, img_res)
-	static float nearPlane = 95;
-	static float farPlane = 110;
+	static float nearPlane = 240;
+	static float farPlane = 260;
 
 	camera_output.setNearPlane(nearPlane);
 	camera_output.setFarPlane(farPlane);
@@ -226,8 +222,8 @@ void MainLayer::createRandomSample() {
 	float l = size_dist(rng_);
 
 	float hw = w / 2.0f, hh = l / 2.0f;
-	std::uniform_real_distribution<float> xpos(-50.0f + hw, 50.0f - hw);
-	std::uniform_real_distribution<float> ypos(-50.0f + hh, 50.0f - hh);
+	std::uniform_real_distribution<float> xpos(-60.0f, 60.0f);
+	std::uniform_real_distribution<float> ypos(-40.0f, 40.0f);
 	float cx = xpos(rng_) + 150, cy = ypos(rng_) + 100;
 
 	std::uniform_real_distribution<float> ang_dist(0.0f, 360.0f);
@@ -246,6 +242,10 @@ void MainLayer::createRandomSample() {
 		scene->removeChild(sample_mesh);
 	
 	createSample(props);
+	slice();
+	gym.setGoalImage(captureGoalImage());
+	gym.setCurrentImage(captureCurrentImage());
+	sim.start();
 }
 
 void MainLayer::createBuffers(){
@@ -311,7 +311,8 @@ void MainLayer::createScene() {
 	bed->setMaterial("chrome");
 
 	bed_glass = ModelLoader::loadModel("./assets/models/glass.stl");
-	bed_glass->setMaterial("glass");
+	//bed_glass->setMaterial("glass");
+	bed_glass->setMaterial("black rubber");
 	bed_glass->translate(glm::vec3(-8, -8, 5));
 	bed_glass->scale(glm::vec3(0.98f, 0.98f, 1.0f));
 	bed_glass->translate(glm::vec3(-150, -100, -5.2));
@@ -330,7 +331,7 @@ void MainLayer::createScene() {
 	floorMat2->loadTexture("assets/textures/bed.png", TextureType::DIFFUSE);
 
 	bed_surface->setMaterial(floorMat2);
-	bed->addChild(bed_surface);
+	//bed->addChild(bed_surface);
 	bed->translate(glm::vec3(150, 100, -5.2));
 
 	nozzle = ModelLoader::loadMesh("./assets/models/nozzle.stl");
@@ -419,19 +420,22 @@ void MainLayer::createGym(){
 }
 
 std::vector<uint8_t> MainLayer::captureCurrentImage(){
+	ParticleSystemDisplayMode psdm = ps->getDisplayMode();
 	bool particleHidden = ps->isHidden();
 	bool nozzleHidden = nozzle->isHidden();
 	bool isosurfaceHidden = isosurface->isHidden();
 	bool toolpathHidden = toolpath->isHidden();
+	bool sampleHidden = sample_mesh->isHidden();
+	if (psdm != ParticleSystemDisplayMode::POINT_SPRITE)  ps->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE);
 	nozzle->hide();
 	isosurface->hide();
 	toolpath->hide();
+	sample_mesh->hide();
 	ps->show();
-
-	ps->setDisplayMode(ParticleSystemDisplayMode::MESH);
 
 	particle_shader->use();
 	particle_shader->setInt("colorCycle", 0);
+	particle_shader->setFloat("radius", 0.1);
 
 	camera_texture->bind();
 	renderer.renderTo(camera_fbo);
@@ -448,24 +452,37 @@ std::vector<uint8_t> MainLayer::captureCurrentImage(){
 	camera_texture->bind();
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
 	camera_texture->unbind();
-	
-	ps->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE_SHADED);
+
 	if (!nozzleHidden) nozzle->show();
 	if (!isosurfaceHidden) isosurface->show();
 	if (!toolpathHidden) toolpath->show();
+	if (!sampleHidden) sample_mesh->show();
 	if (particleHidden) ps->hide();
+	ps->setDisplayMode(psdm);
 
 	particle_shader->use();
 	particle_shader->setInt("colorCycle", colorMode);
+	particle_shader->setFloat("radius", 1);
 	
 	return pixels; // RGB format, 8-bit per channel
 }
 
 std::vector<uint8_t> MainLayer::captureGoalImage(){
 
-	sample_mesh->show();
+	ParticleSystemDisplayMode psdm = ps->getDisplayMode();
+	bool sampleMeshHidden = sample_mesh->isHidden();
+	bool particleHidden = ps->isHidden();
 	bool nozzleHidden = nozzle->isHidden();
+	bool isosurfaceHidden = isosurface->isHidden();
+	bool toolpathHidden = toolpath->isHidden();
+
+	if (psdm != ParticleSystemDisplayMode::POINT_SPRITE)  ps->setDisplayMode(ParticleSystemDisplayMode::POINT_SPRITE);
+
 	nozzle->hide();
+	isosurface->hide();
+	toolpath->hide();
+	sample_mesh->show();
+	ps->show();
 
 	renderer.renderTo(camera_fbo);
 	renderer.activateTarget();
@@ -490,9 +507,12 @@ std::vector<uint8_t> MainLayer::captureGoalImage(){
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
 	camera_goal_texture->unbind();
 
-
-	sample_mesh->hide();
-	if(!nozzleHidden) nozzle->show();
+	if (!nozzleHidden) nozzle->show();
+	if (!isosurfaceHidden) isosurface->show();
+	if (!toolpathHidden) toolpath->show();
+	if (sampleMeshHidden) sample_mesh->hide();
+	if (particleHidden) ps->hide();
+	ps->setDisplayMode(psdm);
 
 	return pixels; // RGB format, 8-bit per channel
 }
@@ -717,6 +737,8 @@ void MainLayer::onImGuiRender() {
 			sim.start();
 		}
 	}
+
+	ImGui::Checkbox("Use AI Control", &use_zmq_control);
 
 	if (ImGui::SmallButton("Reset simulation")) {
 		sim.api_reset();
@@ -963,7 +985,6 @@ void MainLayer::onImGuiRender() {
 
 	if (ImGui::Button("New Goal")) {
 		createRandomSample();
-		gym.setGoalImage(captureGoalImage());
 	}
 
 	ImGui::End();
