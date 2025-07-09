@@ -17,3 +17,6 @@
 [submodule "vendor/tinyxml2--force"]
 	path = vendor/tinyxml2--force
 	url = https://github.com/JulesTopart/tinyxml2.git
+[submodule "vendor/tinyxml2"]
+	path = vendor/tinyxml2
+	url = https://github.com/JulesTopart/tinyxml2.git
