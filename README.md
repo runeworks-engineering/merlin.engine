@@ -101,6 +101,18 @@ This project is built upon various OpenSource codes and tools.
 - Graphical User Interface : [ImGui](https://github.com/ocornut/imgui) This library is used to make the super simple interface that make Merlin alive and interactive.
 - OpenGL development kit : [GLFW](https://www.glfw.org/)
 
+## Citation 
+
+To cite Merlin you can use this BibTeX entry:
+
+```bibtex
+@software{Merlin_Library,
+  author = {Topart. J},
+  license = {CC BY-NC-SA},
+  title = {{Merlin engine - Library}},
+  url = {https://github.com/runeworks-engineering/merlin.engine},
+}
+```
 
 # References
 
