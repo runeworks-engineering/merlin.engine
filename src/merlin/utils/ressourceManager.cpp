@@ -54,19 +54,18 @@ namespace Merlin {
 		//For each ID return a different material name of the default materials : 
 
 		static const std::vector<std::string> names = {
-			"black plastic",
-			"cyan plastic",
-			"green plastic",
-			"red plastic",
-			"gray plastic",
-			"white plastic",
-			"yellow plastic"
+			"pastel pink",
+			"pastel blue",
+			"pastel yellow",
+			"pastel green",
+			"pastel purple",
+			"pastel orange"
 		};
 
 		std::string result = names[id % names.size()];
 
 		id++;
-		return std::string();
+		return result;
 	}
 
 	MaterialLibrary::MaterialLibrary() {
@@ -280,6 +279,56 @@ namespace Merlin {
 		yellow_rubber->setSpecular(glm::vec3(0.7, 0.7, 0.04));
 		yellow_rubber->setShininess(0.078125);
 		add(yellow_rubber);
+
+
+		// Pastel Pink
+		shared<PhongMaterial> pastel_pink = createShared<PhongMaterial>("pastel pink");
+		pastel_pink->setAmbient(glm::vec3(0.24, 0.14, 0.17));
+		pastel_pink->setDiffuse(glm::vec3(0.95, 0.75, 0.80) * 0.8f);
+		pastel_pink->setSpecular(glm::vec3(0.3, 0.2, 0.22) * 0.2f);
+		pastel_pink->setShininess(0.08);
+		add(pastel_pink);
+
+		// Pastel Blue
+		shared<PhongMaterial> pastel_blue = createShared<PhongMaterial>("pastel blue");
+		pastel_blue->setAmbient(glm::vec3(0.13, 0.18, 0.24));
+		pastel_blue->setDiffuse(glm::vec3(0.70, 0.85, 0.98) * 0.8f);
+		pastel_blue->setSpecular(glm::vec3(0.18, 0.24, 0.3) * 0.2f);
+		pastel_blue->setShininess(0.08);
+		add(pastel_blue);
+
+		// Pastel Yellow
+		shared<PhongMaterial> pastel_yellow = createShared<PhongMaterial>("pastel yellow");
+		pastel_yellow->setAmbient(glm::vec3(0.22, 0.21, 0.13));
+		pastel_yellow->setDiffuse(glm::vec3(0.98, 0.96, 0.75) * 0.8f);
+		pastel_yellow->setSpecular(glm::vec3(0.3, 0.29, 0.18) * 0.2f);
+		pastel_yellow->setShininess(0.08);
+		add(pastel_yellow);
+
+		// Pastel Green
+		shared<PhongMaterial> pastel_green = createShared<PhongMaterial>("pastel green");
+		pastel_green->setAmbient(glm::vec3(0.15, 0.24, 0.16));
+		pastel_green->setDiffuse(glm::vec3(0.72, 0.96, 0.80) * 0.8f);
+		pastel_green->setSpecular(glm::vec3(0.19, 0.28, 0.23) * 0.2f);
+		pastel_green->setShininess(0.08);
+		add(pastel_green);
+
+		// Pastel Purple
+		shared<PhongMaterial> pastel_purple = createShared<PhongMaterial>("pastel purple");
+		pastel_purple->setAmbient(glm::vec3(0.18, 0.14, 0.24));
+		pastel_purple->setDiffuse(glm::vec3(0.82, 0.77, 0.96) * 0.8f);
+		pastel_purple->setSpecular(glm::vec3(0.23, 0.21, 0.3) * 0.2f);
+		pastel_purple->setShininess(0.08);
+		add(pastel_purple);
+
+		// Pastel Orange
+		shared<PhongMaterial> pastel_orange = createShared<PhongMaterial>("pastel orange");
+		pastel_orange->setAmbient(glm::vec3(0.24, 0.19, 0.12));
+		pastel_orange->setDiffuse(glm::vec3(0.98, 0.83, 0.67) * 0.8f);
+		pastel_orange->setSpecular(glm::vec3(0.29, 0.22, 0.16) * 0.2f);
+		pastel_orange->setShininess(0.08);
+		add(pastel_orange);
+
 	
 		/*
 		shared<PhongMaterial> color_cycle_1 = createShared<PhongMaterial>("colorcycle 1");
